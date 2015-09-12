@@ -1,0 +1,1 @@
+mvn archetype:generate -DgroupId=woo.ba.ben -DartifactId=Woobaben -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
