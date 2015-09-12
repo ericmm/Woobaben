@@ -25,5 +25,17 @@
             <version>1.10.19</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.eaio.stringsearch</groupId>
+            <artifactId>stringsearch</artifactId>
+            <version>2.2</version>
+        </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>eaio.com</id>
+            <url>http://repo.eaio.com/maven2</url>
+        </repository>
+    </repositories>
 </project>
