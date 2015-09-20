@@ -3,19 +3,23 @@ package woo.ba.ben.core;
 
 import sun.misc.Unsafe;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.ByteOrder;
 
 public class UnsafeFactory {
     private static Unsafe unsafe = null;
-    private static Exception exception = null;
+    public static int ADDRESS_SIZE = 0;
 
     static {
         try {
-            Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
-            unsafeField.setAccessible(true);
-            unsafe = (Unsafe) unsafeField.get(null);
-        } catch (IllegalAccessException | NoSuchFieldException e) {
-            exception = e;
+            Constructor<Unsafe> unsafeConstructor = Unsafe.class.getDeclaredConstructor();
+            unsafeConstructor.setAccessible(true);
+            unsafe = unsafeConstructor.newInstance();
+
+            ADDRESS_SIZE = unsafe.addressSize();
+        } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException("Cannot get the Unsafe instance!", e);
         }
     }
 
@@ -23,13 +27,11 @@ public class UnsafeFactory {
     }
 
     public static Unsafe get() throws Exception {
-        if (unsafe == null) {
-            throw new Exception("Cannot get Unsafe instance!", exception);
-        }
         return unsafe;
     }
 
-    public static Unsafe getSafely() {
-        return unsafe;
+    public static boolean isBigEndian() {
+        return ByteOrder.BIG_ENDIAN.equals(ByteOrder.nativeOrder());
     }
+
 }
