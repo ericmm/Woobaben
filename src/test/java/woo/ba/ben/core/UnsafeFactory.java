@@ -5,11 +5,11 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.ByteOrder;
 
 public class UnsafeFactory {
-    private static Unsafe unsafe = null;
-    public static int ADDRESS_SIZE = 0;
+    public static final int ADDRESS_SIZE;
+    public static final int OBJECT_REF_SIZE;
+    private static final Unsafe unsafe;
 
     static {
         try {
@@ -18,6 +18,7 @@ public class UnsafeFactory {
             unsafe = unsafeConstructor.newInstance();
 
             ADDRESS_SIZE = unsafe.addressSize();
+            OBJECT_REF_SIZE = unsafe.arrayIndexScale(Object[].class);
         } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
             throw new RuntimeException("Cannot get the Unsafe instance!", e);
         }
@@ -29,9 +30,4 @@ public class UnsafeFactory {
     public static Unsafe get() throws Exception {
         return unsafe;
     }
-
-    public static boolean isBigEndian() {
-        return ByteOrder.BIG_ENDIAN.equals(ByteOrder.nativeOrder());
-    }
-
 }
