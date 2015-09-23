@@ -1,19 +1,16 @@
 package woo.ba.ben.core;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * refactored based on Mikhail Vorontsov's ObjObjMap
  */
-public class SingleArrayMap<K, V> implements Map<K, V> {
+public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
     private static final Object FREE_KEY = new Object();
     private static final Object REMOVED_KEY = new Object();
 
-    private static final float DEFAULT_LOAD_FACTOR = 0.75f;
-    private static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
+    private static final float DEFAULT_LOAD_FACTOR = 0.64f;
+    private static final int DEFAULT_INITIAL_CAPACITY = 50;
     private static final int MAXIMUM_CAPACITY = 1 << 30;
 
     /**
@@ -47,15 +44,15 @@ public class SingleArrayMap<K, V> implements Map<K, V> {
      */
     private int nextIndexMask;
 
-    public SingleArrayMap() {
+    public SimpleArrayMap() {
         this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR);
     }
 
-    public SingleArrayMap(final int size) {
+    public SimpleArrayMap(final int size) {
         this(size, DEFAULT_LOAD_FACTOR);
     }
 
-    public SingleArrayMap(final int size, final float fillFactor) {
+    public SimpleArrayMap(final int size, final float fillFactor) {
         if (fillFactor <= 0 || fillFactor >= 1) {
             throw new IllegalArgumentException("FillFactor must be in (0, 1)");
         }
@@ -188,51 +185,9 @@ public class SingleArrayMap<K, V> implements Map<K, V> {
     }
 
     @Override
-    public void putAll(Map<? extends K, ? extends V> m) {
-        throw new RuntimeException("implement me!");
-    }
-
-    @Override
-    public void clear() {
-        throw new RuntimeException("implement me!");
-    }
-
-    @Override
-    public Set<K> keySet() {
-        throw new RuntimeException("implement me!");
-    }
-
-    @Override
-    public Collection<V> values() {
-        throw new RuntimeException("implement me!");
-    }
-
-    @Override
-    public Set<Entry<K, V>> entrySet() {
-        throw new RuntimeException("implement me!");
-    }
-
-    @Override
     public int size() {
         return size;
     }
-
-    @Override
-    public boolean isEmpty() {
-        throw new RuntimeException("implement me!");
-    }
-
-    @Override
-    public boolean containsKey(Object key) {
-        throw new RuntimeException("implement me!");
-    }
-
-    @Override
-    public boolean containsValue(Object value) {
-        throw new RuntimeException("implement me!");
-    }
-
-
 
     private void putValue(K key, V value, int index) {
         data[index] = key;
