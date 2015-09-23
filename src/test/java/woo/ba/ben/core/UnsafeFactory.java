@@ -27,7 +27,7 @@ public class UnsafeFactory {
     private UnsafeFactory() {
     }
 
-    public static Unsafe get() throws Exception {
+    public static Unsafe get(){
         return unsafe;
     }
 }
