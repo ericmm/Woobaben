@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClassMeta {
-    protected Class<?> clazz;
+    protected Class clazz;
     protected ClassMeta parent;
 
     private SimpleMap<String, FieldMeta> fieldMap = new SimpleArrayMap<>();
