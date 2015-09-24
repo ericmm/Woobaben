@@ -7,7 +7,6 @@ import java.util.List;
 public class ClassMeta {
     protected Class<?> clazz;
     protected ClassMeta parent;
-    protected Object staticFieldBase;
 
     private SimpleMap<String, FieldMeta> fieldMap = new SimpleArrayMap<>();
     private List<String> fieldNames = new ArrayList<>();
