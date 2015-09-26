@@ -1,15 +1,16 @@
 package woo.ba.ben.core;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
- * refactored based on Mikhail Vorontsov's ObjObjMap
+ * refactored and improved based on Mikhail Vorontsov's ObjObjMap
  */
 public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
     private static final Object FREE_KEY = new Object();
     private static final Object REMOVED_KEY = new Object();
 
-    private static final float DEFAULT_LOAD_FACTOR = 0.65f;
+    private static final float DEFAULT_LOAD_FACTOR = 0.64f;
     private static final int DEFAULT_INITIAL_CAPACITY = 20;
     private static final int MAXIMUM_CAPACITY = 1 << 30;
 
@@ -77,7 +78,7 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
             return (V) nullValue; //we null it on remove, so safe not to check a flag here
         }
 
-        int index = getStartIndex(key) << 1;
+        int index = getStartIndex(key);
         Object objKey = data[index];
 
         if (objKey == FREE_KEY) {
@@ -88,7 +89,7 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         }
 
         while (true) {
-            index = (index + 2) & nextIndexMask; //that's next index
+            index = getNextIndex(index); //that's next index
             objKey = data[index];
             if (objKey == FREE_KEY) {
                 return null;
@@ -105,7 +106,7 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
             return insertNullKey(value);
         }
 
-        int index = getStartIndex(key) << 1;
+        int index = getStartIndex(key);
         Object objKey = data[index];
 
         if (objKey == FREE_KEY) { //end of chain already
@@ -123,7 +124,7 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         }
 
         while (true) {
-            index = (index + 2) & nextIndexMask; //that's next index calculation
+            index = getNextIndex(index); //that's next index calculation
             objKey = data[index];
             if (objKey == FREE_KEY) {
                 if (firstRemoved != -1) {
@@ -149,13 +150,13 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
             return removeNullKey();
         }
 
-        int index = getStartIndex(key) << 1;
+        int index = getStartIndex(key);
         Object objKey = data[index];
         if (objKey == FREE_KEY) {
             return null;  //end of chain already
         } else if (objKey.equals(key)) { //we check FREE and REMOVED prior to this call
             --size;
-            if (data[(index + 2) & nextIndexMask] == FREE_KEY) {
+            if (data[getNextIndex(index)] == FREE_KEY) {
                 data[index] = FREE_KEY;
             } else {
                 data[index] = REMOVED_KEY;
@@ -166,13 +167,13 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         }
 
         while (true) {
-            index = (index + 2) & nextIndexMask; //that's next index calculation
+            index = getNextIndex(index); //that's next index calculation
             objKey = data[index];
             if (objKey == FREE_KEY) {
                 return null;
             } else if (objKey.equals(key)) {
                 --size;
-                if (data[(index + 2) & nextIndexMask] == FREE_KEY) {
+                if (data[getNextIndex(index)] == FREE_KEY) {
                     data[index] = FREE_KEY;
                 } else {
                     data[index] = REMOVED_KEY;
@@ -189,9 +190,63 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         return size;
     }
 
-    private void putValue(K key, V value, int index) {
+    @Override
+    public void clear() {
+        Arrays.fill(data, FREE_KEY);
+        hasNull = false;
+        nullValue = null;
+        size = 0;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
+    @Override
+    public boolean containsKey(final Object key) {
+        if (key == null) {
+            return hasNull ? true : false;
+        }
+
+        for (int i = 0; i < data.length; i+=2) {
+            final Object objKey = data[i];
+            if(objKey == FREE_KEY || objKey == REMOVED_KEY) {
+                continue;
+            }
+
+            if (key.equals(objKey)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean containsValue(final Object value) {
+        if(hasNull && Objects.equals(value, nullValue)) {
+            return true;
+        }
+
+        for (int i = 0; i < data.length; i+=2) {
+            final Object objKey = data[i];
+            if(objKey == FREE_KEY || objKey == REMOVED_KEY) {
+                continue;
+            }
+
+            if (Objects.equals(value, data[i+1])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    /////////////////////////////////////////
+    private void putValue(final K key, final V value, final int index) {
         data[index] = key;
         data[index + 1] = value;
+
         if (size >= threshold) {
             resize(data.length * 2); //size is set inside
         } else {
@@ -225,12 +280,13 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
     }
 
     private void resize(final int newCapacity) {
-        threshold = (int) (newCapacity / 2 * fillFactor);
-        indexMask = newCapacity / 2 - 1;
-        nextIndexMask = newCapacity - 1;
-
+        //newCapacity = 2 * oldCapacity
         final int oldCapacity = data.length;
         final Object[] oldData = data;
+
+        threshold = (int) (oldCapacity * fillFactor);
+        indexMask = oldCapacity - 1;
+        nextIndexMask = newCapacity - 1;
 
         data = new Object[newCapacity];
         Arrays.fill(data, FREE_KEY);
@@ -241,12 +297,17 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
             final Object oldKey = oldData[i];
             if (oldKey != FREE_KEY && oldKey != REMOVED_KEY) {
                 put((K) oldKey, (V) oldData[i + 1]);
+                size++;
             }
         }
     }
 
     private int getStartIndex(final Object key) {
-        return key.hashCode() & indexMask;
+        return (key.hashCode() & indexMask) << 1;
+    }
+
+    private int getNextIndex(final int index) {
+        return (index + 2) & nextIndexMask;
     }
 
     private static int arraySize(final int expected, final float f) {
