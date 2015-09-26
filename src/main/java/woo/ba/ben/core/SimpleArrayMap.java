@@ -241,6 +241,35 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         return false;
     }
 
+//    @Override
+//    public Iterator<K> keyIterator() {
+//        return null;
+//    }
+//
+//    private static final class KeyIterator<K> implements Iterator {
+//        private int currentKeyIndex = 0;
+//        private Object[]
+//
+//        KeyIterator(){
+//
+//        }
+//
+//        @Override
+//        public boolean hasNext() {
+//            final Object objKey = data[i];
+//            return false;
+//        }
+//
+//        @Override
+//        public Object next() {
+//            return null;
+//        }
+//
+//        @Override
+//        public void remove() {
+//
+//        }
+//    }
 
     /////////////////////////////////////////
     private void putValue(final K key, final V value, final int index) {
