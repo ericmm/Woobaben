@@ -241,35 +241,20 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         return false;
     }
 
-//    @Override
-//    public Iterator<K> keyIterator() {
-//        return null;
-//    }
-//
-//    private static final class KeyIterator<K> implements Iterator {
-//        private int currentKeyIndex = 0;
-//        private Object[]
-//
-//        KeyIterator(){
-//
-//        }
-//
-//        @Override
-//        public boolean hasNext() {
-//            final Object objKey = data[i];
-//            return false;
-//        }
-//
-//        @Override
-//        public Object next() {
-//            return null;
-//        }
-//
-//        @Override
-//        public void remove() {
-//
-//        }
-//    }
+    @Override
+    public void iterate(final EntryProcessor processor) {
+        if (hasNull) {
+            processor.processEntry(null, nullValue);
+        }
+
+        for (int i = 0; i < data.length; i+=2) {
+            final Object objKey = data[i];
+            if(objKey == FREE_KEY || objKey == REMOVED_KEY) {
+                continue;
+            }
+            processor.processEntry(objKey, data[i + 1]);
+        }
+    }
 
     /////////////////////////////////////////
     private void putValue(final K key, final V value, final int index) {
@@ -323,7 +308,7 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         size = hasNull ? 1 : 0;
 
         for (int i = 0; i < oldCapacity; i += 2) {
-            final Object oldKey = oldData[i];
+                final Object oldKey = oldData[i];
             if (oldKey != FREE_KEY && oldKey != REMOVED_KEY) {
                 put((K) oldKey, (V) oldData[i + 1]);
                 size++;
@@ -331,6 +316,7 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         }
     }
 
+    //can be inlined??
     private int getStartIndex(final Object key) {
         return (key.hashCode() & indexMask) << 1;
     }

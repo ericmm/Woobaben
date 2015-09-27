@@ -46,5 +46,9 @@ public interface SimpleMap<K, V> {
 
     boolean containsValue(Object value);
 
-//    Iterator<K> keyIterator();
+    void iterate(EntryProcessor processor);
+
+    interface EntryProcessor<K, V> {
+        void processEntry(K key, V value);
+    }
 }
