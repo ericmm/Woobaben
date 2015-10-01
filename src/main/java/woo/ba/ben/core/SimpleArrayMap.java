@@ -78,7 +78,7 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
             return (V) nullValue; //we null it on remove, so safe not to check a flag here
         }
 
-        int index = getStartIndex(key);
+        int index = getStartIndex(key, indexMask);
         Object objKey = data[index];
 
         if (objKey == FREE_KEY) {
@@ -89,7 +89,7 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         }
 
         while (true) {
-            index = getNextIndex(index); //that's next index
+            index = getNextIndex(index, nextIndexMask); //that's next index
             objKey = data[index];
             if (objKey == FREE_KEY) {
                 return null;
@@ -106,7 +106,7 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
             return insertNullKey(value);
         }
 
-        int index = getStartIndex(key);
+        int index = getStartIndex(key, indexMask);
         Object objKey = data[index];
 
         if (objKey == FREE_KEY) { //end of chain already
@@ -124,7 +124,7 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         }
 
         while (true) {
-            index = getNextIndex(index); //that's next index calculation
+            index = getNextIndex(index, nextIndexMask); //that's next index calculation
             objKey = data[index];
             if (objKey == FREE_KEY) {
                 if (firstRemoved != -1) {
@@ -150,13 +150,13 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
             return removeNullKey();
         }
 
-        int index = getStartIndex(key);
+        int index = getStartIndex(key, indexMask);
         Object objKey = data[index];
         if (objKey == FREE_KEY) {
             return null;  //end of chain already
         } else if (objKey.equals(key)) { //we check FREE and REMOVED prior to this call
             --size;
-            if (data[getNextIndex(index)] == FREE_KEY) {
+            if (data[getNextIndex(index, nextIndexMask)] == FREE_KEY) {
                 data[index] = FREE_KEY;
             } else {
                 data[index] = REMOVED_KEY;
@@ -167,13 +167,13 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         }
 
         while (true) {
-            index = getNextIndex(index); //that's next index calculation
+            index = getNextIndex(index, nextIndexMask); //that's next index calculation
             objKey = data[index];
             if (objKey == FREE_KEY) {
                 return null;
             } else if (objKey.equals(key)) {
                 --size;
-                if (data[getNextIndex(index)] == FREE_KEY) {
+                if (data[getNextIndex(index, nextIndexMask)] == FREE_KEY) {
                     data[index] = FREE_KEY;
                 } else {
                     data[index] = REMOVED_KEY;
@@ -209,9 +209,9 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
             return hasNull ? true : false;
         }
 
-        for (int i = 0; i < data.length; i+=2) {
+        for (int i = 0; i < data.length; i += 2) {
             final Object objKey = data[i];
-            if(objKey == FREE_KEY || objKey == REMOVED_KEY) {
+            if (objKey == FREE_KEY || objKey == REMOVED_KEY) {
                 continue;
             }
 
@@ -224,17 +224,17 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
 
     @Override
     public boolean containsValue(final Object value) {
-        if(hasNull && Objects.equals(value, nullValue)) {
+        if (hasNull && Objects.equals(value, nullValue)) {
             return true;
         }
 
-        for (int i = 0; i < data.length; i+=2) {
+        for (int i = 0; i < data.length; i += 2) {
             final Object objKey = data[i];
-            if(objKey == FREE_KEY || objKey == REMOVED_KEY) {
+            if (objKey == FREE_KEY || objKey == REMOVED_KEY) {
                 continue;
             }
 
-            if (Objects.equals(value, data[i+1])) {
+            if (Objects.equals(value, data[i + 1])) {
                 return true;
             }
         }
@@ -247,9 +247,9 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
             processor.processEntry(null, nullValue);
         }
 
-        for (int i = 0; i < data.length; i+=2) {
+        for (int i = 0; i < data.length; i += 2) {
             final Object objKey = data[i];
-            if(objKey == FREE_KEY || objKey == REMOVED_KEY) {
+            if (objKey == FREE_KEY || objKey == REMOVED_KEY) {
                 continue;
             }
             processor.processEntry(objKey, data[i + 1]);
@@ -308,7 +308,7 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         size = hasNull ? 1 : 0;
 
         for (int i = 0; i < oldCapacity; i += 2) {
-                final Object oldKey = oldData[i];
+            final Object oldKey = oldData[i];
             if (oldKey != FREE_KEY && oldKey != REMOVED_KEY) {
                 put((K) oldKey, (V) oldData[i + 1]);
                 size++;
@@ -316,12 +316,11 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         }
     }
 
-    //can be inlined??
-    private int getStartIndex(final Object key) {
+    private static int getStartIndex(final Object key, final int indexMask) {
         return (key.hashCode() & indexMask) << 1;
     }
 
-    private int getNextIndex(final int index) {
+    private static int getNextIndex(final int index, final int nextIndexMask) {
         return (index + 2) & nextIndexMask;
     }
 
