@@ -2,15 +2,13 @@ package woo.ba.ben.core;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.HashMap;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
-@RunWith(MockitoJUnitRunner.class)
+//@RunWith(MockitoJUnitRunner.class)
 public class SimpleArrayMapTest {
 
     private SimpleMap simpleMap;
@@ -107,6 +105,19 @@ public class SimpleArrayMapTest {
         simpleMap.put("inMap", "someValue");
         final String value = (String) simpleMap.getOrDefault("inMap", "defaultValue2");
         assertThat(value, is("someValue"));
+    }
+
+    @Test
+    public void shouldPutIfAbsentSuccessfully() {
+        assertThat(simpleMap.put("nullInMap", null), nullValue());
+
+        assertThat(simpleMap.get("nullInMap"), nullValue());
+
+        assertThat(simpleMap.putIfAbsent("nullInMap", "someValue"), nullValue());
+        assertThat(simpleMap.get("nullInMap"), is("someValue"));
+
+        assertThat(simpleMap.putIfAbsent("anotherKeyInMap", "test"), nullValue());
+        assertThat(simpleMap.get("anotherKeyInMap"), is("test"));
     }
 
 
