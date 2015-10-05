@@ -1,23 +1,27 @@
 package woo.ba.ben.core;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.HashMap;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SimpleArrayMapTest {
 
+    private SimpleMap simpleMap;
+
+    @Before
+    public void setup() {
+        simpleMap = new SimpleArrayMap<>();
+    }
+
     @Test
     public void shouldCreateSimpleArrayMapSuccessfully() {
-        SimpleMap simpleMap = new SimpleArrayMap<>();
-
         assertThat(simpleMap, notNullValue());
         assertThat(simpleMap.size(), is(0));
 
@@ -49,10 +53,68 @@ public class SimpleArrayMapTest {
     }
 
     @Test
+    public void shouldPutAndGetValueSuccessfully() {
+        simpleMap.put("nullValue", null);
+        assertThat(simpleMap.get("nullValue"), nullValue());
+
+        simpleMap.put("notNullValue", new Object());
+        assertThat(simpleMap.get("notNullValue"), notNullValue());
+
+        assertThat(simpleMap.get("notInMap"), nullValue());
+    }
+
+    @Test
+    public void shouldRemoveValueSuccessfully() {
+        assertThat(simpleMap.size(), is(0));
+        simpleMap.put("key", "value");
+        assertThat(simpleMap.size(), is(1));
+
+        assertThat(simpleMap.remove("key"), is("value"));
+        assertThat(simpleMap.size(), is(0));
+
+        assertThat(simpleMap.remove("notInMap"), nullValue());
+        assertThat(simpleMap.size(), is(0));
+    }
+
+    @Test
+    public void shouldClearSuccessfully() {
+        assertThat(simpleMap.size(), is(0));
+        simpleMap.put("key", "value");
+        assertThat(simpleMap.size(), is(1));
+
+        simpleMap.clear();
+        assertThat(simpleMap.size(), is(0));
+    }
+
+    @Test
+    public void shouldReturnIsEmptySuccessfully() {
+        assertThat(simpleMap.size(), is(0));
+        assertTrue(simpleMap.isEmpty());
+        simpleMap.put("key", "value");
+        assertThat(simpleMap.size(), is(1));
+        assertFalse(simpleMap.isEmpty());
+
+        simpleMap.clear();
+        assertThat(simpleMap.size(), is(0));
+        assertTrue(simpleMap.isEmpty());
+    }
+
+    @Test
+    public void shouldGetOrDefaultSuccessfully() {
+        final String defaultValue = (String) simpleMap.getOrDefault("notInMap", "defaultValue");
+        assertThat(defaultValue, is("defaultValue"));
+
+        simpleMap.put("inMap", "someValue");
+        final String value = (String) simpleMap.getOrDefault("inMap", "defaultValue2");
+        assertThat(value, is("someValue"));
+    }
+
+
+    @Test
     public void testPerformance() throws InterruptedException {
         int size = 3000000;
 
-        for (int times = 0; times<10; times++) {
+        for (int times = 0; times < 3; times++) {
             HashMap hashMap = new HashMap(size * 2);
             SimpleMap simpleMap = new SimpleArrayMap<>(size * 2, 0.75f);
 
