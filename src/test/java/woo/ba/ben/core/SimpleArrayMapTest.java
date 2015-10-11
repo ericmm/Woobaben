@@ -123,9 +123,9 @@ public class SimpleArrayMapTest {
 
     @Test
     public void testPerformance() throws InterruptedException {
-        int size = 3000000;
+        int size = 5_000_000;
 
-        for (int times = 0; times < 3; times++) {
+        for (int times = 0; times < 5; times++) {
             HashMap hashMap = new HashMap(size * 2);
             SimpleMap simpleMap = new SimpleArrayMap<>(size * 2, 0.75f);
 

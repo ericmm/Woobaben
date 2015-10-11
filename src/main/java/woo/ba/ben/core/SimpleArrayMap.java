@@ -10,8 +10,8 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
     private static final Object FREE_KEY = new Object();
     private static final Object REMOVED_KEY = new Object();
 
-    private static final float DEFAULT_LOAD_FACTOR = 0.64f;
-    private static final int DEFAULT_INITIAL_CAPACITY = 20;
+    private static final float DEFAULT_LOAD_FACTOR = 0.75f;
+    private static final int DEFAULT_INITIAL_CAPACITY = 32;
     private static final int MAXIMUM_CAPACITY = 1 << 30;
 
     /**
@@ -324,10 +324,10 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         return (index + 2) & nextIndexMask;
     }
 
-    private static int arraySize(final int expected, final float f) {
-        final long s = Math.max(2, nextPowerOfTwo((long) Math.ceil(expected / f)));
+    private static int arraySize(final int expectedSize, final float fillFactor) {
+        final long s = Math.max(2, nextPowerOfTwo((long) Math.ceil(expectedSize / fillFactor)));
         if (s > MAXIMUM_CAPACITY) {
-            throw new IllegalArgumentException("Too large (" + expected + " expected elements with load factor " + f + ")");
+            throw new IllegalArgumentException("Too large (" + expectedSize + " expected elements with load factor " + fillFactor + ")");
         }
         return (int) s;
     }
