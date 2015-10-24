@@ -3,6 +3,9 @@ package woo.ba.ben.core;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 public class FieldStruct {
     public final String name;
@@ -19,7 +22,7 @@ public class FieldStruct {
         this.realField = field;
         this.name = field.getName();
         this.type = field.getType();
-        this.offset = unsafe.objectFieldOffset(field);
+        this.offset = isStatic() ? unsafe.staticFieldOffset(field) : unsafe.objectFieldOffset(field);
     }
 
     public boolean isArray() {
@@ -27,15 +30,42 @@ public class FieldStruct {
     }
 
     public Class getArrayType() {
-        return isArray()? type.getComponentType() : null;
+        return isArray() ? type.getComponentType() : null;
     }
 
     public Class getFlatType() {
-        return isArray()? type.getComponentType() : type;
+        return isArray() ? type.getComponentType() : type;
     }
 
     public boolean isPrimitive() {
         return type.isPrimitive();
+    }
+
+    public boolean hasParameterizedType() {
+        return realField.getGenericType() instanceof ParameterizedType;
+    }
+
+    public Type[] getParameterizedTypes() {
+        final Type genericType = realField.getGenericType();
+        if (genericType instanceof ParameterizedType) {
+            return ((ParameterizedType) genericType).getActualTypeArguments();
+        }
+        return null;
+    }
+
+    public Type getFirstParameterizedType() {
+        final Type genericType = realField.getGenericType();
+        if (genericType instanceof ParameterizedType) {
+            final Type[] typeArguments = ((ParameterizedType) genericType).getActualTypeArguments();
+            if (typeArguments.length > 0) {
+                return typeArguments[0];
+            }
+        }
+        return null;
+    }
+
+    public boolean isStatic() {
+        return Modifier.isStatic(realField.getModifiers());
     }
 
 

@@ -4,7 +4,6 @@ package woo.ba.ben.core;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteOrder;
 
 public class UnsafeFactory {
@@ -22,7 +21,7 @@ public class UnsafeFactory {
 
             ADDRESS_SIZE = UNSAFE.addressSize();
             OBJECT_REF_SIZE = UNSAFE.arrayIndexScale(Object[].class);
-        } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Cannot get the Unsafe instance!", e);
         }
     }
@@ -30,7 +29,7 @@ public class UnsafeFactory {
     private UnsafeFactory() {
     }
 
-    public static Unsafe get(){
+    public static Unsafe get() {
         return UNSAFE;
     }
 }

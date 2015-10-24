@@ -30,9 +30,8 @@ public class SimpleArrayMapTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowExceptionWhenSizeIsNotPositive() {
-        int[] invalidSizes = {-1, 0};
-        for (int invalidSize : invalidSizes) {
-            SimpleMap simpleMap = new SimpleArrayMap<>(invalidSize);
+        for (int invalidSize : new int[] {-1, 0}) {
+            new SimpleArrayMap<>(invalidSize);
         }
     }
 
