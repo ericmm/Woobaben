@@ -1,8 +1,6 @@
 package woo.ba.ben.core;
 
 
-import sun.misc.Unsafe;
-
 import java.lang.reflect.Field;
 
 public class ClassStruct {
@@ -11,7 +9,7 @@ public class ClassStruct {
     private ClassStruct parent;
     private SimpleMap<String, FieldStruct> fieldMap;
 
-    public ClassStruct(final Class realClass, final Unsafe unsafe) {
+    public ClassStruct(final Class realClass) {
         if (realClass == null) {
             throw new IllegalArgumentException("Argument is null");
         }
@@ -19,7 +17,7 @@ public class ClassStruct {
         this.name = realClass.getName();
         this.realClass = realClass;
 
-        parseFields(realClass, unsafe);
+        parseFields(realClass);
     }
 
 
@@ -47,12 +45,12 @@ public class ClassStruct {
         this.parent = parent;
     }
 
-    private void parseFields(final Class currentClass, final Unsafe unsafe) {
+    private void parseFields(final Class currentClass) {
         final Field[] declaredFields = currentClass.getDeclaredFields();
         if (declaredFields.length > 0) {
             fieldMap = new SimpleArrayMap<>(declaredFields.length);
             for (final Field field : declaredFields) {
-                fieldMap.put(field.getName(), new FieldStruct(field, unsafe));
+                fieldMap.put(field.getName(), new FieldStruct(field));
             }
         }
     }

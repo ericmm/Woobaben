@@ -3,7 +3,6 @@ package woo.ba.ben.core;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
-import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
@@ -18,8 +17,6 @@ import static org.junit.Assert.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FieldStructTest {
-
-    private Unsafe unsafe = UnsafeFactory.get();
 
     public static class TestFieldObj {
         private static int testInt = 50;
@@ -50,7 +47,7 @@ public class FieldStructTest {
         final Field stringList = TestFieldObj.class.getDeclaredField("stringList");
         final Field byteBooleanMap = TestFieldObj.class.getDeclaredField("byteBooleanMap");
 
-        final FieldStruct fieldStruct = new FieldStruct(testInt, unsafe);
+        final FieldStruct fieldStruct = new FieldStruct(testInt);
 
         assertThat(fieldStruct.name, is("testInt"));
         assertThat(fieldStruct.realField, is(testInt));
@@ -65,23 +62,23 @@ public class FieldStructTest {
         assertTrue(fieldStruct.isStatic());
         assertFalse(fieldStruct.hasParameterizedType());
 
-        final FieldStruct integerFieldStruct = new FieldStruct(integerValue, unsafe);
+        final FieldStruct integerFieldStruct = new FieldStruct(integerValue);
         assertFalse(integerFieldStruct.isPrimitive());
         assertFalse(integerFieldStruct.isStatic());
 
-        final FieldStruct stringsFieldStruct = new FieldStruct(strings, unsafe);
+        final FieldStruct stringsFieldStruct = new FieldStruct(strings);
         assertTrue(stringsFieldStruct.isArray());
         assertTrue(stringsFieldStruct.getFlatType() == String.class);
         assertThat(stringsFieldStruct.getFirstParameterizedType(), nullValue());
 
-        final FieldStruct twoDimensionShortsFieldStruct = new FieldStruct(twoDimensionShorts, unsafe);
+        final FieldStruct twoDimensionShortsFieldStruct = new FieldStruct(twoDimensionShorts);
         assertTrue(twoDimensionShortsFieldStruct.isArray());
 
-        final FieldStruct stringListFieldStruct = new FieldStruct(stringList, unsafe);
+        final FieldStruct stringListFieldStruct = new FieldStruct(stringList);
         assertThat(stringListFieldStruct.getParameterizedTypes(), is(new Type[]{String.class}));
         assertThat(stringListFieldStruct.getFirstParameterizedType(), is((Type) String.class));
 
-        final FieldStruct byteBooleanMapFieldStruct = new FieldStruct(byteBooleanMap, unsafe);
+        final FieldStruct byteBooleanMapFieldStruct = new FieldStruct(byteBooleanMap);
         assertThat(byteBooleanMapFieldStruct.getParameterizedTypes(), is(new Type[]{Byte.class, Boolean.class}));
         assertThat(byteBooleanMapFieldStruct.getFirstParameterizedType(), is((Type) Byte.class));
     }
@@ -89,7 +86,7 @@ public class FieldStructTest {
     @Test
     public void shouldFailToCreateFieldStructWhenFieldIsNull() {
         try {
-            new FieldStruct(null, unsafe);
+            new FieldStruct(null);
             fail();
         } catch (IllegalArgumentException e) {
             assertThat(e.getMessage(), is("Argument is null"));

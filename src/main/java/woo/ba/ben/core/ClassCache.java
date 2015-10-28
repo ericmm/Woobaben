@@ -1,35 +1,32 @@
 package woo.ba.ben.core;
 
 
-import sun.misc.Unsafe;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class ClassCache {
     private static final int DEFAULT_CACHE_SIZE = 1024 * 10;
-    private SimpleMap<Class, ClassStruct> cache = new SimpleArrayMap<>();
+    private static final SimpleMap<Class, ClassStruct> CACHE = new SimpleArrayMap<>(DEFAULT_CACHE_SIZE);
 
-
-    public void put(final Class realClass, final Unsafe unsafe) {
+    public void put(final Class realClass) {
         if (realClass == null) {
             throw new IllegalArgumentException("Argument is null");
         }
 
         final List<Class> classAndSuperClasses = getSuperClasses(realClass);
-        createClassStructs(unsafe, classAndSuperClasses);
+        createClassStructs(classAndSuperClasses);
         linkParent(classAndSuperClasses);
     }
 
 
-    private void createClassStructs(final Unsafe unsafe, final List<Class> classAndSuperClasses) {
+    private void createClassStructs(final List<Class> classAndSuperClasses) {
         for (final Class currentClass : classAndSuperClasses) {
-            ClassStruct classStruct = cache.get(currentClass);
+            ClassStruct classStruct = CACHE.get(currentClass);
             if (classStruct != null) {
                 break;
             }
-            classStruct = new ClassStruct(currentClass, unsafe);
-            cache.put(currentClass, classStruct);
+            classStruct = new ClassStruct(currentClass);
+            CACHE.put(currentClass, classStruct);
         }
     }
 
@@ -37,7 +34,7 @@ public class ClassCache {
         final List<Class> superClasses = new ArrayList<>();
 
         Class currentClass = realClass;
-        while (currentClass.getSuperclass() != null) {
+        while (currentClass.getSuperclass() != null) { //except Object.class
             superClasses.add(currentClass);
             currentClass = currentClass.getSuperclass();
         }
@@ -50,14 +47,14 @@ public class ClassCache {
         for (int i = classAndSuperClasses.size() - 1; i >= 0; i--) {
             //eldest super class except Object.class
             Class clazz = classAndSuperClasses.get(i);
-            ClassStruct classStruct = cache.get(clazz);
+            ClassStruct classStruct = CACHE.get(clazz);
             if (classStruct.getParent() != null) {
                 continue;
             }
 
             //link to parent
             if (clazz.getSuperclass() != Object.class) {
-                classStruct.setParent(cache.get(clazz.getSuperclass()));
+                classStruct.setParent(CACHE.get(clazz.getSuperclass()));
             }
         }
     }

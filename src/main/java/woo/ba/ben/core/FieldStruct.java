@@ -14,7 +14,7 @@ public class FieldStruct {
     public final Field realField;
 
 
-    public FieldStruct(final Field field, final Unsafe unsafe) {
+    public FieldStruct(final Field field) {
         if (field == null) {
             throw new IllegalArgumentException("Argument is null");
         }
@@ -22,7 +22,8 @@ public class FieldStruct {
         this.realField = field;
         this.name = field.getName();
         this.type = field.getType();
-        this.offset = isStatic() ? unsafe.staticFieldOffset(field) : unsafe.objectFieldOffset(field);
+        final Unsafe UNSAFE = UnsafeFactory.get();
+        this.offset = isStatic() ? UNSAFE.staticFieldOffset(field) : UNSAFE.objectFieldOffset(field);
     }
 
     public boolean isArray() {
