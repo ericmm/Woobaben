@@ -1,6 +1,5 @@
 package woo.ba.ben.core;
 
-
 import java.lang.reflect.Field;
 
 public class ClassStruct {
@@ -9,17 +8,12 @@ public class ClassStruct {
     private ClassStruct parent;
     private SimpleMap<String, FieldStruct> fieldMap;
 
-    public ClassStruct(final Class realClass) {
-        if (realClass == null) {
-            throw new IllegalArgumentException("Argument is null");
-        }
-
+    ClassStruct(final Class realClass) {
         this.name = realClass.getName();
         this.realClass = realClass;
 
         parseFields(realClass);
     }
-
 
     public FieldStruct getDeclaredField(final String fieldName) {
         return fieldMap == null ? null : fieldMap.get(fieldName);
@@ -27,8 +21,8 @@ public class ClassStruct {
 
     public FieldStruct getField(final String fieldName) {
         ClassStruct current = this;
-        while (current.parent != null) {
-            FieldStruct fieldStruct = current.getDeclaredField(fieldName);
+        while (current.realClass.getSuperclass() != null) {
+            final FieldStruct fieldStruct = current.getDeclaredField(fieldName);
             if (fieldStruct != null) {
                 return fieldStruct;
             }
@@ -41,7 +35,7 @@ public class ClassStruct {
         return parent;
     }
 
-    public void setParent(ClassStruct parent) {
+    public void setParent(final ClassStruct parent) {
         this.parent = parent;
     }
 

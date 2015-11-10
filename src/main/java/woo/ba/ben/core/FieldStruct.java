@@ -14,7 +14,7 @@ public class FieldStruct {
     public final Field realField;
 
 
-    public FieldStruct(final Field field) {
+    FieldStruct(final Field field) {
         if (field == null) {
             throw new IllegalArgumentException("Argument is null");
         }

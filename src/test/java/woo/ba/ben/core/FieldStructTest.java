@@ -1,42 +1,15 @@
 package woo.ba.ben.core;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.List;
-import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 
-@RunWith(MockitoJUnitRunner.class)
 public class FieldStructTest {
-
-    public static class TestFieldObj {
-        private static int testInt = 50;
-        protected Integer integerValue = 28;
-        public BigDecimal bigDecimal = new BigDecimal("12345.67893");
-        BigInteger bigInteger = new BigInteger("123");
-
-        private String[] strings = {"str1", "str2"};
-        private long[] longs = {14, 16};
-        private short[][] twoDimensionShorts = new short[2][3];
-        private Double[][] twoDimensionDoubles = new Double[4][5];
-
-        List<String> stringList;
-
-        protected Map<Byte, Boolean> byteBooleanMap;
-
-        private static short staticShortValue = 10;
-        private static final double staticDoubleValue = 20.5d;
-        private static long[] staticLongArray = {30l, 40l};
-    }
 
     @Test
     public void shouldCreateFieldStruct() throws NoSuchFieldException {
@@ -88,7 +61,7 @@ public class FieldStructTest {
         try {
             new FieldStruct(null);
             fail();
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             assertThat(e.getMessage(), is("Argument is null"));
         }
     }
