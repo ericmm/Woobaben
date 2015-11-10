@@ -1,6 +1,7 @@
 package woo.ba.ben.core;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -23,27 +24,27 @@ public class SimpleArrayMapTest {
         assertThat(simpleMap, notNullValue());
         assertThat(simpleMap.size(), is(0));
 
-        SimpleMap simpleMap2 = new SimpleArrayMap<>(5, 0.5f);
+        final SimpleMap simpleMap2 = new SimpleArrayMap<>(5, 0.5f);
         assertThat(simpleMap2, notNullValue());
         assertThat(simpleMap2.size(), is(0));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowExceptionWhenSizeIsNotPositive() {
-        for (int invalidSize : new int[] {-1, 0}) {
+        for (final int invalidSize : new int[] {-1, 0}) {
             new SimpleArrayMap<>(invalidSize);
         }
     }
 
     @Test
     public void shouldThrowExceptionWhenFillFactorIsNotInZeroAndOne() {
-        int size = 10;
-        float[] invalidFillFactors = {-1f, 0f, 1f, 5f};
-        for (float invalidFillFactor : invalidFillFactors) {
+        final int size = 10;
+        final float[] invalidFillFactors = {-1f, 0f, 1f, 5f};
+        for (final float invalidFillFactor : invalidFillFactors) {
             try {
-                SimpleMap simpleMap = new SimpleArrayMap<>(size, invalidFillFactor);
+                final SimpleMap simpleMap = new SimpleArrayMap<>(size, invalidFillFactor);
                 fail();
-            } catch (IllegalArgumentException e) {
+            } catch (final IllegalArgumentException e) {
                 assertThat(e.getMessage(), is("FillFactor must be in (0, 1)"));
             }
         }
@@ -121,12 +122,13 @@ public class SimpleArrayMapTest {
 
 
     @Test
+    @Ignore
     public void testPerformance() throws InterruptedException {
-        int size = 5_000_000;
+        final int size = 5_000_000;
 
         for (int times = 0; times < 5; times++) {
-            HashMap hashMap = new HashMap(size * 2);
-            SimpleMap simpleMap = new SimpleArrayMap<>(size * 2, 0.75f);
+            final HashMap hashMap = new HashMap(size * 2);
+            final SimpleMap simpleMap = new SimpleArrayMap<>(size * 2, 0.75f);
 
             //warm up
             for (int i = 0; i < 100; i++) {

@@ -3,16 +3,20 @@ package woo.ba.ben.core;
 import java.lang.reflect.Field;
 
 public class ClassStruct {
-    public final String name;
     public final Class realClass;
-    private ClassStruct parent;
+    public final ClassStruct parent;
+
     private SimpleMap<String, FieldStruct> fieldMap;
 
-    ClassStruct(final Class realClass) {
-        this.name = realClass.getName();
+    ClassStruct(final Class realClass, final ClassStruct parent) {
         this.realClass = realClass;
+        this.parent = parent;
 
         parseFields(realClass);
+    }
+
+    public String getClassName() {
+        return realClass.getName();
     }
 
     public FieldStruct getDeclaredField(final String fieldName) {
@@ -29,14 +33,6 @@ public class ClassStruct {
             current = current.parent;
         }
         return null;
-    }
-
-    public ClassStruct getParent() {
-        return parent;
-    }
-
-    public void setParent(final ClassStruct parent) {
-        this.parent = parent;
     }
 
     private void parseFields(final Class currentClass) {
