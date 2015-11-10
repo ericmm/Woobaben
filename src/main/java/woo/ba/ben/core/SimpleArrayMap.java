@@ -11,7 +11,7 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
     private static final Object REMOVED_KEY = new Object();
 
     private static final float DEFAULT_LOAD_FACTOR = 0.75f;
-    private static final int DEFAULT_INITIAL_CAPACITY = 32;
+    private static final int DEFAULT_INITIAL_CAPACITY = 16;
     private static final int MAXIMUM_CAPACITY = 1 << 30;
 
     /**
