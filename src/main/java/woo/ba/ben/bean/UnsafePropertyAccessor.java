@@ -4,152 +4,152 @@ package woo.ba.ben.bean;
 public class UnsafePropertyAccessor implements IPropertyAccessor {
 
     @Override
-    public <T> T get(Object bean, String field, Class<T> fieldType) {
+    public <T> T get(final Object bean, final String field, final Class<T> fieldType) {
         return null;
     }
 
     @Override
-    public <T> T getStatic(Class bean, String field, Class<T> fieldType) {
+    public <T> T getStatic(final Class bean, final String field, final Class<T> fieldType) {
         return null;
     }
 
     @Override
-    public <T> T getArrayElementAt(Object bean, String field, Class<T> fieldType, int index) {
+    public <T> T getArrayElementAt(final Object bean, final String field, final Class<T> fieldType, final int index) {
         return null;
     }
 
     @Override
-    public void set(Object bean, String field, Object value) {
+    public void set(final Object bean, final String field, final Object value) {
 
     }
 
     @Override
-    public void setStatic(Class beanClass, String field, Object value) {
+    public void setStatic(final Class beanClass, final String field, final Object value) {
 
     }
 
     @Override
-    public void setArrayElementAt(Object bean, String field, int index, Object value) {
+    public void setArrayElementAt(final Object bean, final String field, final int index, final Object value) {
 
     }
 
     @Override
-    public void set(Object bean, String field, boolean value) {
+    public void set(final Object bean, final String field, final boolean value) {
 
     }
 
     @Override
-    public void setStatic(Class beanClass, String field, boolean value) {
+    public void setStatic(final Class beanClass, final String field, final boolean value) {
 
     }
 
     @Override
-    public void setArrayElementAt(Object bean, String field, int index, boolean value) {
+    public void setArrayElementAt(final Object bean, final String field, final int index, final boolean value) {
 
     }
 
     @Override
-    public void set(Object bean, String field, byte value) {
+    public void set(final Object bean, final String field, final byte value) {
 
     }
 
     @Override
-    public void setStatic(Class beanClass, String field, byte value) {
+    public void setStatic(final Class beanClass, final String field, final byte value) {
 
     }
 
     @Override
-    public void setArrayElementAt(Object bean, String field, int index, byte value) {
+    public void setArrayElementAt(final Object bean, final String field, final int index, final byte value) {
 
     }
 
     @Override
-    public void set(Object bean, String field, short value) {
+    public void set(final Object bean, final String field, final short value) {
 
     }
 
     @Override
-    public void setStatic(Class beanClass, String field, short value) {
+    public void setStatic(final Class beanClass, final String field, final short value) {
 
     }
 
     @Override
-    public void setArrayElementAt(Object bean, String field, int index, short value) {
+    public void setArrayElementAt(final Object bean, final String field, final int index, final short value) {
 
     }
 
     @Override
-    public void set(Object bean, String field, char value) {
+    public void set(final Object bean, final String field, final char value) {
 
     }
 
     @Override
-    public void setStatic(Class beanClass, String field, char value) {
+    public void setStatic(final Class beanClass, final String field, final char value) {
 
     }
 
     @Override
-    public void setArrayElementAt(Object bean, String field, int index, char value) {
+    public void setArrayElementAt(final Object bean, final String field, final int index, final char value) {
 
     }
 
     @Override
-    public void set(Object bean, String field, int value) {
+    public void set(final Object bean, final String field, final int value) {
 
     }
 
     @Override
-    public void setStatic(Class beanClass, String field, int value) {
+    public void setStatic(final Class beanClass, final String field, final int value) {
 
     }
 
     @Override
-    public void setArrayElementAt(Object bean, String field, int index, int value) {
+    public void setArrayElementAt(final Object bean, final String field, final int index, final int value) {
 
     }
 
     @Override
-    public void set(Object bean, String field, long value) {
+    public void set(final Object bean, final String field, final long value) {
 
     }
 
     @Override
-    public void setStatic(Class beanClass, String field, long value) {
+    public void setStatic(final Class beanClass, final String field, final long value) {
 
     }
 
     @Override
-    public void setArrayElementAt(Object bean, String field, int index, long value) {
+    public void setArrayElementAt(final Object bean, final String field, final int index, final long value) {
 
     }
 
     @Override
-    public void set(Object bean, String field, float value) {
+    public void set(final Object bean, final String field, final float value) {
 
     }
 
     @Override
-    public void setStatic(Class beanClass, String field, float value) {
+    public void setStatic(final Class beanClass, final String field, final float value) {
 
     }
 
     @Override
-    public void setArrayElementAt(Object bean, String field, int index, float value) {
+    public void setArrayElementAt(final Object bean, final String field, final int index, final float value) {
 
     }
 
     @Override
-    public void set(Object bean, String field, double value) {
+    public void set(final Object bean, final String field, final double value) {
 
     }
 
     @Override
-    public void setStatic(Class beanClass, String field, double value) {
+    public void setStatic(final Class beanClass, final String field, final double value) {
 
     }
 
     @Override
-    public void setArrayElementAt(Object bean, String field, int index, double value) {
+    public void setArrayElementAt(final Object bean, final String field, final int index, final double value) {
 
     }
 }

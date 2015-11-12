@@ -70,11 +70,11 @@ public class FieldStruct {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        FieldStruct that = (FieldStruct) o;
+        final FieldStruct that = (FieldStruct) o;
 
         return realField.equals(that.realField);
     }

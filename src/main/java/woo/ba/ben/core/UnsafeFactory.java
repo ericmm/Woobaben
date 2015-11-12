@@ -15,13 +15,13 @@ public class UnsafeFactory {
 
     static {
         try {
-            Constructor<Unsafe> unsafeConstructor = Unsafe.class.getDeclaredConstructor();
+            final Constructor<Unsafe> unsafeConstructor = Unsafe.class.getDeclaredConstructor();
             unsafeConstructor.setAccessible(true);
             UNSAFE = unsafeConstructor.newInstance();
 
             ADDRESS_SIZE = UNSAFE.addressSize();
             OBJECT_REF_SIZE = UNSAFE.arrayIndexScale(Object[].class);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new RuntimeException("Cannot get the Unsafe instance!", e);
         }
     }

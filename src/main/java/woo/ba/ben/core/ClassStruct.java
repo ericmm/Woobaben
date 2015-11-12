@@ -53,7 +53,7 @@ public class ClassStruct {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ClassStruct that = (ClassStruct) o;
+        final ClassStruct that = (ClassStruct) o;
 
         return realClass.equals(that.realClass);
     }
