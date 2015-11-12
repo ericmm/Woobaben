@@ -4,15 +4,15 @@ package woo.ba.ben.core;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClassCache {
+public class ClassStructFactory {
     private static final int DEFAULT_CACHE_SIZE = 1024 * 1024;
     private static final SimpleMap<Class, ClassStruct> CACHE = new SimpleArrayMap<>(DEFAULT_CACHE_SIZE);
-    private static final ClassCache INSTANCE = new ClassCache();
+    private static final ClassStructFactory INSTANCE = new ClassStructFactory();
 
-    private ClassCache() {
+    private ClassStructFactory() {
     }
 
-    public static ClassCache getInstance() {
+    public static ClassStructFactory getInstance() {
         return INSTANCE;
     }
 
@@ -21,11 +21,20 @@ public class ClassCache {
                 && !realClass.isAnnotation() && !realClass.isInterface();
     }
 
-    public ClassStruct put(final Class realClass) {
+    public ClassStruct get(final Class realClass) {
         if (!isValidClass(realClass)) {
             throw new IllegalArgumentException("Argument is invalid");
         }
 
+        final ClassStruct classStruct = CACHE.get(realClass);
+        if (classStruct != null) {
+            return classStruct;
+        }
+        put(realClass);
+        return CACHE.get(realClass);
+    }
+
+    private void put(final Class realClass) {
         final List<Class> classChain = getClassChain(realClass);
         for (int i = classChain.size() - 1; i >= 0; i--) { //eldest super class except Object.class
             final Class clazz = classChain.get(i);
@@ -33,20 +42,15 @@ public class ClassCache {
                 continue;
             }
 
-            final ClassStruct parent = CACHE.get(clazz.getSuperclass());
+            final ClassStruct parent = getParentClassStruct(clazz);
             final ClassStruct classStruct = new ClassStruct(clazz, parent);
             CACHE.put(clazz, classStruct);
         }
-
-        return CACHE.get(realClass);
     }
 
-    public ClassStruct get(final Class realClass) {
-        return CACHE.get(realClass);
-    }
-
-    public int size() {
-        return CACHE.size();
+    private ClassStruct getParentClassStruct(final Class clazz) {
+        final Class superclass = clazz.getSuperclass();
+        return superclass == Object.class ? null : CACHE.get(superclass);
     }
 
     private List<Class> getClassChain(final Class realClass) {

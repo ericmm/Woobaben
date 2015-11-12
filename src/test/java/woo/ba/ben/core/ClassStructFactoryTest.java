@@ -7,17 +7,13 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
 
-public class ClassCacheTest {
-    private ClassCache cache = ClassCache.getInstance();
+public class ClassStructFactoryTest {
+    private ClassStructFactory factory = ClassStructFactory.getInstance();
 
     @Test
     public void shouldPutClassIntoCache() {
-        cache.put(TestClassObj.class);
-
-        assertThat(cache.size(), is(2));
-
-        final ClassStruct testClassObjStruct = cache.get(TestClassObj.class);
-        final ClassStruct testFieldObjStruct = cache.get(TestFieldObj.class);
+        final ClassStruct testClassObjStruct = factory.get(TestClassObj.class);
+        final ClassStruct testFieldObjStruct = factory.get(TestFieldObj.class);
 
         assertThat(testClassObjStruct, notNullValue());
         assertThat(testFieldObjStruct, notNullValue());
@@ -27,34 +23,28 @@ public class ClassCacheTest {
 
     @Test
     public void shouldGetInstance() {
-        cache = ClassCache.getInstance();
+        factory = ClassStructFactory.getInstance();
 
-        assertThat(cache, notNullValue());
-    }
-
-    @Test
-    public void shouldRemoveClassFromCache() {
-        cache.put(TestClassObj.class);
-        assertThat(cache.size(), is(2));
+        assertThat(factory, notNullValue());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenNull() {
-        cache.put(null);
+        factory.get(null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenObjectClass() {
-        cache.put(Object.class);
+        factory.get(Object.class);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenAnnotationClass() {
-        cache.put(Test.class);
+        factory.get(Test.class);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenInterface() {
-        cache.put(Runnable.class);
+        factory.get(Runnable.class);
     }
 }
