@@ -69,6 +69,30 @@ public class FieldStruct {
         return Modifier.isStatic(realField.getModifiers());
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        FieldStruct that = (FieldStruct) o;
+
+        return realField.equals(that.realField);
+    }
+
+    @Override
+    public int hashCode() {
+        return realField.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "FieldStruct{" +
+                "name='" + name + '\'' +
+                ", type=" + type +
+                ", offset=" + offset +
+                ", realField=" + realField +
+                '}';
+    }
 
 //    protected boolean isArray;
 //    protected Class<?> componentType;

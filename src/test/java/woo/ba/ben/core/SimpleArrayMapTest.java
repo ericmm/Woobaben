@@ -1,6 +1,7 @@
 package woo.ba.ben.core;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -120,6 +121,7 @@ public class SimpleArrayMapTest {
 
 
     @Test
+    @Ignore
     public void testPerformance() throws InterruptedException {
         final int size = 5_000_000;
 

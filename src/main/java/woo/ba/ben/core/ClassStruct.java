@@ -30,6 +30,9 @@ public class ClassStruct {
             if (fieldStruct != null) {
                 return fieldStruct;
             }
+            if (current.parent == null) {
+                break;
+            }
             current = current.parent;
         }
         return null;
@@ -45,4 +48,25 @@ public class ClassStruct {
         }
     }
 
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ClassStruct that = (ClassStruct) o;
+
+        return realClass.equals(that.realClass);
+    }
+
+    @Override
+    public int hashCode() {
+        return realClass.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "ClassStruct{" +
+                "realClass=" + realClass +
+                ", parent=" + parent + '}';
+    }
 }

@@ -209,8 +209,9 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
             return hasNull ? true : false;
         }
 
+        Object objKey;
         for (int i = 0; i < data.length; i += 2) {
-            final Object objKey = data[i];
+            objKey = data[i];
             if (objKey == FREE_KEY || objKey == REMOVED_KEY) {
                 continue;
             }
@@ -228,8 +229,9 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
             return true;
         }
 
+        Object objKey;
         for (int i = 0; i < data.length; i += 2) {
-            final Object objKey = data[i];
+            objKey = data[i];
             if (objKey == FREE_KEY || objKey == REMOVED_KEY) {
                 continue;
             }
@@ -247,8 +249,9 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
             processor.processEntry(null, nullValue);
         }
 
+        Object objKey;
         for (int i = 0; i < data.length; i += 2) {
-            final Object objKey = data[i];
+            objKey = data[i];
             if (objKey == FREE_KEY || objKey == REMOVED_KEY) {
                 continue;
             }
@@ -307,8 +310,9 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
 
         size = hasNull ? 1 : 0;
 
+        Object oldKey;
         for (int i = 0; i < oldCapacity; i += 2) {
-            final Object oldKey = oldData[i];
+            oldKey = oldData[i];
             if (oldKey != FREE_KEY && oldKey != REMOVED_KEY) {
                 put((K) oldKey, (V) oldData[i + 1]);
                 size++;

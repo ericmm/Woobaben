@@ -5,6 +5,7 @@ import org.junit.Test;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
@@ -54,6 +55,29 @@ public class FieldStructTest {
         final FieldStruct byteBooleanMapFieldStruct = new FieldStruct(byteBooleanMap);
         assertThat(byteBooleanMapFieldStruct.getParameterizedTypes(), is(new Type[]{Byte.class, Boolean.class}));
         assertThat(byteBooleanMapFieldStruct.getFirstParameterizedType(), is((Type) Byte.class));
+    }
+
+    @Test
+    public void shouldEqualWhenRealFieldIsSame() throws NoSuchFieldException {
+        final Field testInt = TestFieldObj.class.getDeclaredField("testInt");
+        final FieldStruct fieldStruct1 = new FieldStruct(testInt);
+        final FieldStruct fieldStruct2 = new FieldStruct(testInt);
+
+        assertTrue(fieldStruct1.equals(fieldStruct2));
+    }
+
+    @Test
+    public void shouldGenerateHashcode() throws NoSuchFieldException{
+        final Field testInt = TestFieldObj.class.getDeclaredField("testInt");
+        final FieldStruct fieldStruct1 = new FieldStruct(testInt);
+        assertThat(fieldStruct1.hashCode(), notNullValue());
+    }
+
+    @Test
+    public void shouldGenerateToString() throws NoSuchFieldException {
+        final Field testInt = TestFieldObj.class.getDeclaredField("testInt");
+        final FieldStruct fieldStruct1 = new FieldStruct(testInt);
+        assertThat(fieldStruct1.toString(), is("FieldStruct{name='testInt', type=int, offset=120, realField=private static int woo.ba.ben.core.TestFieldObj.testInt}"));
     }
 
     @Test

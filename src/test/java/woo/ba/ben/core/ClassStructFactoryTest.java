@@ -11,12 +11,23 @@ public class ClassStructFactoryTest {
     private ClassStructFactory factory = ClassStructFactory.getInstance();
 
     @Test
-    public void shouldPutClassIntoCache() {
-        final ClassStruct testClassObjStruct = factory.get(TestClassObj.class);
+    public void shouldCreateClassStruct() {
         final ClassStruct testFieldObjStruct = factory.get(TestFieldObj.class);
-
-        assertThat(testClassObjStruct, notNullValue());
         assertThat(testFieldObjStruct, notNullValue());
+
+        final ClassStruct testClassObjStruct = factory.get(TestClassObj.class);
+        assertThat(testClassObjStruct, notNullValue());
+
+        assertThat(testClassObjStruct.getField("testInt").isPrimitive(), is(true));
+    }
+
+    @Test
+    public void shouldGetClassStruct() {
+        final ClassStruct testFieldObjStruct = new ClassStruct(TestFieldObj.class, null);
+        assertThat(testFieldObjStruct, notNullValue());
+
+        final ClassStruct testClassObjStruct = factory.get(TestClassObj.class);
+        assertThat(testClassObjStruct, notNullValue());
 
         assertThat(testClassObjStruct.getField("testInt").isPrimitive(), is(true));
     }
