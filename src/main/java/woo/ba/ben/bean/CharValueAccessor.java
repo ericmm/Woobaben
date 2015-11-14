@@ -38,8 +38,7 @@ public class CharValueAccessor extends BaseValueAccessor implements CharProperty
         UNSAFE.putChar(arrayObj, (long) (ARRAY_CHAR_BASE_OFFSET + index * ARRAY_CHAR_INDEX_SCALE), value);
     }
 
-    @Override
-    public IPropertyAccessor getInstance() {
+    public static IPropertyAccessor getInstance() {
         return CHAR_PROPERTY_ACCESSOR;
     }
 }

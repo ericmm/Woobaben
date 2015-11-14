@@ -8,6 +8,4 @@ import woo.ba.ben.core.UnsafeFactory;
 public interface IPropertyAccessor {
     Unsafe UNSAFE = UnsafeFactory.get();
     ClassStructFactory CLASS_STRUCT_FACTORY = ClassStructFactory.getInstance();
-
-    IPropertyAccessor getInstance();
 }

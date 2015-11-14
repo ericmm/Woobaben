@@ -38,8 +38,7 @@ public class ByteValueAccessor extends BaseValueAccessor implements ByteProperty
         UNSAFE.putByte(arrayObj, (long) (ARRAY_BYTE_BASE_OFFSET + index * ARRAY_BYTE_INDEX_SCALE), value);
     }
 
-    @Override
-    public IPropertyAccessor getInstance() {
+    public static IPropertyAccessor getInstance() {
         return BYTE_PROPERTY_ACCESSOR;
     }
 }

@@ -38,8 +38,7 @@ public class ShortValueAccessor extends BaseValueAccessor implements ShortProper
         UNSAFE.putShort(arrayObj, (long) (ARRAY_SHORT_BASE_OFFSET + index * ARRAY_SHORT_INDEX_SCALE), value);
     }
 
-    @Override
-    public IPropertyAccessor getInstance() {
+    public static IPropertyAccessor getInstance() {
         return SHORT_PROPERTY_ACCESSOR;
     }
 }

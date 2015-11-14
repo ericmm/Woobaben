@@ -38,8 +38,7 @@ public class FloatValueAccessor extends BaseValueAccessor implements FloatProper
         UNSAFE.putFloat(arrayObj, (long) (ARRAY_FLOAT_BASE_OFFSET + index * ARRAY_FLOAT_INDEX_SCALE), value);
     }
 
-    @Override
-    public IPropertyAccessor getInstance() {
+    public static IPropertyAccessor getInstance() {
         return FLOAT_PROPERTY_ACCESSOR;
     }
 }

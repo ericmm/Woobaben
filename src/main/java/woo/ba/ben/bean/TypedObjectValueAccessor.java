@@ -38,8 +38,7 @@ public class TypedObjectValueAccessor extends BaseValueAccessor implements Typed
         UNSAFE.putObject(arrayObj, (long) (ARRAY_OBJECT_BASE_OFFSET + index * ARRAY_OBJECT_INDEX_SCALE), value);
     }
 
-    @Override
-    public IPropertyAccessor getInstance() {
+    public static IPropertyAccessor getInstance() {
         return TYPED_OBJECT_PROPERTY_ACCESSOR;
     }
 }

@@ -38,8 +38,7 @@ public class BooleanValueAccessor extends BaseValueAccessor implements BooleanPr
         UNSAFE.putBoolean(arrayObj, (long) (ARRAY_BOOLEAN_BASE_OFFSET + index * ARRAY_BOOLEAN_INDEX_SCALE), value);
     }
 
-    @Override
-    public IPropertyAccessor getInstance() {
+    public static IPropertyAccessor getInstance() {
         return BOOLEAN_PROPERTY_ACCESSOR;
     }
 }

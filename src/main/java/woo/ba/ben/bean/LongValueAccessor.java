@@ -38,8 +38,7 @@ public class LongValueAccessor extends BaseValueAccessor implements LongProperty
         UNSAFE.putLong(arrayObj, (long) (ARRAY_LONG_BASE_OFFSET + index * ARRAY_LONG_INDEX_SCALE), value);
     }
 
-    @Override
-    public IPropertyAccessor getInstance() {
+    public static IPropertyAccessor getInstance() {
         return LONG_PROPERTY_ACCESSOR;
     }
 }

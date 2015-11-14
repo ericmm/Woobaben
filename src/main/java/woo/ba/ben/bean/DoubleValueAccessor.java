@@ -38,8 +38,7 @@ public class DoubleValueAccessor extends BaseValueAccessor implements DoubleProp
         UNSAFE.putDouble(arrayObj, (long) (ARRAY_DOUBLE_BASE_OFFSET + index * ARRAY_DOUBLE_INDEX_SCALE), value);
     }
 
-    @Override
-    public IPropertyAccessor getInstance() {
+    public static IPropertyAccessor getInstance() {
         return DOUBLE_PROPERTY_ACCESSOR;
     }
 }

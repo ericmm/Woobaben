@@ -38,8 +38,7 @@ public class IntValueAccessor extends BaseValueAccessor implements IntPropertyAc
         UNSAFE.putInt(arrayObj, (long) (ARRAY_INT_BASE_OFFSET + index * ARRAY_INT_INDEX_SCALE), value);
     }
 
-    @Override
-    public IPropertyAccessor getInstance() {
+    public static IPropertyAccessor getInstance() {
         return INT_PROPERTY_ACCESSOR;
     }
 }
