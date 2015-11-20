@@ -8,11 +8,12 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 public class FieldStruct {
+    private static final Unsafe UNSAFE = UnsafeFactory.get();
+
     public final String name;
     public final Class type;
     public final long offset;
     public final Field realField;
-
 
     FieldStruct(final Field field) {
         if (field == null) {
@@ -22,7 +23,6 @@ public class FieldStruct {
         this.realField = field;
         this.name = field.getName();
         this.type = field.getType();
-        final Unsafe UNSAFE = UnsafeFactory.get();
         this.offset = isStatic() ? UNSAFE.staticFieldOffset(field) : UNSAFE.objectFieldOffset(field);
     }
 
