@@ -19,7 +19,7 @@ public class ClassStructTest {
     }
 
     @Test
-    public void shouldEqualWhenRealClassIsSame(){
+    public void shouldEqualWhenRealClassIsSame() {
         final ClassStruct classStruct1 = new ClassStruct(TestFieldObj.class, null);
         final ClassStruct classStruct2 = new ClassStruct(TestFieldObj.class, null);
 
@@ -27,13 +27,13 @@ public class ClassStructTest {
     }
 
     @Test
-     public void shouldGenerateHashcode(){
+    public void shouldGenerateHashcode() {
         final ClassStruct classStruct1 = new ClassStruct(TestFieldObj.class, null);
         assertThat(classStruct1.hashCode(), notNullValue());
     }
 
     @Test
-    public void shouldGenerateToString(){
+    public void shouldGenerateToString() {
         final ClassStruct classStruct1 = new ClassStruct(TestFieldObj.class, null);
         assertThat(classStruct1.toString(), is("ClassStruct{realClass=class woo.ba.ben.core.TestFieldObj, parent=null}"));
     }

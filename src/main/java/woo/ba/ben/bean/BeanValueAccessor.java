@@ -4,7 +4,8 @@ import woo.ba.ben.core.SimpleArrayMap;
 import woo.ba.ben.core.SimpleMap;
 
 public class BeanValueAccessor {
-    private final static SimpleMap<Class, IPropertyAccessor> ACCESSOR_MAP = new SimpleArrayMap<>();
+    private final static SimpleMap<Class, IPropertyAccessor> ACCESSOR_MAP = new SimpleArrayMap<>(9);
+
     static {
         ACCESSOR_MAP.put(boolean.class, BooleanValueAccessor.getInstance());
         ACCESSOR_MAP.put(byte.class, ByteValueAccessor.getInstance());
@@ -17,8 +18,16 @@ public class BeanValueAccessor {
         ACCESSOR_MAP.put(Object.class, TypedObjectValueAccessor.getInstance());
     }
 
-    public IPropertyAccessor getValueAccessor(Class clazz) {
-        return ACCESSOR_MAP.get(clazz);
+    public IPropertyAccessor getValueAccessor(final Class clazz) {
+        if (clazz == null) {
+            throw new IllegalArgumentException();
+        }
+
+        if(clazz.isPrimitive()) {
+            return ACCESSOR_MAP.get(clazz);
+        }
+
+        return ACCESSOR_MAP.get(Object.class);
     }
 
 }
