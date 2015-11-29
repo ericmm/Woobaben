@@ -37,4 +37,9 @@ public class ClassStructTest {
         final ClassStruct classStruct1 = new ClassStruct(TestFieldObj.class, null);
         assertThat(classStruct1.toString(), is("ClassStruct{realClass=class woo.ba.ben.core.TestFieldObj, parent=null}"));
     }
+
+    @Test
+    public void testPerformance(){
+
+    }
 }

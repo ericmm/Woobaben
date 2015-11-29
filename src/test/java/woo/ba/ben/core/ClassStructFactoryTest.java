@@ -58,4 +58,12 @@ public class ClassStructFactoryTest {
     public void shouldThrowIllegalArgumentExceptionWhenInterface() {
         factory.get(Runnable.class);
     }
+
+
+    @Test
+    public void shouldPrintOutClass(){
+        final ClassStruct classStruct = factory.get(TestClassObj.class);
+
+//        classStruct.
+    }
 }
