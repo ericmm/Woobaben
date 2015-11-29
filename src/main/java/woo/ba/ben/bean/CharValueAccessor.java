@@ -6,10 +6,14 @@ import woo.ba.ben.core.FieldStruct;
 import static sun.misc.Unsafe.ARRAY_CHAR_BASE_OFFSET;
 import static sun.misc.Unsafe.ARRAY_CHAR_INDEX_SCALE;
 
-public class CharValueAccessor extends BaseValueAccessor implements CharPropertyAccessor {
+class CharValueAccessor extends BaseValueAccessor implements CharPropertyAccessor {
     private final static CharPropertyAccessor CHAR_PROPERTY_ACCESSOR = new CharValueAccessor();
 
     private CharValueAccessor() {
+    }
+
+    static CharPropertyAccessor getInstance() {
+        return CHAR_PROPERTY_ACCESSOR;
     }
 
     @Override
@@ -36,9 +40,5 @@ public class CharValueAccessor extends BaseValueAccessor implements CharProperty
         final Object arrayObj = getArrayObject(bean, field);
         checkArrayIndex(arrayObj, index);
         UNSAFE.putChar(arrayObj, (long) (ARRAY_CHAR_BASE_OFFSET + index * ARRAY_CHAR_INDEX_SCALE), value);
-    }
-
-    public static IPropertyAccessor getInstance() {
-        return CHAR_PROPERTY_ACCESSOR;
     }
 }

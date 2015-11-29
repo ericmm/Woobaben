@@ -6,10 +6,14 @@ import woo.ba.ben.core.FieldStruct;
 import static sun.misc.Unsafe.ARRAY_INT_BASE_OFFSET;
 import static sun.misc.Unsafe.ARRAY_INT_INDEX_SCALE;
 
-public class IntValueAccessor extends BaseValueAccessor implements IntPropertyAccessor {
+class IntValueAccessor extends BaseValueAccessor implements IntPropertyAccessor {
     private final static IntPropertyAccessor INT_PROPERTY_ACCESSOR = new IntValueAccessor();
 
     private IntValueAccessor() {
+    }
+
+    static IntPropertyAccessor getInstance() {
+        return INT_PROPERTY_ACCESSOR;
     }
 
     @Override
@@ -36,9 +40,5 @@ public class IntValueAccessor extends BaseValueAccessor implements IntPropertyAc
         final Object arrayObj = getArrayObject(bean, field);
         checkArrayIndex(arrayObj, index);
         UNSAFE.putInt(arrayObj, (long) (ARRAY_INT_BASE_OFFSET + index * ARRAY_INT_INDEX_SCALE), value);
-    }
-
-    public static IPropertyAccessor getInstance() {
-        return INT_PROPERTY_ACCESSOR;
     }
 }

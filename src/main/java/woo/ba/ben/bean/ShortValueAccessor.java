@@ -6,10 +6,14 @@ import woo.ba.ben.core.FieldStruct;
 import static sun.misc.Unsafe.ARRAY_SHORT_BASE_OFFSET;
 import static sun.misc.Unsafe.ARRAY_SHORT_INDEX_SCALE;
 
-public class ShortValueAccessor extends BaseValueAccessor implements ShortPropertyAccessor {
+class ShortValueAccessor extends BaseValueAccessor implements ShortPropertyAccessor {
     private final static ShortPropertyAccessor SHORT_PROPERTY_ACCESSOR = new ShortValueAccessor();
 
     private ShortValueAccessor() {
+    }
+
+    static ShortPropertyAccessor getInstance() {
+        return SHORT_PROPERTY_ACCESSOR;
     }
 
     @Override
@@ -36,9 +40,5 @@ public class ShortValueAccessor extends BaseValueAccessor implements ShortProper
         final Object arrayObj = getArrayObject(bean, field);
         checkArrayIndex(arrayObj, index);
         UNSAFE.putShort(arrayObj, (long) (ARRAY_SHORT_BASE_OFFSET + index * ARRAY_SHORT_INDEX_SCALE), value);
-    }
-
-    public static IPropertyAccessor getInstance() {
-        return SHORT_PROPERTY_ACCESSOR;
     }
 }

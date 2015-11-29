@@ -6,10 +6,14 @@ import woo.ba.ben.core.FieldStruct;
 import static sun.misc.Unsafe.ARRAY_FLOAT_BASE_OFFSET;
 import static sun.misc.Unsafe.ARRAY_FLOAT_INDEX_SCALE;
 
-public class FloatValueAccessor extends BaseValueAccessor implements FloatPropertyAccessor {
+class FloatValueAccessor extends BaseValueAccessor implements FloatPropertyAccessor {
     private final static FloatPropertyAccessor FLOAT_PROPERTY_ACCESSOR = new FloatValueAccessor();
 
     private FloatValueAccessor() {
+    }
+
+    static FloatPropertyAccessor getInstance() {
+        return FLOAT_PROPERTY_ACCESSOR;
     }
 
     @Override
@@ -36,9 +40,5 @@ public class FloatValueAccessor extends BaseValueAccessor implements FloatProper
         final Object arrayObj = getArrayObject(bean, field);
         checkArrayIndex(arrayObj, index);
         UNSAFE.putFloat(arrayObj, (long) (ARRAY_FLOAT_BASE_OFFSET + index * ARRAY_FLOAT_INDEX_SCALE), value);
-    }
-
-    public static IPropertyAccessor getInstance() {
-        return FLOAT_PROPERTY_ACCESSOR;
     }
 }

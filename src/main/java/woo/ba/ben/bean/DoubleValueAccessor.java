@@ -6,10 +6,14 @@ import woo.ba.ben.core.FieldStruct;
 import static sun.misc.Unsafe.ARRAY_DOUBLE_BASE_OFFSET;
 import static sun.misc.Unsafe.ARRAY_DOUBLE_INDEX_SCALE;
 
-public class DoubleValueAccessor extends BaseValueAccessor implements DoublePropertyAccessor {
+class DoubleValueAccessor extends BaseValueAccessor implements DoublePropertyAccessor {
     private final static DoublePropertyAccessor DOUBLE_PROPERTY_ACCESSOR = new DoubleValueAccessor();
 
     private DoubleValueAccessor() {
+    }
+
+    static DoublePropertyAccessor getInstance() {
+        return DOUBLE_PROPERTY_ACCESSOR;
     }
 
     @Override
@@ -36,9 +40,5 @@ public class DoubleValueAccessor extends BaseValueAccessor implements DoubleProp
         final Object arrayObj = getArrayObject(bean, field);
         checkArrayIndex(arrayObj, index);
         UNSAFE.putDouble(arrayObj, (long) (ARRAY_DOUBLE_BASE_OFFSET + index * ARRAY_DOUBLE_INDEX_SCALE), value);
-    }
-
-    public static IPropertyAccessor getInstance() {
-        return DOUBLE_PROPERTY_ACCESSOR;
     }
 }

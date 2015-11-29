@@ -6,10 +6,14 @@ import woo.ba.ben.core.FieldStruct;
 import static sun.misc.Unsafe.ARRAY_LONG_BASE_OFFSET;
 import static sun.misc.Unsafe.ARRAY_LONG_INDEX_SCALE;
 
-public class LongValueAccessor extends BaseValueAccessor implements LongPropertyAccessor {
+class LongValueAccessor extends BaseValueAccessor implements LongPropertyAccessor {
     private final static LongPropertyAccessor LONG_PROPERTY_ACCESSOR = new LongValueAccessor();
 
     private LongValueAccessor() {
+    }
+
+    static LongPropertyAccessor getInstance() {
+        return LONG_PROPERTY_ACCESSOR;
     }
 
     @Override
@@ -36,9 +40,5 @@ public class LongValueAccessor extends BaseValueAccessor implements LongProperty
         final Object arrayObj = getArrayObject(bean, field);
         checkArrayIndex(arrayObj, index);
         UNSAFE.putLong(arrayObj, (long) (ARRAY_LONG_BASE_OFFSET + index * ARRAY_LONG_INDEX_SCALE), value);
-    }
-
-    public static IPropertyAccessor getInstance() {
-        return LONG_PROPERTY_ACCESSOR;
     }
 }

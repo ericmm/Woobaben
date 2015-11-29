@@ -6,10 +6,14 @@ import woo.ba.ben.core.FieldStruct;
 import static sun.misc.Unsafe.ARRAY_BOOLEAN_BASE_OFFSET;
 import static sun.misc.Unsafe.ARRAY_BOOLEAN_INDEX_SCALE;
 
-public class BooleanValueAccessor extends BaseValueAccessor implements BooleanPropertyAccessor {
+class BooleanValueAccessor extends BaseValueAccessor implements BooleanPropertyAccessor {
     private final static BooleanPropertyAccessor BOOLEAN_PROPERTY_ACCESSOR = new BooleanValueAccessor();
 
     private BooleanValueAccessor() {
+    }
+
+    static BooleanPropertyAccessor getInstance() {
+        return BOOLEAN_PROPERTY_ACCESSOR;
     }
 
     @Override
@@ -36,9 +40,5 @@ public class BooleanValueAccessor extends BaseValueAccessor implements BooleanPr
         final Object arrayObj = getArrayObject(bean, field);
         checkArrayIndex(arrayObj, index);
         UNSAFE.putBoolean(arrayObj, (long) (ARRAY_BOOLEAN_BASE_OFFSET + index * ARRAY_BOOLEAN_INDEX_SCALE), value);
-    }
-
-    public static IPropertyAccessor getInstance() {
-        return BOOLEAN_PROPERTY_ACCESSOR;
     }
 }

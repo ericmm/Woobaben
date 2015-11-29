@@ -6,10 +6,14 @@ import woo.ba.ben.core.FieldStruct;
 import static sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET;
 import static sun.misc.Unsafe.ARRAY_BYTE_INDEX_SCALE;
 
-public class ByteValueAccessor extends BaseValueAccessor implements BytePropertyAccessor {
+class ByteValueAccessor extends BaseValueAccessor implements BytePropertyAccessor {
     private final static BytePropertyAccessor BYTE_PROPERTY_ACCESSOR = new ByteValueAccessor();
 
     private ByteValueAccessor() {
+    }
+
+    static BytePropertyAccessor getInstance() {
+        return BYTE_PROPERTY_ACCESSOR;
     }
 
     @Override
@@ -36,9 +40,5 @@ public class ByteValueAccessor extends BaseValueAccessor implements ByteProperty
         final Object arrayObj = getArrayObject(bean, field);
         checkArrayIndex(arrayObj, index);
         UNSAFE.putByte(arrayObj, (long) (ARRAY_BYTE_BASE_OFFSET + index * ARRAY_BYTE_INDEX_SCALE), value);
-    }
-
-    public static IPropertyAccessor getInstance() {
-        return BYTE_PROPERTY_ACCESSOR;
     }
 }

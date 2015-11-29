@@ -1,10 +1,16 @@
 package woo.ba.ben.bean;
 
+import sun.misc.Unsafe;
+import woo.ba.ben.core.ClassStructFactory;
 import woo.ba.ben.core.FieldStruct;
+import woo.ba.ben.core.UnsafeFactory;
 
 import java.lang.reflect.Array;
 
-public abstract class BaseValueAccessor implements IPropertyAccessor {
+public abstract class BaseValueAccessor {
+    protected Unsafe UNSAFE = UnsafeFactory.get();
+    protected ClassStructFactory CLASS_STRUCT_FACTORY = ClassStructFactory.getInstance();
+
     protected Class getBeanClass(final Object bean) {
         return bean instanceof Class ? (Class) bean : bean.getClass();
     }
