@@ -13,6 +13,7 @@ import static org.junit.Assert.assertThat;
 
 
 public class ClassStructFactoryTest {
+    public static final int LOOP_COUNTS = 100_000_000;
     private ClassStructFactory factory = ClassStructFactory.getInstance();
 
     @Test
@@ -83,14 +84,14 @@ public class ClassStructFactoryTest {
         final TestClassObj testClassObj = new TestClassObj();
         testClassObj.setTestPrimitiveByte((byte)3);
 
-        long start = System.currentTimeMillis();
-
+        byte value;
         final FieldStruct testPrimitiveByte = classObjStruct.getField("testPrimitiveByte");
         final long offset = testPrimitiveByte.offset;
-        for(int i = 0; i<10_000_000; i++) {
-            unsafe.getByte(testFieldObj, offset);
-            unsafe.getByte(testEmptyObj, offset);
-            unsafe.getByte(testClassObj, offset);
+        long start = System.currentTimeMillis();
+        for(int i = 0; i< LOOP_COUNTS; i++) {
+            value = unsafe.getByte(testFieldObj, offset);
+            value = unsafe.getByte(testEmptyObj, offset);
+            value = unsafe.getByte(testClassObj, offset);
 
             unsafe.putByte(testFieldObj, offset, (byte) 4);
             unsafe.putByte(testEmptyObj, offset, (byte) 5);
@@ -99,12 +100,11 @@ public class ClassStructFactoryTest {
         long end = System.currentTimeMillis();
         System.out.println("unsafe takes "+ (end - start));
 
-
         start = System.currentTimeMillis();
-        for(int i = 0; i<10_000_000; i++) {
-            testFieldObj.getTestPrimitiveByte();
-            testEmptyObj.getTestPrimitiveByte();
-            testClassObj.getTestPrimitiveByte();
+        for(int i = 0; i< LOOP_COUNTS; i++) {
+            value = testFieldObj.getTestPrimitiveByte();
+            value = testEmptyObj.getTestPrimitiveByte();
+            value = testClassObj.getTestPrimitiveByte();
 
             testFieldObj.setTestPrimitiveByte((byte) 4);
             testEmptyObj.setTestPrimitiveByte((byte) 5);
@@ -113,9 +113,8 @@ public class ClassStructFactoryTest {
         end = System.currentTimeMillis();
         System.out.println("getter/setter takes "+ (end - start));
 
-        byte value;
         start = System.currentTimeMillis();
-        for(int i = 0; i<10_000_000; i++) {
+        for(int i = 0; i< LOOP_COUNTS; i++) {
             value = testFieldObj.testPrimitiveByte;
             value = testEmptyObj.testPrimitiveByte;
             value = testClassObj.testPrimitiveByte;
@@ -132,10 +131,10 @@ public class ClassStructFactoryTest {
         final Field field3 = TestClassObj.class.getField("testPrimitiveByte");
 
         start = System.currentTimeMillis();
-        for(int i = 0; i<10_000_000; i++) {
-            field1.getByte(testFieldObj);
-            field1.getByte(testEmptyObj);
-            field1.getByte(testClassObj);
+        for(int i = 0; i< LOOP_COUNTS; i++) {
+            value = field1.getByte(testFieldObj);
+            value = field1.getByte(testEmptyObj);
+            value = field1.getByte(testClassObj);
 
             field1.setByte(testFieldObj, (byte) 4);
             field2.setByte(testEmptyObj, (byte) 5);
@@ -143,10 +142,6 @@ public class ClassStructFactoryTest {
         }
         end = System.currentTimeMillis();
         System.out.println("reflection takes "+ (end - start));
-
-
-
-
 
 //        classObjStruct.getSortedInstanceFields().size()
 
