@@ -17,26 +17,28 @@ class ShortValueAccessor extends BaseValueAccessor implements ShortPropertyAcces
     }
 
     @Override
-    public short get(Object bean, String field) {
-        final FieldStruct fieldStruct = getFieldStruct(bean, field);
+    public short get(final Object bean, final String field) {
+        final Class beanClass = getBeanClass(bean);
+        final FieldStruct fieldStruct = getFieldStruct(beanClass, field);
         return UNSAFE.getShort(fieldStruct.isStatic() ? getBeanClass(bean) : bean, fieldStruct.offset);
     }
 
     @Override
-    public short getArrayElementAt(Object bean, String field, int index) {
+    public short getArrayElementAt(final Object bean, final String field, final int index) {
         final Object arrayObj = getArrayObject(bean, field);
         checkArrayIndex(arrayObj, index);
         return UNSAFE.getShort(arrayObj, (long) (ARRAY_SHORT_BASE_OFFSET + index * ARRAY_SHORT_INDEX_SCALE));
     }
 
     @Override
-    public void set(Object bean, String field, short value) {
-        final FieldStruct fieldStruct = getFieldStruct(bean, field);
+    public void set(final Object bean, final String field, final short value) {
+        final Class beanClass = getBeanClass(bean);
+        final FieldStruct fieldStruct = getFieldStruct(beanClass, field);
         UNSAFE.putShort(fieldStruct.isStatic() ? getBeanClass(bean) : bean, fieldStruct.offset, value);
     }
 
     @Override
-    public void setArrayElementAt(Object bean, String field, int index, short value) {
+    public void setArrayElementAt(final Object bean, final String field, final int index, final short value) {
         final Object arrayObj = getArrayObject(bean, field);
         checkArrayIndex(arrayObj, index);
         UNSAFE.putShort(arrayObj, (long) (ARRAY_SHORT_BASE_OFFSET + index * ARRAY_SHORT_INDEX_SCALE), value);

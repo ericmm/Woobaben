@@ -17,26 +17,28 @@ class IntValueAccessor extends BaseValueAccessor implements IntPropertyAccessor 
     }
 
     @Override
-    public int get(Object bean, String field) {
-        final FieldStruct fieldStruct = getFieldStruct(bean, field);
+    public int get(final Object bean, final String field) {
+        final Class beanClass = getBeanClass(bean);
+        final FieldStruct fieldStruct = getFieldStruct(beanClass, field);
         return UNSAFE.getInt(fieldStruct.isStatic() ? getBeanClass(bean) : bean, fieldStruct.offset);
     }
 
     @Override
-    public int getArrayElementAt(Object bean, String field, int index) {
+    public int getArrayElementAt(final Object bean, final String field, final int index) {
         final Object arrayObj = getArrayObject(bean, field);
         checkArrayIndex(arrayObj, index);
         return UNSAFE.getInt(arrayObj, (long) (ARRAY_INT_BASE_OFFSET + index * ARRAY_INT_INDEX_SCALE));
     }
 
     @Override
-    public void set(Object bean, String field, int value) {
-        final FieldStruct fieldStruct = getFieldStruct(bean, field);
+    public void set(final Object bean, final String field, final int value) {
+        final Class beanClass = getBeanClass(bean);
+        final FieldStruct fieldStruct = getFieldStruct(beanClass, field);
         UNSAFE.putInt(fieldStruct.isStatic() ? getBeanClass(bean) : bean, fieldStruct.offset, value);
     }
 
     @Override
-    public void setArrayElementAt(Object bean, String field, int index, int value) {
+    public void setArrayElementAt(final Object bean, final String field, final int index, final int value) {
         final Object arrayObj = getArrayObject(bean, field);
         checkArrayIndex(arrayObj, index);
         UNSAFE.putInt(arrayObj, (long) (ARRAY_INT_BASE_OFFSET + index * ARRAY_INT_INDEX_SCALE), value);

@@ -18,7 +18,8 @@ class TypedObjectValueAccessor extends BaseValueAccessor implements TypedObjectP
 
     @Override
     public Object get(final Object bean, final String field) {
-        final FieldStruct fieldStruct = getFieldStruct(bean, field);
+        final Class beanClass = getBeanClass(bean);
+        final FieldStruct fieldStruct = getFieldStruct(beanClass, field);
         return UNSAFE.getObject(fieldStruct.isStatic() ? getBeanClass(bean) : bean, fieldStruct.offset);
     }
 
@@ -31,7 +32,8 @@ class TypedObjectValueAccessor extends BaseValueAccessor implements TypedObjectP
 
     @Override
     public void set(final Object bean, final String field, final Object value) {
-        final FieldStruct fieldStruct = getFieldStruct(bean, field);
+        final Class beanClass = getBeanClass(bean);
+        final FieldStruct fieldStruct = getFieldStruct(beanClass, field);
         UNSAFE.putObject(fieldStruct.isStatic() ? getBeanClass(bean) : bean, fieldStruct.offset, value);
     }
 

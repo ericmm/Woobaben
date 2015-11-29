@@ -17,26 +17,28 @@ class LongValueAccessor extends BaseValueAccessor implements LongPropertyAccesso
     }
 
     @Override
-    public long get(Object bean, String field) {
-        final FieldStruct fieldStruct = getFieldStruct(bean, field);
+    public long get(final Object bean, final String field) {
+        final Class beanClass = getBeanClass(bean);
+        final FieldStruct fieldStruct = getFieldStruct(beanClass, field);
         return UNSAFE.getLong(fieldStruct.isStatic() ? getBeanClass(bean) : bean, fieldStruct.offset);
     }
 
     @Override
-    public long getArrayElementAt(Object bean, String field, int index) {
+    public long getArrayElementAt(final Object bean, final String field, final int index) {
         final Object arrayObj = getArrayObject(bean, field);
         checkArrayIndex(arrayObj, index);
         return UNSAFE.getLong(arrayObj, (long) (ARRAY_LONG_BASE_OFFSET + index * ARRAY_LONG_INDEX_SCALE));
     }
 
     @Override
-    public void set(Object bean, String field, long value) {
-        final FieldStruct fieldStruct = getFieldStruct(bean, field);
+    public void set(final Object bean, final String field, final long value) {
+        final Class beanClass = getBeanClass(bean);
+        final FieldStruct fieldStruct = getFieldStruct(beanClass, field);
         UNSAFE.putLong(fieldStruct.isStatic() ? getBeanClass(bean) : bean, fieldStruct.offset, value);
     }
 
     @Override
-    public void setArrayElementAt(Object bean, String field, int index, long value) {
+    public void setArrayElementAt(final Object bean, final String field, final int index, final long value) {
         final Object arrayObj = getArrayObject(bean, field);
         checkArrayIndex(arrayObj, index);
         UNSAFE.putLong(arrayObj, (long) (ARRAY_LONG_BASE_OFFSET + index * ARRAY_LONG_INDEX_SCALE), value);

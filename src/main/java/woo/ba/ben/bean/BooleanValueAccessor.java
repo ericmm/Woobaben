@@ -18,8 +18,9 @@ class BooleanValueAccessor extends BaseValueAccessor implements BooleanPropertyA
 
     @Override
     public boolean get(final Object bean, final String field) {
-        final FieldStruct fieldStruct = getFieldStruct(bean, field);
-        return UNSAFE.getBoolean(fieldStruct.isStatic() ? getBeanClass(bean) : bean, fieldStruct.offset);
+        final Class beanClass = getBeanClass(bean);
+        final FieldStruct fieldStruct = getFieldStruct(beanClass, field);
+        return UNSAFE.getBoolean(fieldStruct.isStatic() ? beanClass : bean, fieldStruct.offset);
     }
 
     @Override
@@ -31,8 +32,9 @@ class BooleanValueAccessor extends BaseValueAccessor implements BooleanPropertyA
 
     @Override
     public void set(final Object bean, final String field, final boolean value) {
-        final FieldStruct fieldStruct = getFieldStruct(bean, field);
-        UNSAFE.putBoolean(fieldStruct.isStatic() ? getBeanClass(bean) : bean, fieldStruct.offset, value);
+        final Class beanClass = getBeanClass(bean);
+        final FieldStruct fieldStruct = getFieldStruct(beanClass, field);
+        UNSAFE.putBoolean(fieldStruct.isStatic() ? beanClass : bean, fieldStruct.offset, value);
     }
 
     @Override

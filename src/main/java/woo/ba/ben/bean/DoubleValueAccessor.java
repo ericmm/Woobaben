@@ -17,26 +17,28 @@ class DoubleValueAccessor extends BaseValueAccessor implements DoublePropertyAcc
     }
 
     @Override
-    public double get(Object bean, String field) {
-        final FieldStruct fieldStruct = getFieldStruct(bean, field);
+    public double get(final Object bean, final String field) {
+        final Class beanClass = getBeanClass(bean);
+        final FieldStruct fieldStruct = getFieldStruct(beanClass, field);
         return UNSAFE.getDouble(fieldStruct.isStatic() ? getBeanClass(bean) : bean, fieldStruct.offset);
     }
 
     @Override
-    public double getArrayElementAt(Object bean, String field, int index) {
+    public double getArrayElementAt(final Object bean, final String field, final int index) {
         final Object arrayObj = getArrayObject(bean, field);
         checkArrayIndex(arrayObj, index);
         return UNSAFE.getDouble(arrayObj, (long) (ARRAY_DOUBLE_BASE_OFFSET + index * ARRAY_DOUBLE_INDEX_SCALE));
     }
 
     @Override
-    public void set(Object bean, String field, double value) {
-        final FieldStruct fieldStruct = getFieldStruct(bean, field);
+    public void set(final Object bean, final String field, final double value) {
+        final Class beanClass = getBeanClass(bean);
+        final FieldStruct fieldStruct = getFieldStruct(beanClass, field);
         UNSAFE.putDouble(fieldStruct.isStatic() ? getBeanClass(bean) : bean, fieldStruct.offset, value);
     }
 
     @Override
-    public void setArrayElementAt(Object bean, String field, int index, double value) {
+    public void setArrayElementAt(final Object bean, final String field, final int index, final double value) {
         final Object arrayObj = getArrayObject(bean, field);
         checkArrayIndex(arrayObj, index);
         UNSAFE.putDouble(arrayObj, (long) (ARRAY_DOUBLE_BASE_OFFSET + index * ARRAY_DOUBLE_INDEX_SCALE), value);
