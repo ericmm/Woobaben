@@ -4,6 +4,8 @@ package woo.ba.ben.core;
 import java.util.ArrayList;
 import java.util.List;
 
+import static woo.ba.ben.core.ClassStruct.OFFSET_NOT_AVAILABLE;
+
 public class ClassStructFactory {
     private static final int DEFAULT_CACHE_SIZE = 1024 * 1024;
     private static final SimpleMap<Class, ClassStruct> CACHE = new SimpleArrayMap<>(DEFAULT_CACHE_SIZE);
@@ -22,28 +24,81 @@ public class ClassStructFactory {
     }
 
     public ClassStruct get(final Class realClass) {
-        if (!isValidClass(realClass)) {
-            throw new IllegalArgumentException("Argument is invalid");
-        }
-
         final ClassStruct classStruct = CACHE.get(realClass);
         if (classStruct != null) {
             return classStruct;
         }
-        put(realClass);
+
+        processClass(realClass);
         return CACHE.get(realClass);
     }
 
-    private void put(final Class realClass) {
+    private void processMinMaxOffset(final ClassStruct classStruct) {
+        final List<ClassStruct> parentClassStructs = getParentClassStructs(classStruct);
+        classStruct.setMinimumOffset(getMinimumOffsetFromClassChain(parentClassStructs));
+        classStruct.setMaximumOffset(getMaximumOffsetFromClassChain(parentClassStructs));
+    }
+
+    private long getMinimumOffsetFromClassChain(final List<ClassStruct> parentClassStructs) {
+        long minimumOffset = OFFSET_NOT_AVAILABLE;
+        for (int i = parentClassStructs.size() - 1; i >= 0; i--) { //oldest super class first
+            final ClassStruct struct = parentClassStructs.get(i);
+            if (!struct.hasInstanceFields()) {
+                continue;
+            }
+
+            final FieldStruct firstFieldStructOnOldest = struct.getSortedInstanceFields().get(0);
+            minimumOffset = firstFieldStructOnOldest.offset;
+            break;
+        }
+        return minimumOffset;
+    }
+
+    private long getMaximumOffsetFromClassChain(final List<ClassStruct> parentClassStructs) {
+        long maximumOffset = OFFSET_NOT_AVAILABLE;
+        for (int i = 0; i < parentClassStructs.size(); i++) { //youngest class first
+            final ClassStruct struct = parentClassStructs.get(i);
+            if (!struct.hasInstanceFields()) {
+                continue;
+            }
+
+            final FieldStruct lastFieldStructOnYoungest = struct.getSortedInstanceFields().get(struct.getSortedInstanceFields().size() - 1);
+            maximumOffset = lastFieldStructOnYoungest.offset;
+            break;
+        }
+        return maximumOffset;
+    }
+
+    private List<ClassStruct> getParentClassStructs(final ClassStruct classStruct) {
+        final List<ClassStruct> parentClassStructs = new ArrayList<>();
+
+        ClassStruct currentClassStruct = classStruct;
+        parentClassStructs.add(currentClassStruct);
+        while (currentClassStruct.parent != null) {
+            parentClassStructs.add(currentClassStruct.parent);
+            currentClassStruct = currentClassStruct.parent;
+        }
+        return parentClassStructs;
+    }
+
+    private void processClass(final Class realClass) {
+        if (!isValidClass(realClass)) {
+            throw new IllegalArgumentException("Argument is invalid");
+        }
+
         final List<Class> classChain = getClassChain(realClass);
+
+        Class clazz;
+        ClassStruct parentClassStruct, classStruct;
         for (int i = classChain.size() - 1; i >= 0; i--) { //eldest super class except Object.class
-            final Class clazz = classChain.get(i);
+            clazz = classChain.get(i);
             if (CACHE.get(clazz) != null) {
                 continue;
             }
 
-            final ClassStruct parent = getParentClassStruct(clazz);
-            final ClassStruct classStruct = new ClassStruct(clazz, parent);
+            parentClassStruct = getParentClassStruct(clazz);
+            classStruct = new ClassStruct(clazz, parentClassStruct);
+            processMinMaxOffset(classStruct);
             CACHE.put(clazz, classStruct);
         }
     }

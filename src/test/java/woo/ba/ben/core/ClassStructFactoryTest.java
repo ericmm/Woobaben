@@ -1,6 +1,11 @@
 package woo.ba.ben.core;
 
 import org.junit.Test;
+import sun.misc.Unsafe;
+import woo.ba.ben.bean.BytePropertyAccessor;
+import woo.ba.ben.bean.ByteValueAccessor;
+
+import java.lang.reflect.Field;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -59,11 +64,93 @@ public class ClassStructFactoryTest {
         factory.get(Runnable.class);
     }
 
-
     @Test
-    public void shouldPrintOutClass(){
-        final ClassStruct classStruct = factory.get(TestClassObj.class);
+    public void shouldGetBlock() throws NoSuchFieldException, IllegalAccessException {
+        final Unsafe unsafe = UnsafeFactory.get();
+        final BytePropertyAccessor byteAccessor = (BytePropertyAccessor) ByteValueAccessor.getInstance();
 
-//        classStruct.
+        factory = ClassStructFactory.getInstance();
+        final ClassStruct classObjStruct = factory.get(TestClassObj.class);
+        final ClassStruct fieldObjStruct = factory.get(TestFieldObj.class);
+        final ClassStruct emptyObjStruct = factory.get(TestEmptyObj.class);
+
+        final TestFieldObj testFieldObj = new TestFieldObj();
+        testFieldObj.setTestPrimitiveByte((byte) 1);
+
+        final TestEmptyObj testEmptyObj = new TestEmptyObj();
+        testEmptyObj.setTestPrimitiveByte((byte) 2);
+
+        final TestClassObj testClassObj = new TestClassObj();
+        testClassObj.setTestPrimitiveByte((byte)3);
+
+        long start = System.currentTimeMillis();
+
+        final FieldStruct testPrimitiveByte = classObjStruct.getField("testPrimitiveByte");
+        final long offset = testPrimitiveByte.offset;
+        for(int i = 0; i<10_000_000; i++) {
+            unsafe.getByte(testFieldObj, offset);
+            unsafe.getByte(testEmptyObj, offset);
+            unsafe.getByte(testClassObj, offset);
+
+            unsafe.putByte(testFieldObj, offset, (byte) 4);
+            unsafe.putByte(testEmptyObj, offset, (byte) 5);
+            unsafe.putByte(testClassObj, offset, (byte) 6);
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("unsafe takes "+ (end - start));
+
+
+        start = System.currentTimeMillis();
+        for(int i = 0; i<10_000_000; i++) {
+            testFieldObj.getTestPrimitiveByte();
+            testEmptyObj.getTestPrimitiveByte();
+            testClassObj.getTestPrimitiveByte();
+
+            testFieldObj.setTestPrimitiveByte((byte) 4);
+            testEmptyObj.setTestPrimitiveByte((byte) 5);
+            testClassObj.setTestPrimitiveByte((byte) 6);
+        }
+        end = System.currentTimeMillis();
+        System.out.println("getter/setter takes "+ (end - start));
+
+        byte value;
+        start = System.currentTimeMillis();
+        for(int i = 0; i<10_000_000; i++) {
+            value = testFieldObj.testPrimitiveByte;
+            value = testEmptyObj.testPrimitiveByte;
+            value = testClassObj.testPrimitiveByte;
+
+            testFieldObj.testPrimitiveByte = (byte) 4;
+            testEmptyObj.testPrimitiveByte = (byte) 5;
+            testClassObj.testPrimitiveByte = (byte) 6;
+        }
+        end = System.currentTimeMillis();
+        System.out.println("direct takes "+ (end - start));
+
+        final Field field1 = TestFieldObj.class.getField("testPrimitiveByte");
+        final Field field2 = TestEmptyObj.class.getField("testPrimitiveByte");
+        final Field field3 = TestClassObj.class.getField("testPrimitiveByte");
+
+        start = System.currentTimeMillis();
+        for(int i = 0; i<10_000_000; i++) {
+            field1.getByte(testFieldObj);
+            field1.getByte(testEmptyObj);
+            field1.getByte(testClassObj);
+
+            field1.setByte(testFieldObj, (byte) 4);
+            field2.setByte(testEmptyObj, (byte) 5);
+            field3.setByte(testClassObj, (byte) 6);
+        }
+        end = System.currentTimeMillis();
+        System.out.println("reflection takes "+ (end - start));
+
+
+
+
+
+//        classObjStruct.getSortedInstanceFields().size()
+
+        assertThat(factory, notNullValue());
+
     }
 }

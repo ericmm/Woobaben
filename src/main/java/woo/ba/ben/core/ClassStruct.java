@@ -9,20 +9,24 @@ import java.util.List;
 import static java.util.Collections.unmodifiableList;
 
 public class ClassStruct {
+    public static final int OFFSET_NOT_AVAILABLE = -1;
+
     public final Class realClass;
     public final ClassStruct parent;
 
     private SimpleMap<String, FieldStruct> fieldMap;
     private List<FieldStruct> sortedInstanceFields;
+    private long minimumOffset = OFFSET_NOT_AVAILABLE;
+    private long maximumOffset = OFFSET_NOT_AVAILABLE;
 
     ClassStruct(final Class realClass, final ClassStruct parent) {
         this.realClass = realClass;
         this.parent = parent;
 
         parseFields(realClass);
-        sortFields(sortedInstanceFields);
 
-        if(sortedInstanceFields != null) {
+        if (sortedInstanceFields != null) {
+            sortFields();
             sortedInstanceFields = unmodifiableList(sortedInstanceFields);
         }
     }
@@ -50,6 +54,17 @@ public class ClassStruct {
         return null;
     }
 
+    public List<FieldStruct> getSortedInstanceFields() {
+        return sortedInstanceFields;
+    }
+
+    public boolean hasInstanceFields() {
+        if (sortedInstanceFields != null) {
+            return !sortedInstanceFields.isEmpty();
+        }
+        return false;
+    }
+
     private void parseFields(final Class currentClass) {
         final Field[] declaredFields = currentClass.getDeclaredFields();
         if (declaredFields.length > 0) {
@@ -61,22 +76,38 @@ public class ClassStruct {
                 fieldStruct = new FieldStruct(field);
                 fieldMap.put(field.getName(), fieldStruct);
 
-                if(!fieldStruct.isStatic()) {
+                if (!fieldStruct.isStatic()) {
                     sortedInstanceFields.add(fieldStruct);
                 }
             }
         }
     }
 
-    private void sortFields(final List<FieldStruct> instanceFields) {
-        if (instanceFields != null && instanceFields.size() > 1) {
-            Collections.sort(instanceFields, new Comparator<FieldStruct>() {
+    private void sortFields() {
+        if (sortedInstanceFields.size() > 1) {
+            Collections.sort(sortedInstanceFields, new Comparator<FieldStruct>() {
                 @Override
-                public int compare(final FieldStruct o1, final FieldStruct o2) {
-                    return (int) (o1.offset - o2.offset);
+                public int compare(final FieldStruct f1, final FieldStruct f2) {
+                    return (int) (f1.offset - f2.offset);
                 }
             });
         }
+    }
+
+    public long getMinimumOffset() {
+        return minimumOffset;
+    }
+
+    void setMinimumOffset(final long minimumOffset) {
+        this.minimumOffset = minimumOffset;
+    }
+
+    public long getMaximumOffset() {
+        return maximumOffset;
+    }
+
+    void setMaximumOffset(final long maximumOffset) {
+        this.maximumOffset = maximumOffset;
     }
 
     @Override
