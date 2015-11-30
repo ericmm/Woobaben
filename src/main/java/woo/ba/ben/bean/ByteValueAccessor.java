@@ -3,9 +3,6 @@ package woo.ba.ben.bean;
 
 import woo.ba.ben.core.FieldStruct;
 
-import static sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_BYTE_INDEX_SCALE;
-
 class ByteValueAccessor extends BaseValueAccessor implements BytePropertyAccessor {
     private final static BytePropertyAccessor BYTE_PROPERTY_ACCESSOR = new ByteValueAccessor();
 
@@ -25,9 +22,9 @@ class ByteValueAccessor extends BaseValueAccessor implements BytePropertyAccesso
 
     @Override
     public byte getArrayElementAt(final Object bean, final String field, final int index) {
-        final Object arrayObj = getArrayObject(bean, field);
-        checkArrayIndex(arrayObj, index);
-        return UNSAFE.getByte(arrayObj, (long) (ARRAY_BYTE_BASE_OFFSET + index * ARRAY_BYTE_INDEX_SCALE));
+        final byte[] array = (byte[]) getArrayObject(bean, field, byte.class);
+        checkArrayIndex(array.length, index);
+        return array[index];
     }
 
     @Override
@@ -39,8 +36,8 @@ class ByteValueAccessor extends BaseValueAccessor implements BytePropertyAccesso
 
     @Override
     public void setArrayElementAt(final Object bean, final String field, final int index, final byte value) {
-        final Object arrayObj = getArrayObject(bean, field);
-        checkArrayIndex(arrayObj, index);
-        UNSAFE.putByte(arrayObj, (long) (ARRAY_BYTE_BASE_OFFSET + index * ARRAY_BYTE_INDEX_SCALE), value);
+        final byte[] array = (byte[]) getArrayObject(bean, field, byte.class);
+        checkArrayIndex(array.length, index);
+        array[index] = value;
     }
 }

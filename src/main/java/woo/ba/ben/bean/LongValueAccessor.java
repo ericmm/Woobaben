@@ -3,9 +3,6 @@ package woo.ba.ben.bean;
 
 import woo.ba.ben.core.FieldStruct;
 
-import static sun.misc.Unsafe.ARRAY_LONG_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_LONG_INDEX_SCALE;
-
 class LongValueAccessor extends BaseValueAccessor implements LongPropertyAccessor {
     private final static LongPropertyAccessor LONG_PROPERTY_ACCESSOR = new LongValueAccessor();
 
@@ -25,9 +22,9 @@ class LongValueAccessor extends BaseValueAccessor implements LongPropertyAccesso
 
     @Override
     public long getArrayElementAt(final Object bean, final String field, final int index) {
-        final Object arrayObj = getArrayObject(bean, field);
-        checkArrayIndex(arrayObj, index);
-        return UNSAFE.getLong(arrayObj, (long) (ARRAY_LONG_BASE_OFFSET + index * ARRAY_LONG_INDEX_SCALE));
+        final long[] array = (long[]) getArrayObject(bean, field, long.class);
+        checkArrayIndex(array.length, index);
+        return array[index];
     }
 
     @Override
@@ -39,8 +36,8 @@ class LongValueAccessor extends BaseValueAccessor implements LongPropertyAccesso
 
     @Override
     public void setArrayElementAt(final Object bean, final String field, final int index, final long value) {
-        final Object arrayObj = getArrayObject(bean, field);
-        checkArrayIndex(arrayObj, index);
-        UNSAFE.putLong(arrayObj, (long) (ARRAY_LONG_BASE_OFFSET + index * ARRAY_LONG_INDEX_SCALE), value);
+        final long[] array = (long[]) getArrayObject(bean, field, long.class);
+        checkArrayIndex(array.length, index);
+        array[index] = value;
     }
 }

@@ -3,9 +3,6 @@ package woo.ba.ben.bean;
 
 import woo.ba.ben.core.FieldStruct;
 
-import static sun.misc.Unsafe.ARRAY_DOUBLE_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_DOUBLE_INDEX_SCALE;
-
 class DoubleValueAccessor extends BaseValueAccessor implements DoublePropertyAccessor {
     private final static DoublePropertyAccessor DOUBLE_PROPERTY_ACCESSOR = new DoubleValueAccessor();
 
@@ -25,9 +22,9 @@ class DoubleValueAccessor extends BaseValueAccessor implements DoublePropertyAcc
 
     @Override
     public double getArrayElementAt(final Object bean, final String field, final int index) {
-        final Object arrayObj = getArrayObject(bean, field);
-        checkArrayIndex(arrayObj, index);
-        return UNSAFE.getDouble(arrayObj, (long) (ARRAY_DOUBLE_BASE_OFFSET + index * ARRAY_DOUBLE_INDEX_SCALE));
+        final double[] array = (double[]) getArrayObject(bean, field, double.class);
+        checkArrayIndex(array.length, index);
+        return array[index];
     }
 
     @Override
@@ -39,8 +36,8 @@ class DoubleValueAccessor extends BaseValueAccessor implements DoublePropertyAcc
 
     @Override
     public void setArrayElementAt(final Object bean, final String field, final int index, final double value) {
-        final Object arrayObj = getArrayObject(bean, field);
-        checkArrayIndex(arrayObj, index);
-        UNSAFE.putDouble(arrayObj, (long) (ARRAY_DOUBLE_BASE_OFFSET + index * ARRAY_DOUBLE_INDEX_SCALE), value);
+        final double[] array = (double[]) getArrayObject(bean, field, double.class);
+        checkArrayIndex(array.length, index);
+        array[index] = value;
     }
 }

@@ -3,9 +3,6 @@ package woo.ba.ben.bean;
 
 import woo.ba.ben.core.FieldStruct;
 
-import static sun.misc.Unsafe.ARRAY_OBJECT_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_OBJECT_INDEX_SCALE;
-
 class TypedObjectValueAccessor extends BaseValueAccessor implements TypedObjectPropertyAccessor {
     private final static TypedObjectPropertyAccessor TYPED_OBJECT_PROPERTY_ACCESSOR = new TypedObjectValueAccessor();
 
@@ -25,9 +22,9 @@ class TypedObjectValueAccessor extends BaseValueAccessor implements TypedObjectP
 
     @Override
     public Object getArrayElementAt(final Object bean, final String field, final int index) {
-        final Object arrayObj = getArrayObject(bean, field);
-        checkArrayIndex(arrayObj, index);
-        return UNSAFE.getObject(arrayObj, (long) (ARRAY_OBJECT_BASE_OFFSET + index * ARRAY_OBJECT_INDEX_SCALE));
+        final Object[] array = (Object[]) getArrayObject(bean, field, Object.class);
+        checkArrayIndex(array.length, index);
+        return array[index];
     }
 
     @Override
@@ -39,8 +36,8 @@ class TypedObjectValueAccessor extends BaseValueAccessor implements TypedObjectP
 
     @Override
     public void setArrayElementAt(final Object bean, final String field, final int index, final Object value) {
-        final Object arrayObj = getArrayObject(bean, field);
-        checkArrayIndex(arrayObj, index);
-        UNSAFE.putObject(arrayObj, (long) (ARRAY_OBJECT_BASE_OFFSET + index * ARRAY_OBJECT_INDEX_SCALE), value);
+        final Object[] array = (Object[]) getArrayObject(bean, field, Object.class);
+        checkArrayIndex(array.length, index);
+        array[index] = value;
     }
 }

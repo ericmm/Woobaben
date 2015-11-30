@@ -3,9 +3,6 @@ package woo.ba.ben.bean;
 
 import woo.ba.ben.core.FieldStruct;
 
-import static sun.misc.Unsafe.ARRAY_FLOAT_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_FLOAT_INDEX_SCALE;
-
 class FloatValueAccessor extends BaseValueAccessor implements FloatPropertyAccessor {
     private final static FloatPropertyAccessor FLOAT_PROPERTY_ACCESSOR = new FloatValueAccessor();
 
@@ -25,9 +22,9 @@ class FloatValueAccessor extends BaseValueAccessor implements FloatPropertyAcces
 
     @Override
     public float getArrayElementAt(final Object bean, final String field, final int index) {
-        final Object arrayObj = getArrayObject(bean, field);
-        checkArrayIndex(arrayObj, index);
-        return UNSAFE.getFloat(arrayObj, (long) (ARRAY_FLOAT_BASE_OFFSET + index * ARRAY_FLOAT_INDEX_SCALE));
+        final float[] array = (float[]) getArrayObject(bean, field, float.class);
+        checkArrayIndex(array.length, index);
+        return array[index];
     }
 
     @Override
@@ -39,8 +36,8 @@ class FloatValueAccessor extends BaseValueAccessor implements FloatPropertyAcces
 
     @Override
     public void setArrayElementAt(final Object bean, final String field, final int index, final float value) {
-        final Object arrayObj = getArrayObject(bean, field);
-        checkArrayIndex(arrayObj, index);
-        UNSAFE.putFloat(arrayObj, (long) (ARRAY_FLOAT_BASE_OFFSET + index * ARRAY_FLOAT_INDEX_SCALE), value);
+        final float[] array = (float[]) getArrayObject(bean, field, float.class);
+        checkArrayIndex(array.length, index);
+        array[index] = value;
     }
 }

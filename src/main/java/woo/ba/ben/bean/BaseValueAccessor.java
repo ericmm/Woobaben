@@ -5,8 +5,6 @@ import woo.ba.ben.core.ClassStructFactory;
 import woo.ba.ben.core.FieldStruct;
 import woo.ba.ben.core.UnsafeFactory;
 
-import java.lang.reflect.Array;
-
 public abstract class BaseValueAccessor {
     protected Unsafe UNSAFE = UnsafeFactory.get();
     protected ClassStructFactory CLASS_STRUCT_FACTORY = ClassStructFactory.getInstance();
@@ -26,11 +24,11 @@ public abstract class BaseValueAccessor {
         return fieldStruct;
     }
 
-    protected Object getArrayObject(final Object bean, final String field) {
+    protected Object getArrayObject(final Object bean, final String field, final Class componentType) {
         final Class beanClass = getBeanClass(bean);
         final FieldStruct fieldStruct = getFieldStruct(beanClass, field);
-        if (!fieldStruct.isArray()) {
-            throw new IllegalArgumentException("Field [" + field + "] on Class [" + beanClass + "] is not an array!");
+        if (!fieldStruct.isArray() && componentType.isAssignableFrom(fieldStruct.type.getComponentType())) {
+            throw new IllegalArgumentException("Field [" + field + "] on Class [" + beanClass + "] is not an array of type ["+componentType.getSimpleName()+"]!");
         }
         final Object arrayObj = UNSAFE.getObject(fieldStruct.isStatic() ? beanClass : bean, fieldStruct.offset);
         if (arrayObj == null) {
@@ -39,8 +37,7 @@ public abstract class BaseValueAccessor {
         return arrayObj;
     }
 
-    protected void checkArrayIndex(final Object arrayObj, final int index) {
-        final int length = Array.getLength(arrayObj);
+    protected void checkArrayIndex(final int length, final int index) {
         if (index >= length) {
             throw new IndexOutOfBoundsException("Array index [" + index + "] is greater than array length [" + length + "]!");
         }

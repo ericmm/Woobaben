@@ -3,9 +3,6 @@ package woo.ba.ben.bean;
 
 import woo.ba.ben.core.FieldStruct;
 
-import static sun.misc.Unsafe.ARRAY_INT_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_INT_INDEX_SCALE;
-
 class IntValueAccessor extends BaseValueAccessor implements IntPropertyAccessor {
     private final static IntPropertyAccessor INT_PROPERTY_ACCESSOR = new IntValueAccessor();
 
@@ -25,9 +22,9 @@ class IntValueAccessor extends BaseValueAccessor implements IntPropertyAccessor 
 
     @Override
     public int getArrayElementAt(final Object bean, final String field, final int index) {
-        final Object arrayObj = getArrayObject(bean, field);
-        checkArrayIndex(arrayObj, index);
-        return UNSAFE.getInt(arrayObj, (long) (ARRAY_INT_BASE_OFFSET + index * ARRAY_INT_INDEX_SCALE));
+        final int[] array = (int[]) getArrayObject(bean, field, int.class);
+        checkArrayIndex(array.length, index);
+        return array[index];
     }
 
     @Override
@@ -39,8 +36,8 @@ class IntValueAccessor extends BaseValueAccessor implements IntPropertyAccessor 
 
     @Override
     public void setArrayElementAt(final Object bean, final String field, final int index, final int value) {
-        final Object arrayObj = getArrayObject(bean, field);
-        checkArrayIndex(arrayObj, index);
-        UNSAFE.putInt(arrayObj, (long) (ARRAY_INT_BASE_OFFSET + index * ARRAY_INT_INDEX_SCALE), value);
+        final int[] array = (int[]) getArrayObject(bean, field, int.class);
+        checkArrayIndex(array.length, index);
+        array[index] = value;
     }
 }

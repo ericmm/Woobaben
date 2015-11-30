@@ -3,9 +3,6 @@ package woo.ba.ben.bean;
 
 import woo.ba.ben.core.FieldStruct;
 
-import static sun.misc.Unsafe.ARRAY_CHAR_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_CHAR_INDEX_SCALE;
-
 class CharValueAccessor extends BaseValueAccessor implements CharPropertyAccessor {
     private final static CharPropertyAccessor CHAR_PROPERTY_ACCESSOR = new CharValueAccessor();
 
@@ -25,9 +22,9 @@ class CharValueAccessor extends BaseValueAccessor implements CharPropertyAccesso
 
     @Override
     public char getArrayElementAt(final Object bean, final String field, final int index) {
-        final Object arrayObj = getArrayObject(bean, field);
-        checkArrayIndex(arrayObj, index);
-        return UNSAFE.getChar(arrayObj, (long) (ARRAY_CHAR_BASE_OFFSET + index * ARRAY_CHAR_INDEX_SCALE));
+        final char[] array = (char[]) getArrayObject(bean, field, char.class);
+        checkArrayIndex(array.length, index);
+        return array[index];
     }
 
     @Override
@@ -39,8 +36,8 @@ class CharValueAccessor extends BaseValueAccessor implements CharPropertyAccesso
 
     @Override
     public void setArrayElementAt(final Object bean, final String field, final int index, final char value) {
-        final Object arrayObj = getArrayObject(bean, field);
-        checkArrayIndex(arrayObj, index);
-        UNSAFE.putChar(arrayObj, (long) (ARRAY_CHAR_BASE_OFFSET + index * ARRAY_CHAR_INDEX_SCALE), value);
+        final char[] array = (char[]) getArrayObject(bean, field, char.class);
+        checkArrayIndex(array.length, index);
+        array[index] = value;
     }
 }

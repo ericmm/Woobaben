@@ -3,9 +3,6 @@ package woo.ba.ben.bean;
 
 import woo.ba.ben.core.FieldStruct;
 
-import static sun.misc.Unsafe.ARRAY_SHORT_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_SHORT_INDEX_SCALE;
-
 class ShortValueAccessor extends BaseValueAccessor implements ShortPropertyAccessor {
     private final static ShortPropertyAccessor SHORT_PROPERTY_ACCESSOR = new ShortValueAccessor();
 
@@ -25,9 +22,9 @@ class ShortValueAccessor extends BaseValueAccessor implements ShortPropertyAcces
 
     @Override
     public short getArrayElementAt(final Object bean, final String field, final int index) {
-        final Object arrayObj = getArrayObject(bean, field);
-        checkArrayIndex(arrayObj, index);
-        return UNSAFE.getShort(arrayObj, (long) (ARRAY_SHORT_BASE_OFFSET + index * ARRAY_SHORT_INDEX_SCALE));
+        final short[] array = (short[]) getArrayObject(bean, field, short.class);
+        checkArrayIndex(array.length, index);
+        return array[index];
     }
 
     @Override
@@ -39,8 +36,8 @@ class ShortValueAccessor extends BaseValueAccessor implements ShortPropertyAcces
 
     @Override
     public void setArrayElementAt(final Object bean, final String field, final int index, final short value) {
-        final Object arrayObj = getArrayObject(bean, field);
-        checkArrayIndex(arrayObj, index);
-        UNSAFE.putShort(arrayObj, (long) (ARRAY_SHORT_BASE_OFFSET + index * ARRAY_SHORT_INDEX_SCALE), value);
+        final short[] array = (short[]) getArrayObject(bean, field, short.class);
+        checkArrayIndex(array.length, index);
+        array[index] = value;
     }
 }
