@@ -10,7 +10,6 @@ public class ClassStructTest {
     public void shouldCreateClassStructSuccessfully() {
         final ClassStruct parent = new ClassStruct(TestFieldObj.class, null);
         final ClassStruct classStruct = new ClassStruct(TestClassObj.class, parent);
-        assertThat(classStruct.getDeclaredField("stringFieldInClassObj").isPrimitive(), is(false));
         assertThat(classStruct.getField("abc"), nullValue());
         assertThat(classStruct.getField("bigInteger"), notNullValue());
         assertThat(classStruct.parent, is(parent));

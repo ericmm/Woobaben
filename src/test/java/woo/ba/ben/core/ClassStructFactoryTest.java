@@ -11,15 +11,14 @@ import static org.junit.Assert.assertThat;
 
 
 public class ClassStructFactoryTest {
-    public static final int LOOP_COUNTS = 100_000_000;
-    private ClassStructFactory factory = ClassStructFactory.getInstance();
+    public static final int LOOP_COUNTS = 10_000_000;
 
     @Test
     public void shouldCreateClassStruct() {
-        final ClassStruct testFieldObjStruct = factory.get(TestFieldObj.class);
+        final ClassStruct testFieldObjStruct = ClassStructFactory.get(TestFieldObj.class);
         assertThat(testFieldObjStruct, notNullValue());
 
-        final ClassStruct testClassObjStruct = factory.get(TestClassObj.class);
+        final ClassStruct testClassObjStruct = ClassStructFactory.get(TestClassObj.class);
         assertThat(testClassObjStruct, notNullValue());
 
         assertThat(testClassObjStruct.getField("testInt").isPrimitive(), is(true));
@@ -30,45 +29,39 @@ public class ClassStructFactoryTest {
         final ClassStruct testFieldObjStruct = new ClassStruct(TestFieldObj.class, null);
         assertThat(testFieldObjStruct, notNullValue());
 
-        final ClassStruct testClassObjStruct = factory.get(TestClassObj.class);
+        final ClassStruct testClassObjStruct = ClassStructFactory.get(TestClassObj.class);
         assertThat(testClassObjStruct, notNullValue());
 
         assertThat(testClassObjStruct.getField("testInt").isPrimitive(), is(true));
     }
 
-    @Test
-    public void shouldGetInstance() {
-        factory = ClassStructFactory.getInstance();
-
-        assertThat(factory, notNullValue());
-    }
-
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenNull() {
-        factory.get(null);
+        ClassStructFactory.get(null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenObjectClass() {
-        factory.get(Object.class);
+        ClassStructFactory.get(Object.class);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenAnnotationClass() {
-        factory.get(Test.class);
+        ClassStructFactory.get(Test.class);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenInterface() {
-        factory.get(Runnable.class);
+        ClassStructFactory.get(Runnable.class);
     }
 
     @Test
     public void shouldGetBlock() throws NoSuchFieldException, IllegalAccessException {
         final Unsafe unsafe = UnsafeFactory.get();
 
-        factory = ClassStructFactory.getInstance();
-        final ClassStruct classObjStruct = factory.get(TestClassObj.class);
+        final ClassStruct classObjStruct = ClassStructFactory.get(TestClassObj.class);
+        final ClassStruct emptyObjStruct = ClassStructFactory.get(TestEmptyObj.class);
+        final ClassStruct fieldObjStruct = ClassStructFactory.get(TestFieldObj.class);
 
         final TestFieldObj testFieldObj = new TestFieldObj();
         testFieldObj.setTestPrimitiveByte((byte) 1);
@@ -95,20 +88,6 @@ public class ClassStructFactoryTest {
         System.out.println("getter/setter takes " + (end - start));
 
 
-        start = System.currentTimeMillis();
-        for (int i = 0; i < LOOP_COUNTS; i++) {
-            value = testFieldObj.testPrimitiveByte;
-            value = testEmptyObj.testPrimitiveByte;
-            value = testClassObj.testPrimitiveByte;
-
-            testFieldObj.testPrimitiveByte = (byte) 4;
-            testEmptyObj.testPrimitiveByte = (byte) 5;
-            testClassObj.testPrimitiveByte = (byte) 6;
-        }
-        end = System.currentTimeMillis();
-        System.out.println("direct takes " + (end - start));
-
-
         final FieldStruct testPrimitiveByte = classObjStruct.getField("testPrimitiveByte");
         final long offset = testPrimitiveByte.offset;
         start = System.currentTimeMillis();
@@ -123,6 +102,20 @@ public class ClassStructFactoryTest {
         }
         end = System.currentTimeMillis();
         System.out.println("unsafe takes " + (end - start));
+
+
+        start = System.currentTimeMillis();
+        for (int i = 0; i < LOOP_COUNTS; i++) {
+            value = testFieldObj.testPrimitiveByte;
+            value = testEmptyObj.testPrimitiveByte;
+            value = testClassObj.testPrimitiveByte;
+
+            testFieldObj.testPrimitiveByte = (byte) 4;
+            testEmptyObj.testPrimitiveByte = (byte) 5;
+            testClassObj.testPrimitiveByte = (byte) 6;
+        }
+        end = System.currentTimeMillis();
+        System.out.println("direct takes " + (end - start));
 
 
         final Field field1 = TestFieldObj.class.getField("testPrimitiveByte");
@@ -141,10 +134,5 @@ public class ClassStructFactoryTest {
         }
         end = System.currentTimeMillis();
         System.out.println("reflection takes " + (end - start));
-
-//        classObjStruct.getSortedInstanceFields().size()
-
-        assertThat(factory, notNullValue());
-
     }
 }

@@ -7,7 +7,6 @@ import woo.ba.ben.core.UnsafeFactory;
 
 public abstract class BaseValueAccessor {
     protected Unsafe UNSAFE = UnsafeFactory.get();
-    protected ClassStructFactory CLASS_STRUCT_FACTORY = ClassStructFactory.getInstance();
 
     protected Class getBeanClass(final Object bean) {
         if (bean == null) {
@@ -17,7 +16,7 @@ public abstract class BaseValueAccessor {
     }
 
     protected FieldStruct getFieldStruct(final Class beanClass, final String field) {
-        final FieldStruct fieldStruct = CLASS_STRUCT_FACTORY.get(beanClass).getField(field);
+        final FieldStruct fieldStruct = ClassStructFactory.get(beanClass).getField(field);
         if (fieldStruct == null) {
             throw new IllegalArgumentException("Field [" + field + "] does not exist on Class [" + beanClass + "] or its Super Classes!");
         }
@@ -28,7 +27,7 @@ public abstract class BaseValueAccessor {
         final Class beanClass = getBeanClass(bean);
         final FieldStruct fieldStruct = getFieldStruct(beanClass, field);
         if (!fieldStruct.isArray() && componentType.isAssignableFrom(fieldStruct.type.getComponentType())) {
-            throw new IllegalArgumentException("Field [" + field + "] on Class [" + beanClass + "] is not an array of type ["+componentType.getSimpleName()+"]!");
+            throw new IllegalArgumentException("Field [" + field + "] on Class [" + beanClass + "] is not an array of type [" + componentType.getSimpleName() + "]!");
         }
         final Object arrayObj = UNSAFE.getObject(fieldStruct.isStatic() ? beanClass : bean, fieldStruct.offset);
         if (arrayObj == null) {

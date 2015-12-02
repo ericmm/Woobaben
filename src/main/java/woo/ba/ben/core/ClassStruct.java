@@ -10,104 +10,139 @@ import static java.util.Collections.unmodifiableList;
 
 public class ClassStruct {
     public static final int OFFSET_NOT_AVAILABLE = -1;
+    private static final Comparator<FieldStruct> FIELD_STRUCT_OFFSET_COMPARATOR = new Comparator<FieldStruct>() {
+        @Override
+        public int compare(final FieldStruct f1, final FieldStruct f2) {
+            return (int) (f1.offset - f2.offset);
+        }
+    };
 
     public final Class realClass;
     public final ClassStruct parent;
-
-    private SimpleMap<String, FieldStruct> fieldMap;
-    private List<FieldStruct> sortedInstanceFields;
-    private long minimumOffset = OFFSET_NOT_AVAILABLE;
-    private long maximumOffset = OFFSET_NOT_AVAILABLE;
+    private List<FieldStruct> sortedInstanceFields = new ArrayList<>();
+    private List<FieldStruct> sortedStaticFields = new ArrayList<>();
 
     ClassStruct(final Class realClass, final ClassStruct parent) {
         this.realClass = realClass;
         this.parent = parent;
 
         parseFields(realClass);
+        addFieldsFromParents(parent);
+        sortFields();
+    }
 
-        if (sortedInstanceFields != null) {
-            sortFields();
-            sortedInstanceFields = unmodifiableList(sortedInstanceFields);
+    private static void sortFieldByOffset(final List<FieldStruct> fieldStructs) {
+        if (fieldStructs.size() > 1) {
+            Collections.sort(fieldStructs, FIELD_STRUCT_OFFSET_COMPARATOR);
         }
+    }
+
+    private void addFieldsFromParents(final ClassStruct parent) {
+        ClassStruct parentClassStruct = parent;
+        if(parent != null) {
+            sortedStaticFields.addAll(parent.getSortedStaticFields());
+        }
+
+        while (parentClassStruct != null) {
+            sortedInstanceFields.addAll(parentClassStruct.getSortedInstanceFields());
+
+            parentClassStruct = parentClassStruct.parent;
+        }
+    }
+
+    public FieldStruct getField(final String fieldName) {
+        int matchedIndex = getMatchedIndex(sortedInstanceFields, fieldName);
+        if (matchedIndex > -1) {
+            return sortedInstanceFields.get(matchedIndex);
+        }
+
+        matchedIndex = getMatchedIndex(sortedStaticFields, fieldName);
+        if (matchedIndex > -1) {
+            return sortedStaticFields.get(matchedIndex);
+        }
+
+        return null;
     }
 
     public String getClassName() {
         return realClass.getName();
     }
 
-    public FieldStruct getDeclaredField(final String fieldName) {
-        return fieldMap == null ? null : fieldMap.get(fieldName);
-    }
-
-    public FieldStruct getField(final String fieldName) {
-        ClassStruct current = this;
-        while (current.realClass.getSuperclass() != null) {
-            final FieldStruct fieldStruct = current.getDeclaredField(fieldName);
-            if (fieldStruct != null) {
-                return fieldStruct;
-            }
-            if (current.parent == null) {
-                break;
-            }
-            current = current.parent;
-        }
-        return null;
-    }
-
     public List<FieldStruct> getSortedInstanceFields() {
         return sortedInstanceFields;
     }
 
+    public List<FieldStruct> getSortedStaticFields() {
+        return sortedStaticFields;
+    }
+
     public boolean hasInstanceFields() {
-        if (sortedInstanceFields != null) {
-            return !sortedInstanceFields.isEmpty();
+        return sortedInstanceFields.size() > 0;
+    }
+
+    public boolean hasStaticFields() {
+        return sortedStaticFields.size() > 0;
+    }
+
+    public long getMinOffsetForInstanceField() {
+        if (hasInstanceFields()) {
+            return sortedInstanceFields.get(0).offset;
         }
-        return false;
+        return OFFSET_NOT_AVAILABLE;
+    }
+
+    public long getMaxOffsetForInstanceField() {
+        if (hasInstanceFields()) {
+            return sortedInstanceFields.get(sortedInstanceFields.size() - 1).offset;
+        }
+        return OFFSET_NOT_AVAILABLE;
+    }
+
+    public long getMinOffsetForStaticField() {
+        if (hasInstanceFields()) {
+            return sortedStaticFields.get(0).offset;
+        }
+        return OFFSET_NOT_AVAILABLE;
+    }
+
+    public long getMaxOffsetForStaticField() {
+        if (hasInstanceFields()) {
+            return sortedStaticFields.get(sortedStaticFields.size() - 1).offset;
+        }
+        return OFFSET_NOT_AVAILABLE;
     }
 
     private void parseFields(final Class currentClass) {
         final Field[] declaredFields = currentClass.getDeclaredFields();
-        if (declaredFields.length > 0) {
-            fieldMap = new SimpleArrayMap<>(declaredFields.length);
-            sortedInstanceFields = new ArrayList<>(declaredFields.length);
-
-            FieldStruct fieldStruct;
-            for (final Field field : declaredFields) {
-                fieldStruct = new FieldStruct(field);
-                fieldMap.put(field.getName(), fieldStruct);
-
-                if (!fieldStruct.isStatic()) {
-                    sortedInstanceFields.add(fieldStruct);
-                }
+        FieldStruct fieldStruct;
+        for (final Field field : declaredFields) {
+            fieldStruct = new FieldStruct(field);
+            if (!fieldStruct.isStatic()) {
+                sortedInstanceFields.add(fieldStruct);
+            } else {
+                sortedStaticFields.add(fieldStruct);
             }
         }
     }
 
-    private void sortFields() {
-        if (sortedInstanceFields.size() > 1) {
-            Collections.sort(sortedInstanceFields, new Comparator<FieldStruct>() {
-                @Override
-                public int compare(final FieldStruct f1, final FieldStruct f2) {
-                    return (int) (f1.offset - f2.offset);
+    private int getMatchedIndex(final List<FieldStruct> fieldStructs, final String fieldName) {
+        if (fieldStructs.size() > 0) {
+            FieldStruct struct;
+            for (int i = fieldStructs.size() - 1; i >= 0; i--) {
+                struct = fieldStructs.get(i);
+                if (fieldName.equals(struct.name)) {
+                    return i;
                 }
-            });
+            }
         }
+        return -1;
     }
 
-    public long getMinimumOffset() {
-        return minimumOffset;
-    }
-
-    void setMinimumOffset(final long minimumOffset) {
-        this.minimumOffset = minimumOffset;
-    }
-
-    public long getMaximumOffset() {
-        return maximumOffset;
-    }
-
-    void setMaximumOffset(final long maximumOffset) {
-        this.maximumOffset = maximumOffset;
+    private void sortFields() {
+        sortFieldByOffset(sortedInstanceFields);
+        sortFieldByOffset(sortedStaticFields);
+        sortedInstanceFields = unmodifiableList(sortedInstanceFields);
+        sortedStaticFields = unmodifiableList(sortedStaticFields);
     }
 
     @Override
