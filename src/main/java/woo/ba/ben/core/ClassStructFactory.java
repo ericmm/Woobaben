@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClassStructFactory {
-    private static final int DEFAULT_CACHE_SIZE = 1024 * 1024;
+    private static final int DEFAULT_CACHE_SIZE = 1024;
     private static final SimpleMap<Class, ClassStruct> CACHE = new SimpleArrayMap<>(DEFAULT_CACHE_SIZE);
 
     private ClassStructFactory() {

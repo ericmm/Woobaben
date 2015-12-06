@@ -68,6 +68,9 @@ public class FieldStruct {
     public boolean isStatic() {
         return Modifier.isStatic(realField.getModifiers());
     }
+    public boolean isTransient() {
+        return Modifier.isTransient(realField.getModifiers());
+    }
 
     @Override
     public boolean equals(final Object o) {

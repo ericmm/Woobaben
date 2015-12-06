@@ -32,4 +32,30 @@ public class UnsafeFactory {
     public static Unsafe get() {
         return UNSAFE;
     }
+
+    public static int getTypeSize(final Class classType) {
+        if (classType == null) {
+            return 0;
+        }
+
+        if (boolean.class == classType) {
+            return UNSAFE.ARRAY_BOOLEAN_INDEX_SCALE;
+        } else if (byte.class == classType) {
+            return UNSAFE.ARRAY_BYTE_INDEX_SCALE;
+        } else if (short.class == classType) {
+            return UNSAFE.ARRAY_SHORT_INDEX_SCALE;
+        } else if (char.class == classType) {
+            return UNSAFE.ARRAY_CHAR_INDEX_SCALE;
+        } else if (int.class == classType) {
+            return UNSAFE.ARRAY_INT_INDEX_SCALE;
+        } else if (float.class == classType) {
+            return UNSAFE.ARRAY_FLOAT_INDEX_SCALE;
+        } else if (long.class == classType) {
+            return UNSAFE.ARRAY_LONG_INDEX_SCALE;
+        } else if (double.class == classType) {
+            return UNSAFE.ARRAY_DOUBLE_INDEX_SCALE;
+        } else {
+            return UNSAFE.ARRAY_OBJECT_INDEX_SCALE;
+        }
+    }
 }

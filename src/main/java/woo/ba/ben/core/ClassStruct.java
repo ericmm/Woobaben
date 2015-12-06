@@ -2,11 +2,12 @@ package woo.ba.ben.core;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import static java.util.Collections.sort;
 import static java.util.Collections.unmodifiableList;
+import static woo.ba.ben.core.UnsafeFactory.getTypeSize;
 
 public class ClassStruct {
     public static final int OFFSET_NOT_AVAILABLE = -1;
@@ -19,34 +20,39 @@ public class ClassStruct {
 
     public final Class realClass;
     public final ClassStruct parent;
-    private List<FieldStruct> sortedInstanceFields = new ArrayList<>();
-    private List<FieldStruct> sortedStaticFields = new ArrayList<>();
+    private List<FieldStruct> sortedInstanceFields;
+    private List<FieldStruct> sortedStaticFields;
 
     ClassStruct(final Class realClass, final ClassStruct parent) {
         this.realClass = realClass;
         this.parent = parent;
 
         parseFields(realClass);
-        addFieldsFromParents(parent);
+        addInherentFieldsFromParent(parent);
         sortFields();
     }
 
     private static void sortFieldByOffset(final List<FieldStruct> fieldStructs) {
-        if (fieldStructs.size() > 1) {
-            Collections.sort(fieldStructs, FIELD_STRUCT_OFFSET_COMPARATOR);
+        if (hasFields(fieldStructs)) {
+            sort(fieldStructs, FIELD_STRUCT_OFFSET_COMPARATOR);
         }
     }
 
-    private void addFieldsFromParents(final ClassStruct parent) {
-        ClassStruct parentClassStruct = parent;
-        if(parent != null) {
-            sortedStaticFields.addAll(parent.getSortedStaticFields());
-        }
+    private static boolean hasFields(final List<FieldStruct> fields) {
+        return fields != null && fields.size() > 0;
+    }
 
-        while (parentClassStruct != null) {
-            sortedInstanceFields.addAll(parentClassStruct.getSortedInstanceFields());
+    private void addInherentFieldsFromParent(final ClassStruct parent) {
+        if (parent != null) {
+            if (parent.getSortedInstanceFields() != null) {
+                sortedInstanceFields = getOrCreateList(sortedInstanceFields);
+                sortedInstanceFields.addAll(parent.getSortedInstanceFields());
+            }
 
-            parentClassStruct = parentClassStruct.parent;
+            if (parent.getSortedStaticFields() != null) {
+                sortedStaticFields = getOrCreateList(sortedStaticFields);
+                sortedStaticFields.addAll(parent.getSortedStaticFields());
+            }
         }
     }
 
@@ -69,45 +75,47 @@ public class ClassStruct {
     }
 
     public List<FieldStruct> getSortedInstanceFields() {
-        return sortedInstanceFields;
+        return unmodifiableList(sortedInstanceFields);
     }
 
     public List<FieldStruct> getSortedStaticFields() {
-        return sortedStaticFields;
+        return unmodifiableList(sortedStaticFields);
     }
 
     public boolean hasInstanceFields() {
-        return sortedInstanceFields.size() > 0;
+        return hasFields(sortedInstanceFields);
     }
 
     public boolean hasStaticFields() {
-        return sortedStaticFields.size() > 0;
+        return hasFields(sortedStaticFields);
     }
 
-    public long getMinOffsetForInstanceField() {
+    public long getInstanceFieldStartOffset() {
         if (hasInstanceFields()) {
             return sortedInstanceFields.get(0).offset;
         }
         return OFFSET_NOT_AVAILABLE;
     }
 
-    public long getMaxOffsetForInstanceField() {
+    public long getInstanceFieldEndOffset() {
         if (hasInstanceFields()) {
-            return sortedInstanceFields.get(sortedInstanceFields.size() - 1).offset;
+            final FieldStruct lastFieldStruct = sortedInstanceFields.get(sortedInstanceFields.size() - 1);
+            return lastFieldStruct.offset + getTypeSize(lastFieldStruct.type);
         }
         return OFFSET_NOT_AVAILABLE;
     }
 
-    public long getMinOffsetForStaticField() {
-        if (hasInstanceFields()) {
+    public long getStaticFieldStartOffset() {
+        if (hasStaticFields()) {
             return sortedStaticFields.get(0).offset;
         }
         return OFFSET_NOT_AVAILABLE;
     }
 
-    public long getMaxOffsetForStaticField() {
-        if (hasInstanceFields()) {
-            return sortedStaticFields.get(sortedStaticFields.size() - 1).offset;
+    public long getStaticFieldEndOffset() {
+        if (hasStaticFields()) {
+            final FieldStruct lastFieldStruct = sortedStaticFields.get(sortedStaticFields.size() - 1);
+            return lastFieldStruct.offset + getTypeSize(lastFieldStruct.type);
         }
         return OFFSET_NOT_AVAILABLE;
     }
@@ -118,15 +126,24 @@ public class ClassStruct {
         for (final Field field : declaredFields) {
             fieldStruct = new FieldStruct(field);
             if (!fieldStruct.isStatic()) {
+                sortedInstanceFields = getOrCreateList(sortedInstanceFields);
                 sortedInstanceFields.add(fieldStruct);
             } else {
+                sortedStaticFields = getOrCreateList(sortedStaticFields);
                 sortedStaticFields.add(fieldStruct);
             }
         }
     }
 
+    private List<FieldStruct> getOrCreateList(final List<FieldStruct> fields) {
+        if (fields == null) {
+            return new ArrayList<>();
+        }
+        return fields;
+    }
+
     private int getMatchedIndex(final List<FieldStruct> fieldStructs, final String fieldName) {
-        if (fieldStructs.size() > 0) {
+        if (hasFields(fieldStructs)) {
             FieldStruct struct;
             for (int i = fieldStructs.size() - 1; i >= 0; i--) {
                 struct = fieldStructs.get(i);
