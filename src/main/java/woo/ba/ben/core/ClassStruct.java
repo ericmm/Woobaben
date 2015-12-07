@@ -10,6 +10,7 @@ import static java.util.Collections.unmodifiableList;
 import static woo.ba.ben.core.UnsafeFactory.getTypeSize;
 
 public class ClassStruct {
+    //TODO: check whether to store transient attributes for given class
     public static final int OFFSET_NOT_AVAILABLE = -1;
     private static final Comparator<FieldStruct> FIELD_STRUCT_OFFSET_COMPARATOR = new Comparator<FieldStruct>() {
         @Override

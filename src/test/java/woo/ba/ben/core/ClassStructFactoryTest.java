@@ -170,6 +170,9 @@ public class ClassStructFactoryTest {
         }
         System.out.println("newOffset=" + newOffset + ", type is int, size is 4");
 
+//        unsafe.putByte(copiedTestClassObj, minInstanceOffset, );
+
+//        unsafe.copyMemory(testClassObj, minInstanceOffset, copiedTestClassObj, minInstanceOffset, 4);
 //        unsafe.copyMemory(dataArray, BYTES_OFFSET, copiedTestClassObj, minInstanceOffset, instanceFieldsSize);
 //        assertThat(copiedTestClassObj.getIntFieldInClassObj(), is(10));
 
