@@ -170,6 +170,7 @@ public class ClassStructFactoryTest {
         }
         System.out.println("newOffset=" + newOffset + ", type is int, size is 4");
 
+        System.out.print(unsafe.ARRAY_OBJECT_INDEX_SCALE +","+ unsafe.ARRAY_INT_INDEX_SCALE);
 //        unsafe.putByte(copiedTestClassObj, minInstanceOffset, );
 
 //        unsafe.copyMemory(testClassObj, minInstanceOffset, copiedTestClassObj, minInstanceOffset, 4);
