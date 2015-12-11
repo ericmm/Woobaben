@@ -10,7 +10,6 @@ import static java.util.Collections.unmodifiableList;
 import static woo.ba.ben.core.UnsafeFactory.getTypeSize;
 
 public class ClassStruct {
-    //TODO: check whether to store transient attributes for given class
     public static final int OFFSET_NOT_AVAILABLE = -1;
     private static final Comparator<FieldStruct> FIELD_STRUCT_OFFSET_COMPARATOR = new Comparator<FieldStruct>() {
         @Override
@@ -21,6 +20,8 @@ public class ClassStruct {
 
     public final Class realClass;
     public final ClassStruct parent;
+
+    private SimpleMap<String, FieldStruct> fieldMap;
     private List<FieldStruct> sortedInstanceFields;
     private List<FieldStruct> sortedStaticFields;
 
@@ -57,17 +58,22 @@ public class ClassStruct {
         }
     }
 
+    public FieldStruct getDeclaredField(final String fieldName) {
+        return fieldMap == null ? null : fieldMap.get(fieldName);
+    }
+
     public FieldStruct getField(final String fieldName) {
-        int matchedIndex = getMatchedIndex(sortedInstanceFields, fieldName);
-        if (matchedIndex > -1) {
-            return sortedInstanceFields.get(matchedIndex);
+        ClassStruct current = this;
+        while (current.realClass.getSuperclass() != null) {
+            final FieldStruct fieldStruct = current.getDeclaredField(fieldName);
+            if (fieldStruct != null) {
+                return fieldStruct;
+            }
+            if (current.parent == null) {
+                break;
+            }
+            current = current.parent;
         }
-
-        matchedIndex = getMatchedIndex(sortedStaticFields, fieldName);
-        if (matchedIndex > -1) {
-            return sortedStaticFields.get(matchedIndex);
-        }
-
         return null;
     }
 
@@ -123,15 +129,20 @@ public class ClassStruct {
 
     private void parseFields(final Class currentClass) {
         final Field[] declaredFields = currentClass.getDeclaredFields();
-        FieldStruct fieldStruct;
-        for (final Field field : declaredFields) {
-            fieldStruct = new FieldStruct(field);
-            if (!fieldStruct.isStatic()) {
-                sortedInstanceFields = getOrCreateList(sortedInstanceFields);
-                sortedInstanceFields.add(fieldStruct);
-            } else {
-                sortedStaticFields = getOrCreateList(sortedStaticFields);
-                sortedStaticFields.add(fieldStruct);
+        if (declaredFields.length > 0) {
+            FieldStruct fieldStruct;
+            fieldMap = new SimpleArrayMap<>(declaredFields.length);
+            for (final Field field : declaredFields) {
+                fieldStruct = new FieldStruct(field);
+                fieldMap.put(field.getName(), fieldStruct);
+
+                if (!fieldStruct.isStatic()) {
+                    sortedInstanceFields = getOrCreateList(sortedInstanceFields);
+                    sortedInstanceFields.add(fieldStruct);
+                } else {
+                    sortedStaticFields = getOrCreateList(sortedStaticFields);
+                    sortedStaticFields.add(fieldStruct);
+                }
             }
         }
     }
@@ -143,18 +154,32 @@ public class ClassStruct {
         return fields;
     }
 
-    private int getMatchedIndex(final List<FieldStruct> fieldStructs, final String fieldName) {
-        if (hasFields(fieldStructs)) {
-            FieldStruct struct;
-            for (int i = fieldStructs.size() - 1; i >= 0; i--) {
-                struct = fieldStructs.get(i);
-                if (fieldName.equals(struct.name)) {
-                    return i;
-                }
-            }
-        }
-        return -1;
-    }
+//    public FieldStruct getField(final String fieldName) {
+//        int matchedIndex = getMatchedIndex(sortedInstanceFields, fieldName);
+//        if (matchedIndex > -1) {
+//            return sortedInstanceFields.get(matchedIndex);
+//        }
+//
+//        matchedIndex = getMatchedIndex(sortedStaticFields, fieldName);
+//        if (matchedIndex > -1) {
+//            return sortedStaticFields.get(matchedIndex);
+//        }
+//
+//        return null;
+//    }
+
+//    private int getMatchedIndex(final List<FieldStruct> fieldStructs, final String fieldName) {
+//        if (hasFields(fieldStructs)) {
+//            FieldStruct struct;
+//            for (int i = fieldStructs.size() - 1; i >= 0; i--) {
+//                struct = fieldStructs.get(i);
+//                if (fieldName.equals(struct.name)) {
+//                    return i;
+//                }
+//            }
+//        }
+//        return -1;
+//    }
 
     private void sortFields() {
         sortFieldByOffset(sortedInstanceFields);
