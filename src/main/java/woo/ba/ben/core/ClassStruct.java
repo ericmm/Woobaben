@@ -82,11 +82,11 @@ public class ClassStruct {
     }
 
     public List<FieldStruct> getSortedInstanceFields() {
-        return unmodifiableList(sortedInstanceFields);
+        return sortedInstanceFields;
     }
 
     public List<FieldStruct> getSortedStaticFields() {
-        return unmodifiableList(sortedStaticFields);
+        return sortedStaticFields;
     }
 
     public boolean hasInstanceFields() {
@@ -184,8 +184,12 @@ public class ClassStruct {
     private void sortFields() {
         sortFieldByOffset(sortedInstanceFields);
         sortFieldByOffset(sortedStaticFields);
-        sortedInstanceFields = unmodifiableList(sortedInstanceFields);
-        sortedStaticFields = unmodifiableList(sortedStaticFields);
+        if(hasInstanceFields()) {
+            sortedInstanceFields = unmodifiableList(sortedInstanceFields);
+        }
+        if(hasStaticFields()) {
+            sortedStaticFields = unmodifiableList(sortedStaticFields);
+        }
     }
 
     @Override
