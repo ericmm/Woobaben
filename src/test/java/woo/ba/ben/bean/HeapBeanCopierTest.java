@@ -3,7 +3,9 @@ package woo.ba.ben.bean;
 import org.junit.Before;
 import org.junit.Test;
 import woo.ba.ben.core.TestClassObj;
+import woo.ba.ben.core.TestFieldObj;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Date;
@@ -12,16 +14,16 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class HeapBeanCopierTest {
-    private long dateMillis = System.currentTimeMillis();
     private TestClassObj testClassObj;
+    private TestFieldObj testFieldObj;
 
     @Before
     public void setup() {
         testClassObj = new TestClassObj();
         testClassObj.dateArrayFieldInClassObj = new Date[1];
-        testClassObj.dateArrayFieldInClassObj[0] = new Date(dateMillis);
 
         testClassObj.setStringFieldInClassObj("stringInClassObj");
         testClassObj.setBigInteger(new BigInteger("111"));
@@ -31,13 +33,25 @@ public class HeapBeanCopierTest {
         testClassObj.setBooleanFieldInClassObj(true);
         testClassObj.setTestPrimitiveChar('A');
         testClassObj.setIntFieldInClassObj(54321);
+
+        testFieldObj = new TestFieldObj();
+
+
     }
 
     @Test
     public void shouldCopyHeapBean() throws InstantiationException {
-        final TestClassObj copiedObj = (TestClassObj) HeapBeanCopier.copyBean(testClassObj);
+        final TestFieldObj copiedTestFieldObj = HeapBeanCopier.copyBean(testFieldObj);
+        final TestClassObj copiedTestClassObj = HeapBeanCopier.copyBean(testClassObj);
 
-        assertThat(copiedObj, notNullValue());
-        assertThat(copiedObj.dateArrayFieldInClassObj[0], is(new Date(dateMillis)));
+        assertThat(copiedTestFieldObj, notNullValue());
+        assertThat(copiedTestFieldObj.bigDecimal, is(new BigDecimal("12345.67893")));
+
+        final List<String> copiedStringList = copiedTestClassObj.getStringList();
+        assertThat(copiedStringList.size(), is(1));
+        assertThat(copiedStringList.get(0), is("abc"));
+
+        final Class integerClass = HeapBeanCopier.copyBean(Integer.class);
+        assertTrue(integerClass.equals(Integer.class));
     }
 }
