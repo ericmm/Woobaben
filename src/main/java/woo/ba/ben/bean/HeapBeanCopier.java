@@ -22,6 +22,7 @@ public class HeapBeanCopier {
         UNSUPPORTED_CLASS_SET.add(Enum.class);
         UNSUPPORTED_CLASS_SET.add(Annotation.class);
         UNSUPPORTED_CLASS_SET.add(Field.class);
+        UNSUPPORTED_CLASS_SET.add(System.class);
     }
 
     private HeapBeanCopier() {
@@ -52,26 +53,30 @@ public class HeapBeanCopier {
             return originalObj;
         }
 
-        final Class<T> objClass = (Class<T>) originalObj.getClass();
-        final T targetObject = createInstance(originalObj, objClass);
-        final ClassStruct classStruct = ClassStructFactory.get(objClass);
+        final T targetObject = createInstance(originalObj, objectMap);
+        final ClassStruct classStruct = ClassStructFactory.get(originalObj.getClass());
         if (!classStruct.hasInstanceFields()) {
             return targetObject;
         }
 
+        Object attributeInOriginalObj, attributeInTargetObj;
         for (final FieldStruct fieldStruct : classStruct.getSortedInstanceFields()) {
             if (fieldStruct.type.isPrimitive()) {
-                copyPrimitiveAttribute(originalObj, targetObject, fieldStruct);
-            } else if (fieldStruct.type.isArray()) {
-                copyArrayAttribute(originalObj, targetObject, fieldStruct, objectMap);
+                copyPrimitive(originalObj, targetObject, fieldStruct);
             } else {
-                copyObjectAttribute(originalObj, targetObject, fieldStruct, objectMap);
+                attributeInOriginalObj = UNSAFE.getObject(originalObj, fieldStruct.offset);
+                if (fieldStruct.type.isArray()) {
+                    attributeInTargetObj = copyArray(attributeInOriginalObj, objectMap);
+                } else {
+                    attributeInTargetObj = copyObject(attributeInOriginalObj, objectMap);
+                }
+                UNSAFE.putObject(targetObject, fieldStruct.offset, attributeInTargetObj);
             }
         }
         return targetObject;
     }
 
-    private static void copyPrimitiveAttribute(final Object originalObj, final Object targetObject, final FieldStruct fieldStruct) {
+    private static void copyPrimitive(final Object originalObj, final Object targetObject, final FieldStruct fieldStruct) {
         if (fieldStruct.type == byte.class) {
             UNSAFE.putByte(targetObject, fieldStruct.offset, UNSAFE.getByte(originalObj, fieldStruct.offset));
         } else if (fieldStruct.type == boolean.class) {
@@ -91,29 +96,21 @@ public class HeapBeanCopier {
         }
     }
 
-    private static void copyArrayAttribute(final Object originalObj, final Object targetObject, final FieldStruct fieldStruct, final SimpleMap<Integer, Object> objectMap) throws InstantiationException {
-        final Object arrayInOriginalObj = UNSAFE.getObject(originalObj, fieldStruct.offset);
-        if (arrayInOriginalObj == null) {
-            UNSAFE.putObject(targetObject, fieldStruct.offset, null);
-            return;
+    private static Object copyArray(final Object arrayInOriginalObj, final SimpleMap<Integer, Object> objectMap) throws InstantiationException {
+        if(arrayInOriginalObj == null) {
+            return arrayInOriginalObj;
         }
 
-        final Integer originalArrayAttributeId = identityHashCode(arrayInOriginalObj);
-        Object targetArrayAttribute = objectMap.get(originalArrayAttributeId);
-        if (targetArrayAttribute == null) {
-            targetArrayAttribute = copyArray(arrayInOriginalObj, fieldStruct, objectMap);
-            objectMap.put(originalArrayAttributeId, targetArrayAttribute);
-        }
-        UNSAFE.putObject(targetObject, fieldStruct.offset, targetArrayAttribute);
-    }
-
-    private static Object copyArray(final Object arrayInOriginalObj, final FieldStruct fieldStruct, final SimpleMap<Integer, Object> objectMap) throws InstantiationException {
-        final Object targetArrayObj = createInstance(arrayInOriginalObj, fieldStruct.type);
-        final Class componentType = fieldStruct.type.getComponentType();
+        final Object arrayInTargetObj = createInstance(arrayInOriginalObj, objectMap);
         final int length = getLength(arrayInOriginalObj);
-        if (!componentType.isPrimitive()) {
+        if(length == 0) {
+            return arrayInTargetObj;
+        }
+
+        final Class arrayClass = arrayInOriginalObj.getClass();
+        if (!arrayClass.getComponentType().isPrimitive()) {
             final Object[] originalArray = (Object[]) arrayInOriginalObj;
-            final Object[] targetArray = (Object[]) targetArrayObj;
+            final Object[] targetArray = (Object[]) arrayInTargetObj;
 
             Object sourceObjElement, targetObjElement;
             for (int i = 0; i < length; i++) {
@@ -122,44 +119,24 @@ public class HeapBeanCopier {
                 targetArray[i] = targetObjElement;
             }
         } else {
-            arraycopy(arrayInOriginalObj, 0, targetArrayObj, 0, length);
+            arraycopy(arrayInOriginalObj, 0, arrayInTargetObj, 0, length);
         }
-        return targetArrayObj;
+        return arrayInTargetObj;
     }
 
-    private static void copyObjectAttribute(final Object originalObj, final Object targetObject, final FieldStruct fieldStruct, final SimpleMap<Integer, Object> objectMap) throws InstantiationException {
-        final Object originalObjAttribute = UNSAFE.getObject(originalObj, fieldStruct.offset);
-        if (originalObjAttribute == null) {
-            UNSAFE.putObject(targetObject, fieldStruct.offset, null);
-            return;
+    private static <T> T createInstance(final T originalObj, final SimpleMap<Integer, Object> objectMap) throws InstantiationException {
+        final Integer originalObjId = identityHashCode(originalObj);
+        T targetObject = (T) objectMap.get(originalObjId);
+        if (targetObject == null) {
+            Class<T> objClass = (Class<T>) originalObj.getClass();
+            if (objClass.isArray()) {
+                targetObject = createArrayInstance(originalObj, objClass);
+            } else {
+                targetObject = createNonArrayInstance(objClass);
+            }
+            objectMap.put(originalObjId, targetObject);
         }
-
-        final Integer originalObjAttributeId = identityHashCode(originalObjAttribute);
-        Object targetObjectAttribute = objectMap.get(originalObjAttributeId);
-        if (targetObjectAttribute == null) {
-            targetObjectAttribute = copyObject(originalObjAttribute, objectMap);
-            objectMap.put(originalObjAttributeId, targetObjectAttribute);
-        }
-        UNSAFE.putObject(targetObject, fieldStruct.offset, targetObjectAttribute);
-    }
-
-//    private byte[] copyValuesToBuffer(final Object originalObj, final ClassStruct classStruct) {
-//        if (classStruct.realClass.isArray()) {
-//
-//        }
-//        //normal object
-//        final long firstInstanceFieldStartPosition = classStruct.getInstanceFieldBlockStartPosition();
-//        final long instanceFieldsSize = classStruct.getInstanceFieldBlockEndPosition() - firstInstanceFieldStartPosition;
-//        final byte[] buffer = new byte[(int) instanceFieldsSize];
-//        UNSAFE.copyMemory(originalObj, firstInstanceFieldStartPosition, buffer, ARRAY_BYTE_BASE_OFFSET, instanceFieldsSize);
-//        return buffer;
-//    }
-
-    private static <T> T createInstance(final T originalObj, final Class<T> objClass) throws InstantiationException {
-        if (objClass.isArray()) {
-            return createArrayInstance(originalObj, objClass);
-        }
-        return createNonArrayInstance(objClass);
+        return targetObject;
     }
 
     private static <T> T createArrayInstance(final T originalObj, final Class<T> objClass) {
