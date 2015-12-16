@@ -156,8 +156,8 @@ public class ClassStructFactoryTest {
         assertThat(copiedTestClassObj.getIntFieldInClassObj(), is(100));
         assertThat(gotValue, is(100));
 
-        long minInstanceOffset = classObjStruct.getInstanceFieldBlockStartPosition();
-        long maxInstanceOffset = classObjStruct.getInstanceFieldBlockEndPosition();
+        long minInstanceOffset = classObjStruct.getFristInstanceFieldStartPosition();
+        long maxInstanceOffset = classObjStruct.getLastInstanceFieldEndPosition();
         final long instanceFieldsSize = maxInstanceOffset - minInstanceOffset;
         byte[] dataArray = new byte[(int) instanceFieldsSize];
         testClassObj.setIntFieldInClassObj(10);

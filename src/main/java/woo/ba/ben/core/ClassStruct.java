@@ -81,14 +81,14 @@ public class ClassStruct {
         return hasFields(sortedInstanceFields);
     }
 
-    public long getInstanceFieldBlockStartPosition() {
+    public long getFristInstanceFieldStartPosition() {
         if (hasInstanceFields()) {
             return sortedInstanceFields.get(0).offset;
         }
         return OFFSET_NOT_AVAILABLE;
     }
 
-    public long getInstanceFieldBlockEndPosition() {
+    public long getLastInstanceFieldEndPosition() {
         if (hasInstanceFields()) {
             final FieldStruct lastFieldStruct = sortedInstanceFields.get(sortedInstanceFields.size() - 1);
             return lastFieldStruct.offset + getTypeSize(lastFieldStruct.type);
