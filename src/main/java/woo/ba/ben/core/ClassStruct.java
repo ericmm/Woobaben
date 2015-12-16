@@ -23,7 +23,6 @@ public class ClassStruct {
 
     private SimpleMap<String, FieldStruct> fieldMap;
     private List<FieldStruct> sortedInstanceFields;
-    private List<FieldStruct> sortedStaticFields;
 
     ClassStruct(final Class realClass, final ClassStruct parent) {
         this.realClass = realClass;
@@ -45,16 +44,9 @@ public class ClassStruct {
     }
 
     private void addInherentFieldsFromParent(final ClassStruct parent) {
-        if (parent != null) {
-            if (parent.getSortedInstanceFields() != null) {
-                sortedInstanceFields = getOrCreateList(sortedInstanceFields);
-                sortedInstanceFields.addAll(parent.getSortedInstanceFields());
-            }
-
-            if (parent.getSortedStaticFields() != null) {
-                sortedStaticFields = getOrCreateList(sortedStaticFields);
-                sortedStaticFields.addAll(parent.getSortedStaticFields());
-            }
+        if (parent != null && parent.getSortedInstanceFields() != null) {
+            sortedInstanceFields = getOrCreateList(sortedInstanceFields);
+            sortedInstanceFields.addAll(parent.getSortedInstanceFields());
         }
     }
 
@@ -85,16 +77,8 @@ public class ClassStruct {
         return sortedInstanceFields;
     }
 
-    public List<FieldStruct> getSortedStaticFields() {
-        return sortedStaticFields;
-    }
-
     public boolean hasInstanceFields() {
         return hasFields(sortedInstanceFields);
-    }
-
-    public boolean hasStaticFields() {
-        return hasFields(sortedStaticFields);
     }
 
     public long getInstanceFieldBlockStartPosition() {
@@ -112,21 +96,6 @@ public class ClassStruct {
         return OFFSET_NOT_AVAILABLE;
     }
 
-    public long getStaticFieldBlockStartPosition() {
-        if (hasStaticFields()) {
-            return sortedStaticFields.get(0).offset;
-        }
-        return OFFSET_NOT_AVAILABLE;
-    }
-
-    public long getStaticFieldBlockEndPosition() {
-        if (hasStaticFields()) {
-            final FieldStruct lastFieldStruct = sortedStaticFields.get(sortedStaticFields.size() - 1);
-            return lastFieldStruct.offset + getTypeSize(lastFieldStruct.type);
-        }
-        return OFFSET_NOT_AVAILABLE;
-    }
-
     private void parseFields(final Class currentClass) {
         final Field[] declaredFields = currentClass.getDeclaredFields();
         if (declaredFields.length > 0) {
@@ -139,9 +108,6 @@ public class ClassStruct {
                 if (!fieldStruct.isStatic()) {
                     sortedInstanceFields = getOrCreateList(sortedInstanceFields);
                     sortedInstanceFields.add(fieldStruct);
-                } else {
-                    sortedStaticFields = getOrCreateList(sortedStaticFields);
-                    sortedStaticFields.add(fieldStruct);
                 }
             }
         }
@@ -183,12 +149,8 @@ public class ClassStruct {
 
     private void sortFields() {
         sortFieldByOffset(sortedInstanceFields);
-        sortFieldByOffset(sortedStaticFields);
-        if(hasInstanceFields()) {
+        if (hasInstanceFields()) {
             sortedInstanceFields = unmodifiableList(sortedInstanceFields);
-        }
-        if(hasStaticFields()) {
-            sortedStaticFields = unmodifiableList(sortedStaticFields);
         }
     }
 
