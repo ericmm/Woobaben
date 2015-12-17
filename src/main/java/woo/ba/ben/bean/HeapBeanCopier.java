@@ -96,12 +96,12 @@ public class HeapBeanCopier {
         }
     }
 
-    private static Object copyArray(final Object arrayInOriginalObj, final SimpleMap<Integer, Object> objectMap) throws InstantiationException {
+    private static <T> T copyArray(final T arrayInOriginalObj, final SimpleMap<Integer, Object> objectMap) throws InstantiationException {
         if(arrayInOriginalObj == null) {
             return arrayInOriginalObj;
         }
 
-        final Object arrayInTargetObj = createInstance(arrayInOriginalObj, objectMap);
+        final T arrayInTargetObj = createInstance(arrayInOriginalObj, objectMap);
         final int length = getLength(arrayInOriginalObj);
         if(length == 0) {
             return arrayInTargetObj;
