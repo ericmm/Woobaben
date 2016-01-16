@@ -34,10 +34,6 @@ public class FieldStruct {
         return isArray() ? type.getComponentType() : null;
     }
 
-    public Class getFlatType() {
-        return isArray() ? type.getComponentType() : type;
-    }
-
     public boolean isPrimitive() {
         return type.isPrimitive();
     }
@@ -55,12 +51,9 @@ public class FieldStruct {
     }
 
     public Type getFirstParameterizedType() {
-        final Type genericType = realField.getGenericType();
-        if (genericType instanceof ParameterizedType) {
-            final Type[] typeArguments = ((ParameterizedType) genericType).getActualTypeArguments();
-            if (typeArguments.length > 0) {
-                return typeArguments[0];
-            }
+        final Type[] typeArguments = getParameterizedTypes();
+        if(typeArguments!=null && typeArguments.length > 0) {
+            return typeArguments[0];
         }
         return null;
     }
@@ -96,11 +89,4 @@ public class FieldStruct {
                 ", realField=" + realField +
                 '}';
     }
-
-//    protected boolean isArray;
-//    protected Class<?> componentType;
-//    protected int length;
-//    protected int baseOffset; //ARRAY_INT_BASE_OFFSET, etc...
-//    protected int indexScale; //ARRAY_INT_INDEX_SCALE, etc...
-
 }

@@ -29,7 +29,6 @@ public class FieldStructTest {
         assertTrue(fieldStruct.offset > 0);
 
         assertFalse(fieldStruct.isArray());
-        assertTrue(fieldStruct.getFlatType() == int.class);
         assertTrue(fieldStruct.getArrayType() == null);
         assertThat(fieldStruct.getParameterizedTypes(), nullValue());
         assertTrue(fieldStruct.isPrimitive());
@@ -42,7 +41,6 @@ public class FieldStructTest {
 
         final FieldStruct stringsFieldStruct = new FieldStruct(strings);
         assertTrue(stringsFieldStruct.isArray());
-        assertTrue(stringsFieldStruct.getFlatType() == String.class);
         assertThat(stringsFieldStruct.getFirstParameterizedType(), nullValue());
 
         final FieldStruct twoDimensionShortsFieldStruct = new FieldStruct(twoDimensionShorts);
