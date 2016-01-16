@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import static java.util.Collections.sort;
 import static java.util.Collections.unmodifiableList;
@@ -21,7 +22,7 @@ public class ClassStruct {
     public final Class realClass;
     public final ClassStruct parent;
 
-    private SimpleMap<String, FieldStruct> fieldMap;
+    private Map<String, FieldStruct> fieldMap;
     private List<FieldStruct> sortedInstanceFields;
 
     ClassStruct(final Class realClass, final ClassStruct parent) {

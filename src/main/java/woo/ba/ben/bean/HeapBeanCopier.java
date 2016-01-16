@@ -6,6 +6,7 @@ import woo.ba.ben.core.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static java.lang.System.arraycopy;
@@ -34,7 +35,7 @@ public class HeapBeanCopier {
     }
 
     public static <T> T copyBean(final T originalObj, final boolean includingTransientFields) {
-        final SimpleMap<Integer, Object> objectMap = new SimpleArrayMap<>();
+        final Map<Integer, Object> objectMap = new SimpleArrayMap<>();
         return copyObject(originalObj, objectMap, includingTransientFields);
     }
 
@@ -53,7 +54,7 @@ public class HeapBeanCopier {
         return true;
     }
 
-    private static <T> T copyObject(final T originalObj, final SimpleMap<Integer, Object> objectMap, boolean includingTransientFields) {
+    private static <T> T copyObject(final T originalObj, final Map<Integer, Object> objectMap, boolean includingTransientFields) {
         if (originalObj == null || !isCloneable(originalObj)) {
             return originalObj;
         }
@@ -106,7 +107,7 @@ public class HeapBeanCopier {
         }
     }
 
-    private static <T> T copyArray(final T arrayInOriginalObj, final SimpleMap<Integer, Object> objectMap, boolean includingTransientFields) {
+    private static <T> T copyArray(final T arrayInOriginalObj, final Map<Integer, Object> objectMap, boolean includingTransientFields) {
         if (arrayInOriginalObj == null) {
             return arrayInOriginalObj;
         }
@@ -134,7 +135,7 @@ public class HeapBeanCopier {
         return arrayInTargetObj;
     }
 
-    private static <T> T createInstance(final T originalObj, final SimpleMap<Integer, Object> objectMap) {
+    private static <T> T createInstance(final T originalObj, final Map<Integer, Object> objectMap) {
         final Integer originalObjId = identityHashCode(originalObj);
         T targetObject = (T) objectMap.get(originalObjId);
         if (targetObject == null) {

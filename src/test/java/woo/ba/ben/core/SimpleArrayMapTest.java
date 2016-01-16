@@ -5,13 +5,14 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 public class SimpleArrayMapTest {
 
-    private SimpleMap simpleMap;
+    private Map simpleMap;
 
     @Before
     public void setup() {
@@ -23,7 +24,7 @@ public class SimpleArrayMapTest {
         assertThat(simpleMap, notNullValue());
         assertThat(simpleMap.size(), is(0));
 
-        final SimpleMap simpleMap2 = new SimpleArrayMap<>(5, 0.5f);
+        final Map simpleMap2 = new SimpleArrayMap<>(5, 0.5f);
         assertThat(simpleMap2, notNullValue());
         assertThat(simpleMap2.size(), is(0));
     }
@@ -41,7 +42,7 @@ public class SimpleArrayMapTest {
         final float[] invalidFillFactors = {-1f, 0f, 1f, 5f};
         for (final float invalidFillFactor : invalidFillFactors) {
             try {
-                final SimpleMap simpleMap = new SimpleArrayMap<>(size, invalidFillFactor);
+                final Map simpleMap = new SimpleArrayMap<>(size, invalidFillFactor);
                 fail();
             } catch (final IllegalArgumentException e) {
                 assertThat(e.getMessage(), is("FillFactor must be in (0, 1)"));
@@ -127,7 +128,7 @@ public class SimpleArrayMapTest {
 
         for (int times = 0; times < 5; times++) {
             final HashMap hashMap = new HashMap(size * 2);
-            final SimpleMap simpleMap = new SimpleArrayMap<>(size * 2, 0.75f);
+            final Map simpleMap = new SimpleArrayMap<>(size * 2, 0.75f);
 
             //warm up
             for (int i = 0; i < 100; i++) {

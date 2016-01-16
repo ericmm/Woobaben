@@ -1,40 +1,32 @@
 package woo.ba.ben.core;
 
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * refactored and improved based on Mikhail Vorontsov's ObjObjMap
  */
-public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
+public class SimpleArrayMap<K, V> implements Map<K, V> {
     private static final Object FREE_KEY = new Object();
     private static final Object REMOVED_KEY = new Object();
 
     private static final float DEFAULT_LOAD_FACTOR = 0.75f;
     private static final int DEFAULT_INITIAL_CAPACITY = 12;
     private static final int MAXIMUM_CAPACITY = 1 << 30;
-
-    /**
-     * Keys and values
-     */
-    private Object[] data;
-    /**
-     * Value for the null key (if inserted into a map)
-     */
-    private Object nullValue = null;
-    private boolean hasNull = false;
-
     /**
      * Fill factor, must be between (0 and 1)
      */
     private final float fillFactor;
     /**
-     * We will resize a map once it reaches this size
+     * Keys and values
      */
-    private int threshold;
+    private Object[] data;
     /**
-     * Current map size
+     * value for the null key
      */
+    private Object nullValue = null;
+    private boolean hasNull = false;
+
+    private int threshold;
     private int size;
     /**
      * Mask to calculate the original position
@@ -61,15 +53,40 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
             throw new IllegalArgumentException("Size must be positive!");
         }
 
-        final int capacity = arraySize(size, fillFactor);
-        indexMask = capacity - 1;
-        nextIndexMask = capacity * 2 - 1;
         this.fillFactor = fillFactor;
 
-        data = new Object[capacity * 2];
-        Arrays.fill(data, FREE_KEY);
+        initDataBlock(size);
+    }
 
-        threshold = (int) (capacity * fillFactor);
+    private static int getStartIndex(final Object key, final int indexMask) {
+        return (key.hashCode() & indexMask) << 1;
+    }
+
+    private static int getNextIndex(final int index, final int nextIndexMask) {
+        return (index + 2) & nextIndexMask;
+    }
+
+    private static int arraySize(final int expectedSize, final float fillFactor) {
+        final long dataSize = Math.max(2, nextPowerOfTwo((long) Math.ceil(expectedSize / fillFactor)));
+        checkSize(expectedSize, fillFactor, dataSize);
+        return (int) dataSize;
+    }
+
+    private static void checkSize(final int expectedSize, final float fillFactor, final long dataSize) {
+        if (dataSize > MAXIMUM_CAPACITY) {
+            throw new IllegalArgumentException("Too large (" + expectedSize + " expected elements with load factor " + fillFactor + ")");
+        }
+    }
+
+    private static long nextPowerOfTwo(long x) {
+        if (x == 0) return 1;
+        x--;
+        x |= x >> 1;
+        x |= x >> 2;
+        x |= x >> 4;
+        x |= x >> 8;
+        x |= x >> 16;
+        return (x | x >> 32) + 1;
     }
 
     @Override
@@ -186,6 +203,12 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
     }
 
     @Override
+    public void putAll(final Map<? extends K, ? extends V> m) {
+        //TODO
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public int size() {
         return size;
     }
@@ -196,6 +219,24 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         hasNull = false;
         nullValue = null;
         size = 0;
+    }
+
+    @Override
+    public Set<K> keySet() {
+        //TODO
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Collection<V> values() {
+        //TODO
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<Entry<K, V>> entrySet() {
+        //TODO
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -243,29 +284,13 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         return false;
     }
 
-    @Override
-    public void iterate(final EntryProcessor processor) {
-        if (hasNull) {
-            processor.processEntry(null, nullValue);
-        }
-
-        Object objKey;
-        for (int i = 0; i < data.length; i += 2) {
-            objKey = data[i];
-            if (objKey == FREE_KEY || objKey == REMOVED_KEY) {
-                continue;
-            }
-            processor.processEntry(objKey, data[i + 1]);
-        }
-    }
-
     /////////////////////////////////////////
     private void putValue(final K key, final V value, final int index) {
         data[index] = key;
         data[index + 1] = value;
 
         if (size >= threshold) {
-            resize(data.length * 2); //size is set inside
+            resize();
         } else {
             ++size;
         }
@@ -296,54 +321,30 @@ public class SimpleArrayMap<K, V> implements SimpleMap<K, V> {
         }
     }
 
-    private void resize(final int newCapacity) {
-        //newCapacity = 2 * oldCapacity
-        final int oldCapacity = data.length;
-        final Object[] oldData = data;
+    private void initDataBlock(final int size) {
+        final int capacity = arraySize(size, fillFactor);
+        indexMask = capacity - 1;
+        nextIndexMask = capacity * 2 - 1;
 
-        threshold = (int) (oldCapacity * fillFactor);
-        indexMask = oldCapacity - 1;
-        nextIndexMask = newCapacity - 1;
-
-        data = new Object[newCapacity];
+        data = new Object[capacity * 2];
         Arrays.fill(data, FREE_KEY);
+
+        threshold = (int) (capacity * fillFactor);
+    }
+
+    private void resize() {
+        final Object[] oldData = data;
+        initDataBlock(size * 2);
 
         size = hasNull ? 1 : 0;
 
         Object oldKey;
-        for (int i = 0; i < oldCapacity; i += 2) {
+        for (int i = 0; i < oldData.length; i += 2) {
             oldKey = oldData[i];
             if (oldKey != FREE_KEY && oldKey != REMOVED_KEY) {
                 put((K) oldKey, (V) oldData[i + 1]);
                 size++;
             }
         }
-    }
-
-    private static int getStartIndex(final Object key, final int indexMask) {
-        return (key.hashCode() & indexMask) << 1;
-    }
-
-    private static int getNextIndex(final int index, final int nextIndexMask) {
-        return (index + 2) & nextIndexMask;
-    }
-
-    private static int arraySize(final int expectedSize, final float fillFactor) {
-        final long s = Math.max(2, nextPowerOfTwo((long) Math.ceil(expectedSize / fillFactor)));
-        if (s > MAXIMUM_CAPACITY) {
-            throw new IllegalArgumentException("Too large (" + expectedSize + " expected elements with load factor " + fillFactor + ")");
-        }
-        return (int) s;
-    }
-
-    private static long nextPowerOfTwo(long x) {
-        if (x == 0) return 1;
-        x--;
-        x |= x >> 1;
-        x |= x >> 2;
-        x |= x >> 4;
-        x |= x >> 8;
-        x |= x >> 16;
-        return (x | x >> 32) + 1;
     }
 }

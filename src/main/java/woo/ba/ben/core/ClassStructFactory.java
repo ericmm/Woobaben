@@ -3,11 +3,12 @@ package woo.ba.ben.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ClassStructFactory {
     //TODO: allow the eldest Classes to be garbage collected
     private static final int DEFAULT_CACHE_SIZE = 1024;
-    private static final SimpleMap<Class, ClassStruct> CACHE = new SimpleArrayMap<>(DEFAULT_CACHE_SIZE);
+    private static final Map<Class, ClassStruct> CACHE = new SimpleArrayMap<>(DEFAULT_CACHE_SIZE);
 
     private ClassStructFactory() {
     }
