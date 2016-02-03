@@ -57,7 +57,7 @@ public class ClassStructFactoryTest {
 
     @Test
     public void shouldGetBlock() throws NoSuchFieldException, IllegalAccessException {
-        final Unsafe unsafe = UnsafeFactory.get();
+        final Unsafe unsafe = UnsafeFactory.UNSAFE;
 
         final ClassStruct classObjStruct = ClassStructFactory.get(TestClassObj.class);
         final ClassStruct emptyObjStruct = ClassStructFactory.get(TestEmptyObj.class);
@@ -138,7 +138,7 @@ public class ClassStructFactoryTest {
 
     @Test
     public void shouldCopyBean() {
-        final Unsafe unsafe = UnsafeFactory.get();
+        final Unsafe unsafe = UnsafeFactory.UNSAFE;
 
         final ClassStruct classObjStruct = ClassStructFactory.get(TestClassObj.class);
         final TestClassObj testClassObj = new TestClassObj();

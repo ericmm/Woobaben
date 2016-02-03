@@ -11,7 +11,7 @@ import static org.junit.Assert.assertTrue;
 public class UnsafeFactoryTest {
     @Test
     public void shouldGetUnsafeInstanceSuccessfully() {
-        final Unsafe unsafe = UnsafeFactory.get();
+        final Unsafe unsafe = UnsafeFactory.UNSAFE;
 
         assertTrue(unsafe != null);
         assertTrue(UnsafeFactory.ADDRESS_SIZE > 0);

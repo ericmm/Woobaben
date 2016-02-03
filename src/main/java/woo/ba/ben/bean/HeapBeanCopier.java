@@ -72,7 +72,7 @@ public class HeapBeanCopier {
             if (fieldStruct.type.isPrimitive()) {
                 copyPrimitive(originalObj, targetObject, fieldStruct, includingTransientFields);
             } else {
-                if (includingTransientFields && fieldStruct.isTransient()) {
+                if (!includingTransientFields && fieldStruct.isTransient()) {
                     UNSAFE.putObject(targetObject, fieldStruct.offset, null);
                     continue;
                 }
@@ -90,22 +90,23 @@ public class HeapBeanCopier {
     }
 
     private static void copyPrimitive(final Object originalObj, final Object targetObject, final FieldStruct fieldStruct, boolean includingTransientFields) {
+        final boolean needCopy = !fieldStruct.isTransient() || (includingTransientFields && fieldStruct.isTransient());
         if (fieldStruct.type == byte.class) {
-            UNSAFE.putByte(targetObject, fieldStruct.offset, includingTransientFields ? UNSAFE.getByte(originalObj, fieldStruct.offset) : (byte) 0);
+            UNSAFE.putByte(targetObject, fieldStruct.offset, needCopy ? UNSAFE.getByte(originalObj, fieldStruct.offset) : (byte) 0);
         } else if (fieldStruct.type == boolean.class) {
-            UNSAFE.putBoolean(targetObject, fieldStruct.offset, includingTransientFields ? UNSAFE.getBoolean(originalObj, fieldStruct.offset) : false);
+            UNSAFE.putBoolean(targetObject, fieldStruct.offset, needCopy ? UNSAFE.getBoolean(originalObj, fieldStruct.offset) : false);
         } else if (fieldStruct.type == char.class) {
-            UNSAFE.putChar(targetObject, fieldStruct.offset, includingTransientFields ? UNSAFE.getChar(originalObj, fieldStruct.offset) : (char) 0);
+            UNSAFE.putChar(targetObject, fieldStruct.offset, needCopy ? UNSAFE.getChar(originalObj, fieldStruct.offset) : (char) 0);
         } else if (fieldStruct.type == short.class) {
-            UNSAFE.putShort(targetObject, fieldStruct.offset, includingTransientFields ? UNSAFE.getShort(originalObj, fieldStruct.offset) : (short) 0);
+            UNSAFE.putShort(targetObject, fieldStruct.offset, needCopy ? UNSAFE.getShort(originalObj, fieldStruct.offset) : (short) 0);
         } else if (fieldStruct.type == float.class) {
-            UNSAFE.putFloat(targetObject, fieldStruct.offset, includingTransientFields ? UNSAFE.getFloat(originalObj, fieldStruct.offset) : 0F);
+            UNSAFE.putFloat(targetObject, fieldStruct.offset, needCopy ? UNSAFE.getFloat(originalObj, fieldStruct.offset) : 0F);
         } else if (fieldStruct.type == int.class) {
-            UNSAFE.putInt(targetObject, fieldStruct.offset, includingTransientFields ? UNSAFE.getInt(originalObj, fieldStruct.offset) : 0);
+            UNSAFE.putInt(targetObject, fieldStruct.offset, needCopy ? UNSAFE.getInt(originalObj, fieldStruct.offset) : 0);
         } else if (fieldStruct.type == long.class) {
-            UNSAFE.putLong(targetObject, fieldStruct.offset, includingTransientFields ? UNSAFE.getLong(originalObj, fieldStruct.offset) : 0L);
+            UNSAFE.putLong(targetObject, fieldStruct.offset, needCopy ? UNSAFE.getLong(originalObj, fieldStruct.offset) : 0L);
         } else if (fieldStruct.type == double.class) {
-            UNSAFE.putDouble(targetObject, fieldStruct.offset, includingTransientFields ? UNSAFE.getDouble(originalObj, fieldStruct.offset) : 0D);
+            UNSAFE.putDouble(targetObject, fieldStruct.offset, needCopy ? UNSAFE.getDouble(originalObj, fieldStruct.offset) : 0D);
         }
     }
 
