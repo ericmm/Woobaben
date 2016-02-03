@@ -3,6 +3,8 @@ package woo.ba.ben.bean;
 
 import woo.ba.ben.core.FieldStruct;
 
+import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
+
 class TypedObjectValueAccessor extends BaseValueAccessor implements TypedObjectPropertyAccessor {
     private final static TypedObjectPropertyAccessor TYPED_OBJECT_PROPERTY_ACCESSOR = new TypedObjectValueAccessor();
 

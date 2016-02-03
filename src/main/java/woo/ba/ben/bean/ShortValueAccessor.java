@@ -3,6 +3,8 @@ package woo.ba.ben.bean;
 
 import woo.ba.ben.core.FieldStruct;
 
+import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
+
 class ShortValueAccessor extends BaseValueAccessor implements ShortPropertyAccessor {
     private final static ShortPropertyAccessor SHORT_PROPERTY_ACCESSOR = new ShortValueAccessor();
 

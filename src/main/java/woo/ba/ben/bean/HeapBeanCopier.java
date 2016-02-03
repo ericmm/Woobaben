@@ -1,7 +1,9 @@
 package woo.ba.ben.bean;
 
-import sun.misc.Unsafe;
-import woo.ba.ben.core.*;
+import woo.ba.ben.core.ClassStruct;
+import woo.ba.ben.core.ClassStructFactory;
+import woo.ba.ben.core.FieldStruct;
+import woo.ba.ben.core.SimpleArrayMap;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -13,9 +15,9 @@ import static java.lang.System.arraycopy;
 import static java.lang.System.identityHashCode;
 import static java.lang.reflect.Array.getLength;
 import static java.lang.reflect.Array.newInstance;
+import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 public class HeapBeanCopier {
-    private static final Unsafe UNSAFE = UnsafeFactory.get();
     private static final Set<Class> UNSUPPORTED_CLASS_SET = new HashSet<>();
 
     static {

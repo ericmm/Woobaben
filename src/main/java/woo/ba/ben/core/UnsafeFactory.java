@@ -11,7 +11,7 @@ public class UnsafeFactory {
     public static final int OBJECT_REF_SIZE;
     public static final ByteOrder SYSTEM_BYTE_ORDER = ByteOrder.nativeOrder();
 
-    private static final Unsafe UNSAFE;
+    public static final Unsafe UNSAFE;
 
     static {
         try {
@@ -29,9 +29,9 @@ public class UnsafeFactory {
     private UnsafeFactory() {
     }
 
-    public static Unsafe get() {
-        return UNSAFE;
-    }
+//    public static Unsafe get() {
+//        return UNSAFE;
+//    }
 
     public static int getTypeSize(final Class classType) {
         return UNSAFE.arrayIndexScale(classType);

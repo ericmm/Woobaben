@@ -1,12 +1,11 @@
 package woo.ba.ben.bean;
 
-import sun.misc.Unsafe;
 import woo.ba.ben.core.ClassStructFactory;
 import woo.ba.ben.core.FieldStruct;
-import woo.ba.ben.core.UnsafeFactory;
+
+import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 public abstract class BaseValueAccessor {
-    protected Unsafe UNSAFE = UnsafeFactory.get();
 
     protected Class getBeanClass(final Object bean) {
         if (bean == null) {

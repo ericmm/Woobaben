@@ -1,14 +1,13 @@
 package woo.ba.ben.core;
 
-import sun.misc.Unsafe;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
+import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
+
 public class FieldStruct {
-    private static final Unsafe UNSAFE = UnsafeFactory.get();
 
     public final String name;
     public final Class type;

@@ -3,6 +3,8 @@ package woo.ba.ben.bean;
 
 import woo.ba.ben.core.FieldStruct;
 
+import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
+
 class LongValueAccessor extends BaseValueAccessor implements LongPropertyAccessor {
     private final static LongPropertyAccessor LONG_PROPERTY_ACCESSOR = new LongValueAccessor();
 

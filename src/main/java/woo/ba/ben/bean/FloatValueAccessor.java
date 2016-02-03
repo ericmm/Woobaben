@@ -3,6 +3,8 @@ package woo.ba.ben.bean;
 
 import woo.ba.ben.core.FieldStruct;
 
+import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
+
 class FloatValueAccessor extends BaseValueAccessor implements FloatPropertyAccessor {
     private final static FloatPropertyAccessor FLOAT_PROPERTY_ACCESSOR = new FloatValueAccessor();
 

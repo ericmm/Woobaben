@@ -3,6 +3,8 @@ package woo.ba.ben.bean;
 
 import woo.ba.ben.core.FieldStruct;
 
+import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
+
 class BooleanValueAccessor extends BaseValueAccessor implements BooleanPropertyAccessor {
     private final static BooleanPropertyAccessor BOOLEAN_PROPERTY_ACCESSOR = new BooleanValueAccessor();
 

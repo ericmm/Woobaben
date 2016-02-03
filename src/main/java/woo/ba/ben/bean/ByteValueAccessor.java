@@ -3,6 +3,8 @@ package woo.ba.ben.bean;
 
 import woo.ba.ben.core.FieldStruct;
 
+import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
+
 class ByteValueAccessor extends BaseValueAccessor implements BytePropertyAccessor {
     private final static BytePropertyAccessor BYTE_PROPERTY_ACCESSOR = new ByteValueAccessor();
 
