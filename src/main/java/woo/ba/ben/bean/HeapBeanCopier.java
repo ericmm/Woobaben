@@ -26,19 +26,23 @@ public class HeapBeanCopier {
         UNSUPPORTED_CLASS_SET.add(Annotation.class);
         UNSUPPORTED_CLASS_SET.add(Field.class);
         UNSUPPORTED_CLASS_SET.add(System.class);
-        //add more
+        UNSUPPORTED_CLASS_SET.add(HeapBeanCopier.class);
+        //add more, TODO: make this configurable or let user add others.
     }
 
     private HeapBeanCopier() {
     }
 
-    public static <T> T copyBean(final T originalObj) {
-        return copyBean(originalObj, false);
-    }
+    public static <T> T deepCopy(final T originalObj) {
+        if (originalObj == null) {
+            return originalObj;
+        }
 
-    public static <T> T copyBean(final T originalObj, final boolean includingTransientFields) {
         final Map<Integer, Object> objectMap = new SimpleArrayMap<>();
-        return copyObject(originalObj, objectMap, includingTransientFields);
+        if(originalObj.getClass().isArray()) {
+            return copyArray(originalObj, objectMap);
+        }
+        return copyObject(originalObj, objectMap);
     }
 
     private static <T> boolean isCloneable(final T originalObj) {
@@ -47,16 +51,10 @@ public class HeapBeanCopier {
                 return false;
             }
         }
-
-        final Class<T> clz = (Class<T>) originalObj.getClass();
-        if (clz.equals(HeapBeanCopier.class)) {
-            return false;
-        }
-
         return true;
     }
 
-    private static <T> T copyObject(final T originalObj, final Map<Integer, Object> objectMap, boolean includingTransientFields) {
+    private static <T> T copyObject(final T originalObj, final Map<Integer, Object> objectMap) {
         if (originalObj == null || !isCloneable(originalObj)) {
             return originalObj;
         }
@@ -70,18 +68,13 @@ public class HeapBeanCopier {
         Object attributeInOriginalObj, attributeInTargetObj;
         for (final FieldStruct fieldStruct : classStruct.getSortedInstanceFields()) {
             if (fieldStruct.type.isPrimitive()) {
-                copyPrimitive(originalObj, targetObject, fieldStruct, includingTransientFields);
+                copyPrimitive(originalObj, targetObject, fieldStruct);
             } else {
-                if (!includingTransientFields && fieldStruct.isTransient()) {
-                    UNSAFE.putObject(targetObject, fieldStruct.offset, null);
-                    continue;
-                }
-
                 attributeInOriginalObj = UNSAFE.getObject(originalObj, fieldStruct.offset);
                 if (fieldStruct.type.isArray()) {
-                    attributeInTargetObj = copyArray(attributeInOriginalObj, objectMap, includingTransientFields);
+                    attributeInTargetObj = copyArray(attributeInOriginalObj, objectMap);
                 } else {
-                    attributeInTargetObj = copyObject(attributeInOriginalObj, objectMap, includingTransientFields);
+                    attributeInTargetObj = copyObject(attributeInOriginalObj, objectMap);
                 }
                 UNSAFE.putObject(targetObject, fieldStruct.offset, attributeInTargetObj);
             }
@@ -89,53 +82,47 @@ public class HeapBeanCopier {
         return targetObject;
     }
 
-    private static void copyPrimitive(final Object originalObj, final Object targetObject, final FieldStruct fieldStruct, boolean includingTransientFields) {
-        final boolean needCopy = !fieldStruct.isTransient() || (includingTransientFields && fieldStruct.isTransient());
+    private static <T> void copyPrimitive(final T originalObj, final T targetObject, final FieldStruct fieldStruct) {
         if (fieldStruct.type == byte.class) {
-            UNSAFE.putByte(targetObject, fieldStruct.offset, needCopy ? UNSAFE.getByte(originalObj, fieldStruct.offset) : (byte) 0);
+            UNSAFE.putByte(targetObject, fieldStruct.offset, UNSAFE.getByte(originalObj, fieldStruct.offset));
         } else if (fieldStruct.type == boolean.class) {
-            UNSAFE.putBoolean(targetObject, fieldStruct.offset, needCopy ? UNSAFE.getBoolean(originalObj, fieldStruct.offset) : false);
+            UNSAFE.putBoolean(targetObject, fieldStruct.offset, UNSAFE.getBoolean(originalObj, fieldStruct.offset));
         } else if (fieldStruct.type == char.class) {
-            UNSAFE.putChar(targetObject, fieldStruct.offset, needCopy ? UNSAFE.getChar(originalObj, fieldStruct.offset) : (char) 0);
+            UNSAFE.putChar(targetObject, fieldStruct.offset, UNSAFE.getChar(originalObj, fieldStruct.offset));
         } else if (fieldStruct.type == short.class) {
-            UNSAFE.putShort(targetObject, fieldStruct.offset, needCopy ? UNSAFE.getShort(originalObj, fieldStruct.offset) : (short) 0);
+            UNSAFE.putShort(targetObject, fieldStruct.offset, UNSAFE.getShort(originalObj, fieldStruct.offset));
         } else if (fieldStruct.type == float.class) {
-            UNSAFE.putFloat(targetObject, fieldStruct.offset, needCopy ? UNSAFE.getFloat(originalObj, fieldStruct.offset) : 0F);
+            UNSAFE.putFloat(targetObject, fieldStruct.offset, UNSAFE.getFloat(originalObj, fieldStruct.offset));
         } else if (fieldStruct.type == int.class) {
-            UNSAFE.putInt(targetObject, fieldStruct.offset, needCopy ? UNSAFE.getInt(originalObj, fieldStruct.offset) : 0);
+            UNSAFE.putInt(targetObject, fieldStruct.offset, UNSAFE.getInt(originalObj, fieldStruct.offset));
         } else if (fieldStruct.type == long.class) {
-            UNSAFE.putLong(targetObject, fieldStruct.offset, needCopy ? UNSAFE.getLong(originalObj, fieldStruct.offset) : 0L);
+            UNSAFE.putLong(targetObject, fieldStruct.offset, UNSAFE.getLong(originalObj, fieldStruct.offset));
         } else if (fieldStruct.type == double.class) {
-            UNSAFE.putDouble(targetObject, fieldStruct.offset, needCopy ? UNSAFE.getDouble(originalObj, fieldStruct.offset) : 0D);
+            UNSAFE.putDouble(targetObject, fieldStruct.offset, UNSAFE.getDouble(originalObj, fieldStruct.offset));
         }
     }
 
-    private static <T> T copyArray(final T arrayInOriginalObj, final Map<Integer, Object> objectMap, boolean includingTransientFields) {
-        if (arrayInOriginalObj == null) {
-            return arrayInOriginalObj;
+    private static <T> T copyArray(final T arrayObj, final Map<Integer, Object> objectMap) {
+        if (arrayObj == null) {
+            return arrayObj;
         }
 
-        final T arrayInTargetObj = createInstance(arrayInOriginalObj, objectMap);
-        final int length = getLength(arrayInOriginalObj);
+        final T copiedArrayObj = createInstance(arrayObj, objectMap);
+        final int length = getLength(arrayObj);
         if (length == 0) {
-            return arrayInTargetObj;
+            return copiedArrayObj;
         }
 
-        final Class arrayClass = arrayInOriginalObj.getClass();
-        if (!arrayClass.getComponentType().isPrimitive()) {
-            final Object[] originalArray = (Object[]) arrayInOriginalObj;
-            final Object[] targetArray = (Object[]) arrayInTargetObj;
-
-            Object sourceObjElement, targetObjElement;
-            for (int i = 0; i < length; i++) {
-                sourceObjElement = originalArray[i];
-                targetObjElement = copyObject(sourceObjElement, objectMap, includingTransientFields);
-                targetArray[i] = targetObjElement;
-            }
+        if (arrayObj.getClass().getComponentType().isPrimitive()) {
+            arraycopy(arrayObj, 0, copiedArrayObj, 0, length);
         } else {
-            arraycopy(arrayInOriginalObj, 0, arrayInTargetObj, 0, length);
+            final Object[] originalArray = (Object[]) arrayObj;
+            final Object[] targetArray = (Object[]) copiedArrayObj;
+            for (int i = 0; i < length; i++) {
+                targetArray[i] = copyObject(originalArray[i], objectMap);;
+            }
         }
-        return arrayInTargetObj;
+        return copiedArrayObj;
     }
 
     private static <T> T createInstance(final T originalObj, final Map<Integer, Object> objectMap) {
