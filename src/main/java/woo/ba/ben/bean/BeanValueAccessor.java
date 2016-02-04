@@ -1,11 +1,11 @@
 package woo.ba.ben.bean;
 
-import woo.ba.ben.core.SimpleArrayMap;
+import woo.ba.ben.core.ArrayBackedHashMap;
 
 import java.util.Map;
 
 public class BeanValueAccessor {
-    private final static Map<Class, IPropertyAccessor> ACCESSOR_MAP = new SimpleArrayMap<>(9);
+    private final static Map<Class, IPropertyAccessor> ACCESSOR_MAP = new ArrayBackedHashMap<>(9);
 
     static {
         ACCESSOR_MAP.put(boolean.class, BooleanValueAccessor.getInstance());

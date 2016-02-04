@@ -101,7 +101,7 @@ public class ClassStruct {
         final Field[] declaredFields = currentClass.getDeclaredFields();
         if (declaredFields.length > 0) {
             FieldStruct fieldStruct;
-            fieldMap = new SimpleArrayMap<>(declaredFields.length);
+            fieldMap = new ArrayBackedHashMap<>(declaredFields.length);
             for (final Field field : declaredFields) {
                 fieldStruct = new FieldStruct(field);
                 fieldMap.put(field.getName(), fieldStruct);

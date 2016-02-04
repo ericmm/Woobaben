@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * refactored and improved based on Mikhail Vorontsov's ObjObjMap
  */
-public class SimpleArrayMap<K, V> implements Map<K, V> {
+public class ArrayBackedHashMap<K, V> implements Map<K, V> {
     private static final Object FREE_KEY = new Object();
     private static final Object REMOVED_KEY = new Object();
 
@@ -37,15 +37,15 @@ public class SimpleArrayMap<K, V> implements Map<K, V> {
      */
     private int nextIndexMask;
 
-    public SimpleArrayMap() {
+    public ArrayBackedHashMap() {
         this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR);
     }
 
-    public SimpleArrayMap(final int size) {
+    public ArrayBackedHashMap(final int size) {
         this(size, DEFAULT_LOAD_FACTOR);
     }
 
-    public SimpleArrayMap(final int size, final float fillFactor) {
+    public ArrayBackedHashMap(final int size, final float fillFactor) {
         if (fillFactor <= 0 || fillFactor >= 1) {
             throw new IllegalArgumentException("FillFactor must be in (0, 1)");
         }
@@ -203,12 +203,6 @@ public class SimpleArrayMap<K, V> implements Map<K, V> {
     }
 
     @Override
-    public void putAll(final Map<? extends K, ? extends V> m) {
-        //TODO
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public int size() {
         return size;
     }
@@ -219,24 +213,6 @@ public class SimpleArrayMap<K, V> implements Map<K, V> {
         hasNull = false;
         nullValue = null;
         size = 0;
-    }
-
-    @Override
-    public Set<K> keySet() {
-        //TODO
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Collection<V> values() {
-        //TODO
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Set<Entry<K, V>> entrySet() {
-        //TODO
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -284,6 +260,29 @@ public class SimpleArrayMap<K, V> implements Map<K, V> {
         return false;
     }
 
+    @Override
+    public void putAll(final Map<? extends K, ? extends V> m) {
+        //TODO
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<K> keySet() {
+        //TODO
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Collection<V> values() {
+        //TODO
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<Entry<K, V>> entrySet() {
+        //TODO
+        throw new UnsupportedOperationException();
+    }
     /////////////////////////////////////////
     private void putValue(final K key, final V value, final int index) {
         data[index] = key;

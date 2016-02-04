@@ -1,9 +1,9 @@
 package woo.ba.ben.bean;
 
+import woo.ba.ben.core.ArrayBackedHashMap;
 import woo.ba.ben.core.ClassStruct;
 import woo.ba.ben.core.ClassStructFactory;
 import woo.ba.ben.core.FieldStruct;
-import woo.ba.ben.core.SimpleArrayMap;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -38,7 +38,7 @@ public class HeapBeanCopier {
             return originalObj;
         }
 
-        final Map<Integer, Object> objectMap = new SimpleArrayMap<>();
+        final Map<Integer, Object> objectMap = new ArrayBackedHashMap<>();
         if(originalObj.getClass().isArray()) {
             return copyArray(originalObj, objectMap);
         }

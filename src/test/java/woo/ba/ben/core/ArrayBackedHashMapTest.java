@@ -10,13 +10,13 @@ import java.util.Map;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
-public class SimpleArrayMapTest {
+public class ArrayBackedHashMapTest {
 
     private Map simpleMap;
 
     @Before
     public void setup() {
-        simpleMap = new SimpleArrayMap<>();
+        simpleMap = new ArrayBackedHashMap<>();
     }
 
     @Test
@@ -24,7 +24,7 @@ public class SimpleArrayMapTest {
         assertThat(simpleMap, notNullValue());
         assertThat(simpleMap.size(), is(0));
 
-        final Map simpleMap2 = new SimpleArrayMap<>(5, 0.5f);
+        final Map simpleMap2 = new ArrayBackedHashMap<>(5, 0.5f);
         assertThat(simpleMap2, notNullValue());
         assertThat(simpleMap2.size(), is(0));
     }
@@ -32,7 +32,7 @@ public class SimpleArrayMapTest {
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowExceptionWhenSizeIsNotPositive() {
         for (final int invalidSize : new int[] {-1, 0}) {
-            new SimpleArrayMap<>(invalidSize);
+            new ArrayBackedHashMap<>(invalidSize);
         }
     }
 
@@ -42,7 +42,7 @@ public class SimpleArrayMapTest {
         final float[] invalidFillFactors = {-1f, 0f, 1f, 5f};
         for (final float invalidFillFactor : invalidFillFactors) {
             try {
-                final Map simpleMap = new SimpleArrayMap<>(size, invalidFillFactor);
+                final Map simpleMap = new ArrayBackedHashMap<>(size, invalidFillFactor);
                 fail();
             } catch (final IllegalArgumentException e) {
                 assertThat(e.getMessage(), is("FillFactor must be in (0, 1)"));
@@ -128,7 +128,7 @@ public class SimpleArrayMapTest {
 
         for (int times = 0; times < 5; times++) {
             final HashMap hashMap = new HashMap(size * 2);
-            final Map simpleMap = new SimpleArrayMap<>(size * 2, 0.75f);
+            final Map simpleMap = new ArrayBackedHashMap<>(size * 2, 0.75f);
 
             //warm up
             for (int i = 0; i < 100; i++) {
