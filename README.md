@@ -1,15 +1,15 @@
 # Woobaben
-Thoughts in my mind
+Some thoughts in my mind
 
 Talk is cheap, show me the code.
 
 ---------------------
-<li>SimpeArrayMap - refactored and improved based on Mikhail Vorontsov's ObjObjMap, faster and less memory consumption than java.util.HashMap  --Done 
+<li>ArrayBackedHashMap - refactored and improved based on Mikhail Vorontsov's ObjObjMap and implemented Map interface, it's faster and less memory consumption than java.util.HashMap  --Done 
 <li>Faster java object attribute accessors by utlilising sun.misc.Unsafe  --Done 
 <li>Faster java heap object copy (clone) by sun.misc.Unsafe  --Done
 
 <b>Near plan</b>
-<li>Heap object serialiser and deserialiser (JSON, Binary format, etc.)
+<li>Heap object serialiser and deserialiser (binary format)
 <li>Off-heap object facility
 <li>Off-heap object copy/serialise/deserialise
 
