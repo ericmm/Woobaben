@@ -27,10 +27,13 @@ public class HeapBeanCopier {
         UNSUPPORTED_CLASS_SET.add(Field.class);
         UNSUPPORTED_CLASS_SET.add(System.class);
         UNSUPPORTED_CLASS_SET.add(HeapBeanCopier.class);
-        //add more, TODO: make this configurable or let user add others.
     }
 
     private HeapBeanCopier() {
+    }
+
+    public static boolean addNonCloneableClass(final Class singletonClass) {
+        return UNSUPPORTED_CLASS_SET.add(singletonClass);
     }
 
     public static <T> T deepCopy(final T originalObj) {
@@ -39,7 +42,7 @@ public class HeapBeanCopier {
         }
 
         final Map<Integer, Object> objectMap = new ArrayBackedHashMap<>();
-        if(originalObj.getClass().isArray()) {
+        if (originalObj.getClass().isArray()) {
             return copyArray(originalObj, objectMap);
         }
         return copyObject(originalObj, objectMap);
@@ -119,7 +122,8 @@ public class HeapBeanCopier {
             final Object[] originalArray = (Object[]) arrayObj;
             final Object[] targetArray = (Object[]) copiedArrayObj;
             for (int i = 0; i < length; i++) {
-                targetArray[i] = copyObject(originalArray[i], objectMap);;
+                targetArray[i] = copyObject(originalArray[i], objectMap);
+                ;
             }
         }
         return copiedArrayObj;
