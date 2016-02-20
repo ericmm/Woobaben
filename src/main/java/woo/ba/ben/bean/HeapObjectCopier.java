@@ -17,7 +17,7 @@ import static java.lang.reflect.Array.getLength;
 import static java.lang.reflect.Array.newInstance;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
-public class HeapBeanCopier {
+public class HeapObjectCopier {
     private static final Set<Class> UNSUPPORTED_CLASS_SET = new HashSet<>();
 
     static {
@@ -26,13 +26,13 @@ public class HeapBeanCopier {
         UNSUPPORTED_CLASS_SET.add(Annotation.class);
         UNSUPPORTED_CLASS_SET.add(Field.class);
         UNSUPPORTED_CLASS_SET.add(System.class);
-        UNSUPPORTED_CLASS_SET.add(HeapBeanCopier.class);
+        UNSUPPORTED_CLASS_SET.add(HeapObjectCopier.class);
     }
 
-    private HeapBeanCopier() {
+    private HeapObjectCopier() {
     }
 
-    public static boolean addNonCloneableClass(final Class singletonClass) {
+    public static boolean addSingletonClass(final Class singletonClass) {
         return UNSUPPORTED_CLASS_SET.add(singletonClass);
     }
 

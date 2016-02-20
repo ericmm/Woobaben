@@ -40,8 +40,8 @@ public class HeapBeanCopierTest {
 
     @Test
     public void shouldCopyHeapBean() throws InstantiationException {
-        final TestFieldObj copiedTestFieldObj = HeapBeanCopier.deepCopy(testFieldObj);
-        final TestClassObj copiedTestClassObj = HeapBeanCopier.deepCopy(testClassObj);
+        final TestFieldObj copiedTestFieldObj = HeapObjectCopier.deepCopy(testFieldObj);
+        final TestClassObj copiedTestClassObj = HeapObjectCopier.deepCopy(testClassObj);
 
         assertThat(copiedTestFieldObj, notNullValue());
         assertThat(copiedTestFieldObj.bigDecimal, is(new BigDecimal("12345.67893")));
@@ -50,17 +50,17 @@ public class HeapBeanCopierTest {
         assertThat(copiedStringList.size(), is(1));
         assertThat(copiedStringList.get(0), is("abc"));
 
-        final Class integerClass = HeapBeanCopier.deepCopy(Integer.class);
+        final Class integerClass = HeapObjectCopier.deepCopy(Integer.class);
         assertTrue(integerClass.equals(Integer.class));
 
         final int[] intArray = new int[2];
         intArray[0] = 1;
         intArray[1] = 2;
 
-        final int[] copiedIntArray = HeapBeanCopier.deepCopy(intArray);
+        final int[] copiedIntArray = HeapObjectCopier.deepCopy(intArray);
         assertArrayEquals(intArray, copiedIntArray);
 
-        assertTrue(HeapBeanCopier.deepCopy(null) == null);
-        assertTrue(HeapBeanCopier.deepCopy(1) == 1);
+        assertTrue(HeapObjectCopier.deepCopy(null) == null);
+        assertTrue(HeapObjectCopier.deepCopy(1) == 1);
     }
 }
