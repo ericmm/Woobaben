@@ -23,7 +23,7 @@ public class DataReader {
                 | normalizeLong(buffer[offset + 7]);
     }
 
-    public static final long getLongLittleEndian(final byte[] buffer, final int offset) {
+    public static final long readLongLittleEndian(final byte[] buffer, final int offset) {
         return (normalizeLong(buffer[offset + 7]) << 56)
                 | (normalizeLong(buffer[offset + 6]) << 48)
                 | (normalizeLong(buffer[offset + 5]) << 40)
@@ -39,10 +39,17 @@ public class DataReader {
     }
 
     public static int readInt(final byte[] buffer, final int offset) {
-        return (normalizeInt(buffer[offset]) << 24) |
-                (normalizeInt(buffer[offset + 1]) << 16) |
-                (normalizeInt(buffer[offset + 2]) << 8) |
-                normalizeInt(buffer[offset + 3]);
+        return (normalizeInt(buffer[offset]) << 24)
+                | (normalizeInt(buffer[offset + 1]) << 16)
+                | (normalizeInt(buffer[offset + 2]) << 8)
+                | normalizeInt(buffer[offset + 3]);
+    }
+
+    public static int readIntLittleEndian(final byte[] buffer, final int offset) {
+        return normalizeInt(buffer[offset])
+                | (normalizeInt(buffer[offset + 1]) << 8)
+                | (normalizeInt(buffer[offset + 2]) << 16)
+                | (normalizeInt(buffer[offset + 3]) << 24);
     }
 
     public static short readShort(final byte[] buffer, final int offset) {
