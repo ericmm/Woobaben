@@ -8,19 +8,30 @@ public class DataReader {
     private DataReader() {
     }
 
-    public static double readDouble(byte[] buffer, int offset) {
+    public static double readDouble(final byte[] buffer, final int offset) {
         return Double.longBitsToDouble(readLong(buffer, offset));
     }
 
-    public static long readLong(byte[] buffer, int offset) {
-        return (normalizeLong(buffer[offset]) << 56) |
-                (normalizeLong(buffer[offset + 1]) << 48) |
-                (normalizeLong(buffer[offset + 2]) << 40) |
-                (normalizeLong(buffer[offset + 3]) << 32) |
-                (normalizeLong(buffer[offset + 4]) << 24) |
-                (normalizeLong(buffer[offset + 5]) << 16) |
-                (normalizeLong(buffer[offset + 6]) << 8) |
-                normalizeLong(buffer[offset + 7]);
+    public static long readLong(final byte[] buffer, final int offset) {
+        return (normalizeLong(buffer[offset]) << 56)
+                | (normalizeLong(buffer[offset + 1]) << 48)
+                | (normalizeLong(buffer[offset + 2]) << 40)
+                | (normalizeLong(buffer[offset + 3]) << 32)
+                | (normalizeLong(buffer[offset + 4]) << 24)
+                | (normalizeLong(buffer[offset + 5]) << 16)
+                | (normalizeLong(buffer[offset + 6]) << 8)
+                | normalizeLong(buffer[offset + 7]);
+    }
+
+    public static final long getLongLittleEndian(final byte[] buffer, final int offset) {
+        return (normalizeLong(buffer[offset + 7]) << 56)
+                | (normalizeLong(buffer[offset + 6]) << 48)
+                | (normalizeLong(buffer[offset + 5]) << 40)
+                | (normalizeLong(buffer[offset + 4]) << 32)
+                | (normalizeLong(buffer[offset + 3]) << 24)
+                | (normalizeLong(buffer[offset + 2]) << 16)
+                | (normalizeLong(buffer[offset + 1]) << 8)
+                | normalizeLong(buffer[offset]);
     }
 
     public static float readFloat(final byte[] buffer, final int offset) {
