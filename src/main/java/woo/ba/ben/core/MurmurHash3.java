@@ -48,15 +48,7 @@ public class MurmurHash3 {
 
         // finalization
         h1 ^= len;
-
-        // fmix(h1);
-        h1 ^= h1 >>> 16;
-        h1 *= 0x85ebca6b;
-        h1 ^= h1 >>> 13;
-        h1 *= 0xc2b2ae35;
-        h1 ^= h1 >>> 16;
-
-        return h1;
+        return fmix32(h1);
     }
 
     /**
@@ -147,15 +139,7 @@ public class MurmurHash3 {
 
         // finalization
         h1 ^= nBytes;
-
-        // fmix(h1);
-        h1 ^= h1 >>> 16;
-        h1 *= 0x85ebca6b;
-        h1 ^= h1 >>> 13;
-        h1 *= 0xc2b2ae35;
-        h1 ^= h1 >>> 16;
-
-        return h1;
+        return fmix32(h1);
     }
 
     /**
