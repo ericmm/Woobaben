@@ -97,6 +97,10 @@ public class ClassStruct {
         return OFFSET_NOT_AVAILABLE;
     }
 
+    public int getFieldCount() {
+        return fieldMap == null ? 0 : fieldMap.size();
+    }
+
     private void parseFields(final Class currentClass) {
         final Field[] declaredFields = currentClass.getDeclaredFields();
         if (declaredFields.length > 0) {

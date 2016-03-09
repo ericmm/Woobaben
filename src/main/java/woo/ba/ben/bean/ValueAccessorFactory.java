@@ -4,7 +4,7 @@ import woo.ba.ben.core.ArrayBackedHashMap;
 
 import java.util.Map;
 
-public class BeanValueAccessor {
+public class ValueAccessorFactory {
     private final static Map<Class, IPropertyAccessor> ACCESSOR_MAP = new ArrayBackedHashMap<>(9);
 
     static {
@@ -19,7 +19,7 @@ public class BeanValueAccessor {
         ACCESSOR_MAP.put(Object.class, TypedObjectValueAccessor.getInstance());
     }
 
-    private BeanValueAccessor() {
+    private ValueAccessorFactory() {
     }
 
     public static IPropertyAccessor getAccessorByClass(final Class clazz) {
