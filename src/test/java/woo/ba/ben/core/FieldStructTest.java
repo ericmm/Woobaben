@@ -83,8 +83,8 @@ public class FieldStructTest {
         try {
             new FieldStruct(null);
             fail();
-        } catch (final IllegalArgumentException e) {
-            assertThat(e.getMessage(), is("Argument is null"));
+        } catch (final NullPointerException e) {
+            assertThat(e.getMessage(), is("The 1 parameter is null!"));
         }
     }
 }

@@ -1,4 +1,4 @@
-package woo.ba.ben.bean;
+package woo.ba.ben.util;
 
 
 public class DataReader {

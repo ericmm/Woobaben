@@ -1,8 +1,8 @@
 package woo.ba.ben.core;
 
 
-import static woo.ba.ben.bean.DataReader.readIntLittleEndian;
-import static woo.ba.ben.bean.DataReader.readLongLittleEndian;
+import static woo.ba.ben.util.DataReader.readIntLittleEndian;
+import static woo.ba.ben.util.DataReader.readLongLittleEndian;
 
 public class MurmurHash3 {
     /**

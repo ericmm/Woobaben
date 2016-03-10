@@ -6,6 +6,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
+import static woo.ba.ben.util.Util.checkNotNull;
 
 public class FieldStruct {
 
@@ -15,9 +16,7 @@ public class FieldStruct {
     public final Field realField;
 
     FieldStruct(final Field field) {
-        if (field == null) {
-            throw new IllegalArgumentException("Argument is null");
-        }
+        checkNotNull(field);
 
         this.realField = field;
         this.name = field.getName();
