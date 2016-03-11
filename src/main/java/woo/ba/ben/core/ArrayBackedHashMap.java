@@ -2,8 +2,10 @@ package woo.ba.ben.core;
 
 import java.util.*;
 
+import static woo.ba.ben.util.Util.nextPowerOfTwo;
+
 /**
- * refactored and improved based on Mikhail Vorontsov's ObjObjMap
+ * inspired by Mikhail Vorontsov's ObjObjMap
  */
 public class ArrayBackedHashMap<K, V> implements Map<K, V> {
     private static final Object FREE_KEY = new Object();
@@ -16,10 +18,10 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
      * Fill factor, must be between (0 and 1)
      */
     private final float fillFactor;
-    /**
-     * Keys and values
-     */
-    private Object[] data;
+
+    private Object[] keys;
+    private Object[] values;
+
     /**
      * value for the null key
      */
@@ -28,14 +30,6 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
 
     private int threshold;
     private int size;
-    /**
-     * Mask to calculate the original position
-     */
-    private int indexMask;
-    /**
-     * Mask to wrap the actual array pointer
-     */
-    private int nextIndexMask;
 
     public ArrayBackedHashMap() {
         this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR);
@@ -58,14 +52,6 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
         initDataBlock(size);
     }
 
-    private static int getStartIndex(final Object key, final int indexMask) {
-        return (key.hashCode() & indexMask) << 1;
-    }
-
-    private static int getNextIndex(final int index, final int nextIndexMask) {
-        return (index + 2) & nextIndexMask;
-    }
-
     private static int arraySize(final int expectedSize, final float fillFactor) {
         final long dataSize = Math.max(2, nextPowerOfTwo((long) Math.ceil(expectedSize / fillFactor)));
         checkSize(expectedSize, fillFactor, dataSize);
@@ -74,47 +60,29 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
 
     private static void checkSize(final int expectedSize, final float fillFactor, final long dataSize) {
         if (dataSize > MAXIMUM_CAPACITY) {
-            throw new IllegalArgumentException("Too large (" + expectedSize + " expected elements with load factor " + fillFactor + ")");
+            throw new RuntimeException("Too large (" + expectedSize + " expected elements with load factor "
+                    + fillFactor + "), maximum capacity is " + MAXIMUM_CAPACITY + ".");
         }
-    }
-
-    private static long nextPowerOfTwo(long x) {
-        if (x == 0) return 1;
-        x--;
-        x |= x >> 1;
-        x |= x >> 2;
-        x |= x >> 4;
-        x |= x >> 8;
-        x |= x >> 16;
-        return (x | x >> 32) + 1;
     }
 
     @Override
     public V get(final Object key) {
         if (key == null) {
-            return (V) nullValue; //we null it on remove, so safe not to check a flag here
+            return (V) nullValue;
         }
 
-        int index = getStartIndex(key, indexMask);
-        Object objKey = data[index];
-
-        if (objKey == FREE_KEY) {
-            return null; //end of chain already
-        }
-        if (objKey.equals(key)) { //we check FREE and REMOVED prior to this call
-            return (V) data[index + 1];
-        }
-
-        while (true) {
-            index = getNextIndex(index, nextIndexMask); //that's next index
-            objKey = data[index];
+        int index = getStartIndex(key);
+        Object objKey = keys[index];
+        for (int i = 0; i < keys.length; i++) {
             if (objKey == FREE_KEY) {
                 return null;
+            } else if (objKey.equals(key)) {
+                return (V) values[index];
             }
-            if (objKey.equals(key)) {
-                return (V) data[index + 1];
-            }
+            index = getNextIndex(index);
+            objKey = keys[index];
         }
+        return null;
     }
 
     @Override
@@ -123,42 +91,24 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
             return insertNullKey(value);
         }
 
-        int index = getStartIndex(key, indexMask);
-        Object objKey = data[index];
-
-        if (objKey == FREE_KEY) { //end of chain already
-            putValue(key, value, index);
-            return null;
-        } else if (objKey.equals(key)) { //we check FREE and REMOVED prior to this call
-            final Object previousValue = data[index + 1];
-            data[index + 1] = value;
-            return (V) previousValue;
-        }
-
         int firstRemoved = -1;
-        if (objKey == REMOVED_KEY) {
-            firstRemoved = index; //we may find a key later
-        }
-
-        while (true) {
-            index = getNextIndex(index, nextIndexMask); //that's next index calculation
-            objKey = data[index];
-            if (objKey == FREE_KEY) {
+        int index = getStartIndex(key);
+        Object objKey = keys[index];
+        for (int i = 0; i < keys.length; i++) {
+            if (objKey == FREE_KEY) { //end of chain
                 if (firstRemoved != -1) {
                     index = firstRemoved;
                 }
-                putValue(key, value, index);
-                return null;
+                return putValue(key, value, index);
             } else if (objKey.equals(key)) {
-                final Object previousValue = data[index + 1];
-                data[index + 1] = value;
-                return (V) previousValue;
-            } else if (objKey == REMOVED_KEY) {
-                if (firstRemoved == -1) {
-                    firstRemoved = index;
-                }
+                return replaceValue(index, value);
+            } else if (objKey == REMOVED_KEY && firstRemoved == -1) {
+                firstRemoved = index; //we may find a key later
             }
+            index = getNextIndex(index);
+            objKey = keys[index];
         }
+        throw new RuntimeException("Cannot find a place to put, this should never happen!");
     }
 
     @Override
@@ -167,39 +117,24 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
             return removeNullKey();
         }
 
-        int index = getStartIndex(key, indexMask);
-        Object objKey = data[index];
-        if (objKey == FREE_KEY) {
-            return null;  //end of chain already
-        } else if (objKey.equals(key)) { //we check FREE and REMOVED prior to this call
-            --size;
-            if (data[getNextIndex(index, nextIndexMask)] == FREE_KEY) {
-                data[index] = FREE_KEY;
-            } else {
-                data[index] = REMOVED_KEY;
-            }
-            final V previousValue = (V) data[index + 1];
-            data[index + 1] = null;
-            return previousValue;
-        }
-
-        while (true) {
-            index = getNextIndex(index, nextIndexMask); //that's next index calculation
-            objKey = data[index];
+        int index = getStartIndex(key);
+        Object objKey = keys[index];
+        for (int i = 0; i < keys.length; i++) {
             if (objKey == FREE_KEY) {
                 return null;
             } else if (objKey.equals(key)) {
                 --size;
-                if (data[getNextIndex(index, nextIndexMask)] == FREE_KEY) {
-                    data[index] = FREE_KEY;
+                if (keys[getNextIndex(index)] == FREE_KEY) {
+                    keys[index] = FREE_KEY;
                 } else {
-                    data[index] = REMOVED_KEY;
+                    keys[index] = REMOVED_KEY;
                 }
-                final V previousValue = (V) data[index + 1];
-                data[index + 1] = null;
-                return previousValue;
+                return replaceValue(index, null);
             }
+            index = getNextIndex(index);
+            objKey = keys[index];
         }
+        return null;
     }
 
     @Override
@@ -209,7 +144,8 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
 
     @Override
     public void clear() {
-        Arrays.fill(data, FREE_KEY);
+        Arrays.fill(keys, FREE_KEY);
+        Arrays.fill(values, FREE_KEY);
         hasNull = false;
         nullValue = null;
         size = 0;
@@ -223,12 +159,12 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
     @Override
     public boolean containsKey(final Object key) {
         if (key == null) {
-            return hasNull ? true : false;
+            return hasNull;
         }
 
         Object objKey;
-        for (int i = 0; i < data.length; i += 2) {
-            objKey = data[i];
+        for (int i = 0; i < keys.length; i++) {
+            objKey = keys[i];
             if (objKey == FREE_KEY || objKey == REMOVED_KEY) {
                 continue;
             }
@@ -247,13 +183,13 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
         }
 
         Object objKey;
-        for (int i = 0; i < data.length; i += 2) {
-            objKey = data[i];
+        for (int i = 0; i < keys.length; i++) {
+            objKey = keys[i];
             if (objKey == FREE_KEY || objKey == REMOVED_KEY) {
                 continue;
             }
 
-            if (Objects.equals(value, data[i + 1])) {
+            if (Objects.equals(value, values[i])) {
                 return true;
             }
         }
@@ -283,16 +219,24 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
         //TODO
         throw new UnsupportedOperationException();
     }
+
     /////////////////////////////////////////
-    private void putValue(final K key, final V value, final int index) {
-        data[index] = key;
-        data[index + 1] = value;
+    private V putValue(final K key, final V value, final int index) {
+        keys[index] = key;
+        values[index] = value;
 
         if (size >= threshold) {
             resize();
         } else {
             ++size;
         }
+        return null;
+    }
+
+    private V replaceValue(final int index, final V value) {
+        final V previousValue = (V) values[index];
+        values[index] = value;
+        return previousValue;
     }
 
     private V insertNullKey(final V value) {
@@ -322,28 +266,38 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
 
     private void initDataBlock(final int size) {
         final int capacity = arraySize(size, fillFactor);
-        indexMask = capacity - 1;
-        nextIndexMask = capacity * 2 - 1;
 
-        data = new Object[capacity * 2];
-        Arrays.fill(data, FREE_KEY);
+        keys = new Object[capacity];
+        values = new Object[capacity];
+        Arrays.fill(keys, FREE_KEY);
+        Arrays.fill(values, FREE_KEY);
 
         threshold = (int) (capacity * fillFactor);
     }
 
     private void resize() {
-        final Object[] oldData = data;
+        final Object[] oldKeys = keys;
+        final Object[] oldValues = values;
         initDataBlock(size * 2);
 
         size = hasNull ? 1 : 0;
 
         Object oldKey;
-        for (int i = 0; i < oldData.length; i += 2) {
-            oldKey = oldData[i];
+        for (int i = 0; i < oldKeys.length; i++) {
+            oldKey = oldKeys[i];
             if (oldKey != FREE_KEY && oldKey != REMOVED_KEY) {
-                put((K) oldKey, (V) oldData[i + 1]);
+                put((K) oldKey, (V) oldValues[i]);
                 size++;
             }
         }
     }
+
+    private int getStartIndex(final Object key) {
+        return key.hashCode() & (keys.length - 1);
+    }
+
+    private int getNextIndex(final int index) {
+        return (index + 1) & (keys.length - 1);
+    }
+
 }

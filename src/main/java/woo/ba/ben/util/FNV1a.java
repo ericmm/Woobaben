@@ -1,4 +1,4 @@
-package woo.ba.ben.core;
+package woo.ba.ben.util;
 
 
 import static woo.ba.ben.util.Util.checkNotNull;
@@ -12,6 +12,7 @@ public class FNV1a {
     private static final long FNV1_64_INIT = 0xcbf29ce484222325L;
     private static final long FNV1_PRIME_64 = 1099511628211L;
 
+    private FNV1a(){}
     /**
      * FNV1a 32 bit variant.
      *

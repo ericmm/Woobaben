@@ -1,10 +1,13 @@
-package woo.ba.ben.core;
+package woo.ba.ben.util;
 
 
 import static woo.ba.ben.util.DataReader.readIntLittleEndian;
 import static woo.ba.ben.util.DataReader.readLongLittleEndian;
 
 public class MurmurHash3 {
+
+    private MurmurHash3(){}
+
     /**
      * Returns the MurmurHash3_x86_32 hash.
      */

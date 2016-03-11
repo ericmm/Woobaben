@@ -5,8 +5,7 @@ public class DataReader {
     private static final int BYTE_MASK_INT = 0xFF;
     private static final long BYTE_MASK_LONG = 0xFFL;
 
-    private DataReader() {
-    }
+    private DataReader() {}
 
     public static double readDouble(final byte[] buffer, final int offset) {
         return Double.longBitsToDouble(readLong(buffer, offset));

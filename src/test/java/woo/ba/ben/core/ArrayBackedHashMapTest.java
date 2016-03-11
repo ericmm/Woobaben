@@ -120,7 +120,6 @@ public class ArrayBackedHashMapTest {
         assertThat(simpleMap.get("anotherKeyInMap"), is("test"));
     }
 
-
     @Test
     @Ignore
     public void testPerformance() throws InterruptedException {
