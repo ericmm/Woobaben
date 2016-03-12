@@ -1,6 +1,5 @@
-package woo.ba.ben.bean;
+package woo.ba.ben.field;
 
 
 public interface IPropertyAccessor {
-
 }

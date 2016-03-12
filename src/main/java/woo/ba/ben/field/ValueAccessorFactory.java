@@ -1,4 +1,4 @@
-package woo.ba.ben.bean;
+package woo.ba.ben.field;
 
 import woo.ba.ben.core.ArrayBackedHashMap;
 

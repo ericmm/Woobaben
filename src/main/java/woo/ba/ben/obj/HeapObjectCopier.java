@@ -1,4 +1,4 @@
-package woo.ba.ben.bean;
+package woo.ba.ben.obj;
 
 import woo.ba.ben.core.ArrayBackedHashMap;
 import woo.ba.ben.core.ClassStruct;

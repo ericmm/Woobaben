@@ -29,10 +29,6 @@ public class UnsafeFactory {
     private UnsafeFactory() {
     }
 
-//    public static Unsafe get() {
-//        return UNSAFE;
-//    }
-
     public static int getTypeSize(final Class classType) {
         return UNSAFE.arrayIndexScale(classType);
     }
