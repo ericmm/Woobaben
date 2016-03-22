@@ -4,7 +4,8 @@ Some thoughts in my mind
 Talk is cheap, show me the code.
 
 ---------------------
-<li>ArrayBackedHashMap - refactored and improved based on Mikhail Vorontsov's ObjObjMap and implemented Map interface, it's faster and less memory consumption than java.util.HashMap  --Done 
+<li>ArrayBackedHashMap - inspired by Mikhail Vorontsov's ObjObjMap, faster and less memory consumption than java.util.HashMap (see ArrayBackedHashMapTest.testPerformance())  --Done 
+<li>ArrayBackedHashSet - Array Backed Hash Set  --Done 
 <li>Faster java object attribute accessors by utlilising sun.misc.Unsafe  --Done 
 <li>Faster java heap object copy (clone) by sun.misc.Unsafe  --Done
 
