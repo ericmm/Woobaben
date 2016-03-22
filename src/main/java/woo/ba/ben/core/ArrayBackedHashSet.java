@@ -1,11 +1,9 @@
 package woo.ba.ben.core;
 
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
+import static java.util.Arrays.copyOf;
 import static java.util.Arrays.fill;
 
 public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
@@ -28,6 +26,14 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
         checkFillFactorAndSize(size, fillFactor);
         this.fillFactor = fillFactor;
         initDataBlock(size);
+    }
+
+    ArrayBackedHashSet(final Object[] elements, final int size, final float fillFactor, final boolean hasNull, final int threshold) {
+        this.fillFactor = fillFactor;
+        this.size = size;
+        this.threshold = threshold;
+        this.hasNull = hasNull;
+        this.elements = copyOf(elements, elements.length);
     }
 
 
@@ -53,17 +59,32 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
 
     @Override
     public Iterator<E> iterator() {
-        return null;
+        //TODO
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Object[] toArray() {
-        return new Object[0];
+        final Object[] result = new Object[size];
+
+        Object obj;
+        int index = 0;
+        if (hasNull) {
+            result[index++] = null;
+        }
+
+        for (int i = 0; i < elements.length; i++) {
+            obj = elements[i];
+            if (obj != FREE_KEY && obj != REMOVED_KEY) {
+                result[index++] = obj;
+            }
+        }
+        return result;
     }
 
     @Override
-    public <T> T[] toArray(final T[] a) {
-        return null;
+    public <E> E[] toArray(final E[] a) {
+        return (E[]) toArray();
     }
 
     @Override
@@ -127,27 +148,79 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
     }
 
     @Override
-    public boolean containsAll(final Collection<?> c) {
-        //TODO
-        throw new UnsupportedOperationException();
+    public boolean containsAll(final Collection<?> collection) {
+        //TODO: if there's a better way
+        for (final Object element : collection) {
+            if (!contains(element)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
-    public boolean addAll(final Collection<? extends E> c) {
-        //TODO
-        throw new UnsupportedOperationException();
+    public boolean addAll(final Collection<? extends E> collection) {
+        if (collection == null) {
+            throw new NullPointerException("Input parameter is null");
+        } else if (collection.isEmpty()) {
+            return false;
+        }
+
+        final int newSize = size + collection.size();
+        final int newCapacity = arraySize(newSize, fillFactor);
+        if (newCapacity != elements.length) {
+            final Object[] oldElements = elements;
+
+            initDataBlock(newSize);
+            size = hasNull ? 1 : 0;
+
+            for (int i = 0; i < oldElements.length; i++) {
+                if (oldElements[i] != FREE_KEY && oldElements[i] != REMOVED_KEY) {
+                    add((E) oldElements[i]);
+                    size++;
+                }
+            }
+        }
+
+        boolean modified = false;
+        for (final E e : collection) {
+            if (add(e)) {
+                modified = true;
+            }
+        }
+        return modified;
     }
 
     @Override
-    public boolean retainAll(final Collection<?> c) {
-        //TODO
-        throw new UnsupportedOperationException();
+    public boolean retainAll(final Collection<?> collection) {
+        //TODO: if there's a better way
+
+        Objects.requireNonNull(collection);
+        boolean modified = false;
+        final Iterator<E> it = iterator();
+        while (it.hasNext()) {
+            if (!collection.contains(it.next())) {
+                it.remove();
+                modified = true;
+            }
+        }
+        return modified;
     }
 
     @Override
-    public boolean removeAll(final Collection<?> c) {
-        //TODO
-        throw new UnsupportedOperationException();
+    public boolean removeAll(final Collection<?> collection) {
+        //TODO: if there's a better way
+
+        Objects.requireNonNull(collection);
+        boolean modified = false;
+        final Iterator<?> it = iterator();
+        while (it.hasNext()) {
+            if (collection.contains(it.next())) {
+                it.remove();
+                modified = true;
+            }
+        }
+        return modified;
     }
 
     @Override

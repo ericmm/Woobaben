@@ -181,20 +181,41 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
 
     @Override
     public void putAll(final Map<? extends K, ? extends V> m) {
-        //TODO
-        throw new UnsupportedOperationException();
+        if (m == null || m.isEmpty()) {
+            return;
+        }
+
+        final int newSize = size + m.size();
+        final int newCapacity = arraySize(newSize, fillFactor);
+        if (newCapacity != keys.length) {
+            final Object[] oldKeys = keys;
+            final Object[] oldValues = values;
+
+            initDataBlock(newSize);
+
+            size = hasNull ? 1 : 0;
+
+            for (int i = 0; i < oldKeys.length; i++) {
+                if (oldKeys[i] != FREE_KEY && oldKeys[i] != REMOVED_KEY) {
+                    put((K) oldKeys[i], (V) oldValues[i]);
+                    size++;
+                }
+            }
+        }
+
+        for (final Entry<? extends K, ? extends V> entry : m.entrySet()) {
+            put(entry.getKey(), entry.getValue());
+        }
     }
 
     @Override
     public Set<K> keySet() {
-        //TODO
-        throw new UnsupportedOperationException();
+        return new ArrayBackedHashSet<>(keys, size, fillFactor, hasNull, threshold);
     }
 
     @Override
     public Collection<V> values() {
-        //TODO
-        throw new UnsupportedOperationException();
+        return Arrays.asList((V[]) values);
     }
 
     @Override
