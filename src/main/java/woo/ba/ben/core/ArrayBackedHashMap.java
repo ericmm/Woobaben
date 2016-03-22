@@ -1,19 +1,14 @@
 package woo.ba.ben.core;
 
+
 import java.util.*;
 
-import static woo.ba.ben.util.Util.nextPowerOfTwo;
+import static java.util.Arrays.fill;
 
 /**
  * inspired by Mikhail Vorontsov's ObjObjMap
  */
-public class ArrayBackedHashMap<K, V> implements Map<K, V> {
-    private static final Object FREE_KEY = new Object();
-    private static final Object REMOVED_KEY = new Object();
-
-    private static final float DEFAULT_LOAD_FACTOR = 0.75f;
-    private static final int DEFAULT_INITIAL_CAPACITY = 12;
-    private static final int MAXIMUM_CAPACITY = 1 << 30;
+public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K, V> {
     /**
      * Fill factor, must be between (0 and 1)
      */
@@ -40,29 +35,9 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
     }
 
     public ArrayBackedHashMap(final int size, final float fillFactor) {
-        if (fillFactor <= 0 || fillFactor >= 1) {
-            throw new IllegalArgumentException("FillFactor must be in (0, 1)");
-        }
-        if (size <= 0) {
-            throw new IllegalArgumentException("Size must be positive!");
-        }
-
+        checkFillFactorAndSize(size, fillFactor);
         this.fillFactor = fillFactor;
-
         initDataBlock(size);
-    }
-
-    private static int arraySize(final int expectedSize, final float fillFactor) {
-        final long dataSize = Math.max(2, nextPowerOfTwo((long) Math.ceil(expectedSize / fillFactor)));
-        checkSize(expectedSize, fillFactor, dataSize);
-        return (int) dataSize;
-    }
-
-    private static void checkSize(final int expectedSize, final float fillFactor, final long dataSize) {
-        if (dataSize > MAXIMUM_CAPACITY) {
-            throw new RuntimeException("Too large (" + expectedSize + " expected elements with load factor "
-                    + fillFactor + "), maximum capacity is " + MAXIMUM_CAPACITY + ".");
-        }
     }
 
     @Override
@@ -71,16 +46,16 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
             return (V) nullValue;
         }
 
-        int index = getStartIndex(key);
-        Object objKey = keys[index];
+        int index = getStartIndex(key, keys.length - 1);
+        Object objKey;
         for (int i = 0; i < keys.length; i++) {
+            objKey = keys[index];
             if (objKey == FREE_KEY) {
                 return null;
             } else if (objKey.equals(key)) {
                 return (V) values[index];
             }
-            index = getNextIndex(index);
-            objKey = keys[index];
+            index = getNextIndex(index, keys.length - 1);
         }
         return null;
     }
@@ -92,9 +67,10 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
         }
 
         int firstRemoved = -1;
-        int index = getStartIndex(key);
-        Object objKey = keys[index];
+        int index = getStartIndex(key, keys.length - 1);
+        Object objKey;
         for (int i = 0; i < keys.length; i++) {
+            objKey = keys[index];
             if (objKey == FREE_KEY) { //end of chain
                 if (firstRemoved != -1) {
                     index = firstRemoved;
@@ -105,10 +81,17 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
             } else if (objKey == REMOVED_KEY && firstRemoved == -1) {
                 firstRemoved = index; //we may find a key later
             }
-            index = getNextIndex(index);
-            objKey = keys[index];
+            index = getNextIndex(index, keys.length - 1);
         }
-        throw new RuntimeException("Cannot find a place to put, this should never happen!");
+
+        if (firstRemoved != -1) {
+            return putValue(key, value, firstRemoved);
+        } else {
+            final String message = "Cannot find a place to put, this should never happen! \n"
+                    + "FREE_KEY=[" + FREE_KEY + "], REMOVED_KEY=[" + REMOVED_KEY + "], \n"
+                    + "key array is {" + Arrays.toString(keys) + "}";
+            throw new RuntimeException(message);
+        }
     }
 
     @Override
@@ -117,22 +100,22 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
             return removeNullKey();
         }
 
-        int index = getStartIndex(key);
-        Object objKey = keys[index];
+        int index = getStartIndex(key, keys.length - 1);
+        Object objKey;
         for (int i = 0; i < keys.length; i++) {
+            objKey = keys[index];
             if (objKey == FREE_KEY) {
                 return null;
             } else if (objKey.equals(key)) {
                 --size;
-                if (keys[getNextIndex(index)] == FREE_KEY) {
+                if (keys[getNextIndex(index, keys.length - 1)] == FREE_KEY) {
                     keys[index] = FREE_KEY;
                 } else {
                     keys[index] = REMOVED_KEY;
                 }
                 return replaceValue(index, null);
             }
-            index = getNextIndex(index);
-            objKey = keys[index];
+            index = getNextIndex(index, keys.length - 1);
         }
         return null;
     }
@@ -144,8 +127,8 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
 
     @Override
     public void clear() {
-        Arrays.fill(keys, FREE_KEY);
-        Arrays.fill(values, FREE_KEY);
+        fill(keys, FREE_KEY);
+        fill(values, FREE_KEY);
         hasNull = false;
         nullValue = null;
         size = 0;
@@ -269,8 +252,9 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
 
         keys = new Object[capacity];
         values = new Object[capacity];
-        Arrays.fill(keys, FREE_KEY);
-        Arrays.fill(values, FREE_KEY);
+
+        fill(keys, FREE_KEY);
+        fill(values, FREE_KEY);
 
         threshold = (int) (capacity * fillFactor);
     }
@@ -291,13 +275,4 @@ public class ArrayBackedHashMap<K, V> implements Map<K, V> {
             }
         }
     }
-
-    private int getStartIndex(final Object key) {
-        return key.hashCode() & (keys.length - 1);
-    }
-
-    private int getNextIndex(final int index) {
-        return (index + 1) & (keys.length - 1);
-    }
-
 }
