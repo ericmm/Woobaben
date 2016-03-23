@@ -31,7 +31,7 @@ public class ArrayBackedHashMapTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowExceptionWhenSizeIsNotPositive() {
-        for (final int invalidSize : new int[] {-1, 0}) {
+        for (final int invalidSize : new int[]{-1, 0}) {
             new ArrayBackedHashMap<>(invalidSize);
         }
     }

@@ -43,16 +43,14 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
             return hasNull;
         }
 
-        Object obj;
+        int index = getStartIndex(element, elements.length - 1);
         for (int i = 0; i < elements.length; i++) {
-            obj = elements[i];
-            if (obj == FREE_KEY || obj == REMOVED_KEY) {
-                continue;
-            }
-
-            if (element.equals(obj)) {
+            if (elements[index] == FREE_KEY) {
+                return false;
+            } else if (elements[index].equals(element)) {
                 return true;
             }
+            index = getNextIndex(index, elements.length - 1);
         }
         return false;
     }
@@ -67,16 +65,13 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
     public Object[] toArray() {
         final Object[] result = new Object[size];
 
-        Object obj;
         int index = 0;
         if (hasNull) {
             result[index++] = null;
         }
-
         for (int i = 0; i < elements.length; i++) {
-            obj = elements[i];
-            if (obj != FREE_KEY && obj != REMOVED_KEY) {
-                result[index++] = obj;
+            if (elements[i] != FREE_KEY && elements[i] != REMOVED_KEY) {
+                result[index++] = elements[i];
             }
         }
         return result;
@@ -115,8 +110,7 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
             return putValue(element, firstRemoved);
         } else {
             final String message = "Cannot find a place to put, this should never happen! \n"
-                    + "FREE_KEY=[" + FREE_KEY + "], REMOVED_KEY=[" + REMOVED_KEY + "], \n"
-                    + "element array is {" + Arrays.toString(elements) + "}";
+                    + "The element array is {" + Arrays.toString(elements) + "}";
             throw new RuntimeException(message);
         }
     }

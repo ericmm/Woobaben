@@ -4,6 +4,7 @@ package woo.ba.ben.core;
 import java.util.*;
 
 import static java.util.Arrays.fill;
+import static java.util.Collections.EMPTY_LIST;
 
 /**
  * inspired by Mikhail Vorontsov's ObjObjMap
@@ -17,10 +18,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
     private Object[] keys;
     private Object[] values;
 
-    /**
-     * value for the null key
-     */
-    private Object nullValue = null;
+    private Object valueForNullKey = null;
     private boolean hasNull = false;
 
     private int threshold;
@@ -43,7 +41,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
     @Override
     public V get(final Object key) {
         if (key == null) {
-            return (V) nullValue;
+            return (V) valueForNullKey;
         }
 
         int index = getStartIndex(key, keys.length - 1);
@@ -88,8 +86,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
             return putValue(key, value, firstRemoved);
         } else {
             final String message = "Cannot find a place to put, this should never happen! \n"
-                    + "FREE_KEY=[" + FREE_KEY + "], REMOVED_KEY=[" + REMOVED_KEY + "], \n"
-                    + "key array is {" + Arrays.toString(keys) + "}";
+                    + "The key array is {" + Arrays.toString(keys) + "}";
             throw new RuntimeException(message);
         }
     }
@@ -130,7 +127,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
         fill(keys, FREE_KEY);
         fill(values, FREE_KEY);
         hasNull = false;
-        nullValue = null;
+        valueForNullKey = null;
         size = 0;
     }
 
@@ -145,33 +142,28 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
             return hasNull;
         }
 
-        Object objKey;
+        int index = getStartIndex(key, keys.length - 1);
         for (int i = 0; i < keys.length; i++) {
-            objKey = keys[i];
-            if (objKey == FREE_KEY || objKey == REMOVED_KEY) {
-                continue;
-            }
-
-            if (key.equals(objKey)) {
+            if (keys[index] == FREE_KEY) {
+                return false;
+            }else if (keys[index].equals(key)) {
                 return true;
             }
+            index = getNextIndex(index, keys.length - 1);
         }
         return false;
     }
 
     @Override
     public boolean containsValue(final Object value) {
-        if (hasNull && Objects.equals(value, nullValue)) {
+        if (hasNull && Objects.equals(value, valueForNullKey)) {
             return true;
         }
 
-        Object objKey;
         for (int i = 0; i < keys.length; i++) {
-            objKey = keys[i];
-            if (objKey == FREE_KEY || objKey == REMOVED_KEY) {
+            if (keys[i] == FREE_KEY || keys[i] == REMOVED_KEY) {
                 continue;
             }
-
             if (Objects.equals(value, values[i])) {
                 return true;
             }
@@ -180,18 +172,18 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
     }
 
     @Override
-    public void putAll(final Map<? extends K, ? extends V> m) {
-        if (m == null || m.isEmpty()) {
+    public void putAll(final Map<? extends K, ? extends V> anotherMap) {
+        if (anotherMap == null || anotherMap.isEmpty()) {
             return;
         }
 
-        final int newSize = size + m.size();
+        final int newSize = size + anotherMap.size();
         final int newCapacity = arraySize(newSize, fillFactor);
         if (newCapacity != keys.length) {
             final Object[] oldKeys = keys;
             final Object[] oldValues = values;
 
-            initDataBlock(newSize);
+            allocateArrays(newSize);
 
             size = hasNull ? 1 : 0;
 
@@ -203,7 +195,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
             }
         }
 
-        for (final Entry<? extends K, ? extends V> entry : m.entrySet()) {
+        for (final Entry<? extends K, ? extends V> entry : anotherMap.entrySet()) {
             put(entry.getKey(), entry.getValue());
         }
     }
@@ -215,7 +207,21 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
 
     @Override
     public Collection<V> values() {
-        return Arrays.asList((V[]) values);
+        if(size == 0) {
+            return EMPTY_LIST;
+        }
+
+        int index = 0;
+        final Object[] theValues = new Object[size];
+        if (hasNull) {
+            theValues[index++] = valueForNullKey;
+        }
+        for (int i = 0; i < keys.length; i++) {
+            if (keys[i] != FREE_KEY && keys[i] != REMOVED_KEY) {
+                theValues[index++] = values[i];
+            }
+        }
+        return Arrays.asList((V[]) theValues);
     }
 
     @Override
@@ -245,11 +251,11 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
 
     private V insertNullKey(final V value) {
         if (hasNull) {
-            final Object previousValue = nullValue;
-            nullValue = value;
+            final Object previousValue = valueForNullKey;
+            valueForNullKey = value;
             return (V) previousValue;
         } else {
-            nullValue = value;
+            valueForNullKey = value;
             hasNull = true;
             ++size;
             return null;
@@ -258,8 +264,8 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
 
     private V removeNullKey() {
         if (hasNull) {
-            final Object previousValue = nullValue;
-            nullValue = null;
+            final Object previousValue = valueForNullKey;
+            valueForNullKey = null;
             hasNull = false;
             --size;
             return (V) previousValue;
@@ -269,8 +275,10 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
     }
 
     private void initDataBlock(final int size) {
-        final int capacity = arraySize(size, fillFactor);
+        allocateArrays(arraySize(size, fillFactor));
+    }
 
+    private void allocateArrays(final int capacity) {
         keys = new Object[capacity];
         values = new Object[capacity];
 

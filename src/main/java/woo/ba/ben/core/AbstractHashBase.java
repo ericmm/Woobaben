@@ -4,8 +4,18 @@ package woo.ba.ben.core;
 import static woo.ba.ben.util.Util.nextPowerOfTwo;
 
 public abstract class AbstractHashBase {
-    protected static final Object FREE_KEY = new Object();
-    protected static final Object REMOVED_KEY = new Object();
+    protected static final Object FREE_KEY = new Object() {
+        @Override
+        public String toString(){
+            return "#FREE#";
+        }
+    };
+    protected static final Object REMOVED_KEY = new Object(){
+        @Override
+        public String toString(){
+            return "#REMOVED#";
+        }
+    };
     protected static final float DEFAULT_LOAD_FACTOR = 0.75f;
     protected static final int DEFAULT_INITIAL_CAPACITY = 12;
 
