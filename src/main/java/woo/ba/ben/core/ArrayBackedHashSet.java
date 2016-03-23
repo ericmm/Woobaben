@@ -289,5 +289,6 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
                 size++;
             }
         }
+        fill(oldElements, null);
     }
 }

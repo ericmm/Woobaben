@@ -7,6 +7,7 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.lang.Math.random;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
@@ -127,11 +128,11 @@ public class ArrayBackedHashMapTest {
 
         for (int times = 0; times < 5; times++) {
             final HashMap hashMap = new HashMap(size * 2);
-            final Map simpleMap = new ArrayBackedHashMap<>(size * 2, 0.75f);
+            final Map simpleMap = new ArrayBackedHashMap<>(size * 2);
 
             //warm up
             for (int i = 0; i < 100; i++) {
-                final String obj = String.valueOf(i);
+                final String obj = String.valueOf(random());
                 simpleMap.put(obj, obj);
                 simpleMap.remove(obj);
 
@@ -139,41 +140,61 @@ public class ArrayBackedHashMapTest {
                 hashMap.remove(obj);
             }
 
+            String[] keys = new String[size];
+            String[] values = new String[size];
+            String[] keys2 = new String[size];
+            String[] values2 = new String[size];
+            for (int i = 0; i < size; i++) {
+                keys[i] = "int"+i;
+                values[i] = String.valueOf(random());
+                keys2[i] = String.valueOf(i);
+                values2[i] = keys[i];
+            }
+
             final long start = System.currentTimeMillis();
             for (int i = 0; i < size; i++) {
-                hashMap.put("int", String.valueOf(i));
-                hashMap.put(String.valueOf(i), "int");
+                hashMap.put(keys[i], values[i]);
+                hashMap.put(keys2[i], values2[i]);
             }
             final long end = System.currentTimeMillis();
             System.out.println("HashMap add used :" + (end - start));
 
-            System.gc();
+            try {
+                System.gc();
+                Thread.sleep(3_000);
+            } catch (Exception e){}
 
 
             final long start1 = System.currentTimeMillis();
             for (int i = 0; i < size; i++) {
-                simpleMap.put("int", String.valueOf(i));
-                simpleMap.put(String.valueOf(i), "int");
+                simpleMap.put(keys[i], values[i]);
+                simpleMap.put(keys2[i], values2[i]);
             }
             final long end1 = System.currentTimeMillis();
             System.out.println("SimpleMap add used :" + (end1 - start1));
 
-            System.gc();
+            try {
+                System.gc();
+                Thread.sleep(3_000);
+            } catch (Exception e){}
 
             final long start2 = System.currentTimeMillis();
             for (int i = 0; i < size; i++) {
-                hashMap.remove("int");
-                hashMap.remove(String.valueOf(i));
+                hashMap.remove(keys[i]);
+                hashMap.remove(keys2[i]);
             }
             final long end2 = System.currentTimeMillis();
             System.out.println("HashMap remove used :" + (end2 - start2));
 
-            System.gc();
+            try {
+                System.gc();
+                Thread.sleep(3_000);
+            } catch (Exception e){}
 
             final long start3 = System.currentTimeMillis();
             for (int i = 0; i < size; i++) {
-                simpleMap.remove("int");
-                simpleMap.remove(String.valueOf(i));
+                simpleMap.remove(keys[i]);
+                simpleMap.remove(keys2[i]);
             }
             final long end3 = System.currentTimeMillis();
             System.out.println("SimpleMap remove used :" + (end3 - start3));
