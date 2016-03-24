@@ -73,6 +73,28 @@ public class ArrayBackedHashMapTest {
 
         assertThat(simpleMap.remove("notInMap"), nullValue());
         assertThat(simpleMap.size(), is(0));
+
+        final int size = 500_000;
+        simpleMap = new ArrayBackedHashMap<>(size * 2);
+        String[] keys = new String[size];
+        String[] values = new String[size];
+        for (int i = 0; i < size; i++) {
+            keys[i] = "int"+i;
+            values[i] = String.valueOf(random()+i);
+        }
+
+        for (int i = 0; i < size; i++) {
+            simpleMap.put(keys[i], values[i]);
+            simpleMap.put(values[i], keys[i]);
+        }
+
+        assertThat(simpleMap.size(), is(size *2));
+
+        for (int i = 0; i < size; i++) {
+            simpleMap.remove(keys[i]);
+            simpleMap.remove(values[i]);
+        }
+        assertThat(simpleMap.size(), is(0));
     }
 
     @Test
@@ -126,13 +148,18 @@ public class ArrayBackedHashMapTest {
     public void testPerformance() throws InterruptedException {
         final int size = 5_000_000;
 
-        for (int times = 0; times < 5; times++) {
+        for (int times = 0; times < 3; times++) {
+            try {
+                System.gc();
+                Thread.sleep(1_000);
+            } catch (Exception e){}
+
             final HashMap hashMap = new HashMap(size * 2);
             final Map simpleMap = new ArrayBackedHashMap<>(size * 2);
 
             //warm up
             for (int i = 0; i < 100; i++) {
-                final String obj = String.valueOf(random());
+                final String obj = String.valueOf(i);
                 simpleMap.put(obj, obj);
                 simpleMap.remove(obj);
 
@@ -142,59 +169,40 @@ public class ArrayBackedHashMapTest {
 
             String[] keys = new String[size];
             String[] values = new String[size];
-            String[] keys2 = new String[size];
-            String[] values2 = new String[size];
             for (int i = 0; i < size; i++) {
                 keys[i] = "int"+i;
                 values[i] = String.valueOf(random());
-                keys2[i] = String.valueOf(i);
-                values2[i] = keys[i];
             }
+
 
             final long start = System.currentTimeMillis();
             for (int i = 0; i < size; i++) {
                 hashMap.put(keys[i], values[i]);
-                hashMap.put(keys2[i], values2[i]);
+                hashMap.put(values[i], keys[i]);
             }
             final long end = System.currentTimeMillis();
             System.out.println("HashMap add used :" + (end - start));
 
-            try {
-                System.gc();
-                Thread.sleep(3_000);
-            } catch (Exception e){}
-
-
             final long start1 = System.currentTimeMillis();
             for (int i = 0; i < size; i++) {
                 simpleMap.put(keys[i], values[i]);
-                simpleMap.put(keys2[i], values2[i]);
+                simpleMap.put(values[i], keys[i]);
             }
             final long end1 = System.currentTimeMillis();
             System.out.println("SimpleMap add used :" + (end1 - start1));
 
-            try {
-                System.gc();
-                Thread.sleep(3_000);
-            } catch (Exception e){}
-
             final long start2 = System.currentTimeMillis();
             for (int i = 0; i < size; i++) {
                 hashMap.remove(keys[i]);
-                hashMap.remove(keys2[i]);
+                hashMap.remove(values[i]);
             }
             final long end2 = System.currentTimeMillis();
             System.out.println("HashMap remove used :" + (end2 - start2));
 
-            try {
-                System.gc();
-                Thread.sleep(3_000);
-            } catch (Exception e){}
-
             final long start3 = System.currentTimeMillis();
             for (int i = 0; i < size; i++) {
                 simpleMap.remove(keys[i]);
-                simpleMap.remove(keys2[i]);
+                simpleMap.remove(values[i]);
             }
             final long end3 = System.currentTimeMillis();
             System.out.println("SimpleMap remove used :" + (end3 - start3));

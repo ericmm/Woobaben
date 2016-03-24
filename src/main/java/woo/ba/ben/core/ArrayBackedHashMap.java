@@ -303,8 +303,5 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
                 size++;
             }
         }
-
-        fill(oldKeys, null);
-        fill(oldValues, null);
     }
 }
