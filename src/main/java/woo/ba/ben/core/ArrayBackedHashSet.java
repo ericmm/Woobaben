@@ -10,7 +10,6 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
     private final float fillFactor;
     private Object[] elements;
     private boolean hasNull = false;
-
     private int threshold;
     private int size;
 
@@ -36,23 +35,12 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
         this.elements = copyOf(elements, elements.length);
     }
 
-
     @Override
     public boolean contains(final Object element) {
         if (element == null) {
             return hasNull;
         }
-
-        int index = getStartIndex(element, elements.length);
-        for (int i = 0; i < elements.length; i++) {
-            if (elements[index] == FREE_KEY) {
-                return false;
-            } else if (elements[index].equals(element)) {
-                return true;
-            }
-            index = getNextIndex(index, elements.length);
-        }
-        return false;
+        return foundAt(elements, element) != NOT_FOUND_INDEX;
     }
 
     @Override
@@ -90,17 +78,15 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
 
         int firstRemoved = -1;
         int index = getStartIndex(element, elements.length);
-        Object obj;
         for (int i = 0; i < elements.length; i++) {
-            obj = elements[index];
-            if (obj == FREE_KEY) { //end of chain
+            if (elements[index] == FREE_KEY) { //end of chain
                 if (firstRemoved != -1) {
                     index = firstRemoved;
                 }
                 return putValue(element, index);
-            } else if (obj.equals(element)) {
+            } else if (elements[index].equals(element)) {
                 return false;
-            } else if (obj == REMOVED_KEY && firstRemoved == -1) {
+            } else if (elements[index] == REMOVED_KEY && firstRemoved == -1) {
                 firstRemoved = index;
             }
             index = getNextIndex(index, elements.length);
@@ -121,28 +107,18 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
             return removeNull();
         }
 
-        int index = getStartIndex(element, elements.length);
-        Object obj;
-        for (int i = 0; i < elements.length; i++) {
-            obj = elements[index];
-            if (obj == FREE_KEY) {
-                return false;
-            } else if (obj.equals(element)) {
-                --size;
-                if (elements[getNextIndex(index, elements.length)] == FREE_KEY) {
-                    elements[index] = FREE_KEY;
-                } else {
-                    elements[index] = REMOVED_KEY;
-                }
-                return true;
-            }
-            index = getNextIndex(index, elements.length);
+        final int foundIndex = foundAt(elements, element);
+        if (foundIndex != NOT_FOUND_INDEX) {
+            --size;
+            removeAt(elements, foundIndex);
+            return true;
         }
         return false;
     }
 
     @Override
     public boolean containsAll(final Collection<?> collection) {
+        //TODO Iterator, loop through smaller collection
         for (final Object element : collection) {
             if (!contains(element)) {
                 return false;
@@ -153,31 +129,19 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
 
     @Override
     public boolean addAll(final Collection<? extends E> collection) {
-        if (collection == null) {
-            throw new NullPointerException("Input parameter is null");
-        } else if (collection.isEmpty()) {
+        Objects.requireNonNull(collection);
+        if (collection.isEmpty()) {
             return false;
         }
 
         final int newSize = size + collection.size();
-        final int newCapacity = arraySize(newSize, fillFactor);
-        if (newCapacity != elements.length) {
-            final Object[] oldElements = elements;
-
-            initDataBlock(newSize);
-            size = hasNull ? 1 : 0;
-
-            for (int i = 0; i < oldElements.length; i++) {
-                if (oldElements[i] != FREE_KEY && oldElements[i] != REMOVED_KEY) {
-                    add((E) oldElements[i]);
-                    size++;
-                }
-            }
+        if (arraySize(newSize, fillFactor) != elements.length) {
+            resize(newSize);
         }
 
         boolean modified = false;
-        for (final E e : collection) {
-            if (add(e)) {
+        for (final E element : collection) {
+            if (add(element)) {
                 modified = true;
             }
         }
@@ -186,9 +150,13 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
 
     @Override
     public boolean retainAll(final Collection<?> collection) {
-        //TODO: if there's a better way
-
         Objects.requireNonNull(collection);
+        if(collection.isEmpty()) {
+            clear();
+            return false;
+        }
+
+        //TODO Iterator
         boolean modified = false;
         final Iterator<E> it = iterator();
         while (it.hasNext()) {
@@ -205,6 +173,11 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
         //TODO: if there's a better way
 
         Objects.requireNonNull(collection);
+        if(collection.isEmpty()) {
+            return false;
+        }
+
+        //TODO Iterator
         boolean modified = false;
         final Iterator<?> it = iterator();
         while (it.hasNext()) {
@@ -238,7 +211,7 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
         elements[index] = element;
 
         if (size >= threshold) {
-            resize();
+            resize(size * 2);
         } else {
             ++size;
         }
@@ -274,17 +247,15 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
         threshold = (int) (capacity * fillFactor);
     }
 
-    private void resize() {
+    private void resize(final int newSize) {
         final Object[] oldElements = elements;
-        initDataBlock(size * 2);
+        initDataBlock(newSize);
 
         size = hasNull ? 1 : 0;
 
-        Object old;
         for (int i = 0; i < oldElements.length; i++) {
-            old = oldElements[i];
-            if (old != FREE_KEY && old != REMOVED_KEY) {
-                add((E) old);
+            if (oldElements[i] != FREE_KEY && oldElements[i] != REMOVED_KEY) {
+                add((E) oldElements[i]);
                 size++;
             }
         }

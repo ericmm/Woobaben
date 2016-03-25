@@ -44,16 +44,9 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
             return (V) valueForNullKey;
         }
 
-        int index = getStartIndex(key, keys.length);
-        Object objKey;
-        for (int i = 0; i < keys.length; i++) {
-            objKey = keys[index];
-            if (objKey == FREE_KEY) {
-                return null;
-            } else if (objKey.equals(key)) {
-                return (V) values[index];
-            }
-            index = getNextIndex(index, keys.length);
+        final int foundIndex = foundAt(keys, key);
+        if (foundIndex != NOT_FOUND_INDEX) {
+            return (V) values[foundIndex];
         }
         return null;
     }
@@ -97,22 +90,11 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
             return removeNullKey();
         }
 
-        int index = getStartIndex(key, keys.length);
-        Object objKey;
-        for (int i = 0; i < keys.length; i++) {
-            objKey = keys[index];
-            if (objKey == FREE_KEY) {
-                return null;
-            } else if (objKey.equals(key)) {
-                --size;
-                if (keys[getNextIndex(index, keys.length)] == FREE_KEY) {
-                    keys[index] = FREE_KEY;
-                } else {
-                    keys[index] = REMOVED_KEY;
-                }
-                return replaceValue(index, null);
-            }
-            index = getNextIndex(index, keys.length);
+        final int foundIndex = foundAt(keys, key);
+        if (foundIndex != NOT_FOUND_INDEX) {
+            --size;
+            removeAt(keys, foundIndex);
+            return replaceValue(foundIndex, null);
         }
         return null;
     }
@@ -146,7 +128,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
         for (int i = 0; i < keys.length; i++) {
             if (keys[index] == FREE_KEY) {
                 return false;
-            }else if (keys[index].equals(key)) {
+            } else if (keys[index].equals(key)) {
                 return true;
             }
             index = getNextIndex(index, keys.length);
@@ -178,21 +160,8 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
         }
 
         final int newSize = size + anotherMap.size();
-        final int newCapacity = arraySize(newSize, fillFactor);
-        if (newCapacity != keys.length) {
-            final Object[] oldKeys = keys;
-            final Object[] oldValues = values;
-
-            allocateArrays(newSize);
-
-            size = hasNull ? 1 : 0;
-
-            for (int i = 0; i < oldKeys.length; i++) {
-                if (oldKeys[i] != FREE_KEY && oldKeys[i] != REMOVED_KEY) {
-                    put((K) oldKeys[i], (V) oldValues[i]);
-                    size++;
-                }
-            }
+        if (arraySize(newSize, fillFactor) != keys.length) {
+            resize(newSize);
         }
 
         for (final Entry<? extends K, ? extends V> entry : anotherMap.entrySet()) {
@@ -207,7 +176,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
 
     @Override
     public Collection<V> values() {
-        if(size == 0) {
+        if (size == 0) {
             return EMPTY_LIST;
         }
 
@@ -236,7 +205,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
         values[index] = value;
 
         if (size >= threshold) {
-            resize();
+            resize(size * 2);
         } else {
             ++size;
         }
@@ -275,10 +244,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
     }
 
     private void initDataBlock(final int size) {
-        allocateArrays(arraySize(size, fillFactor));
-    }
-
-    private void allocateArrays(final int capacity) {
+        final int capacity = arraySize(size, fillFactor);
         keys = new Object[capacity];
         values = new Object[capacity];
 
@@ -288,18 +254,16 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
         threshold = (int) (capacity * fillFactor);
     }
 
-    private void resize() {
+    private void resize(final int newSize) {
         final Object[] oldKeys = keys;
         final Object[] oldValues = values;
-        initDataBlock(size * 2);
+        initDataBlock(newSize);
 
         size = hasNull ? 1 : 0;
 
-        Object oldKey;
         for (int i = 0; i < oldKeys.length; i++) {
-            oldKey = oldKeys[i];
-            if (oldKey != FREE_KEY && oldKey != REMOVED_KEY) {
-                put((K) oldKey, (V) oldValues[i]);
+            if (oldKeys[i] != FREE_KEY && oldKeys[i] != REMOVED_KEY) {
+                put((K) oldKeys[i], (V) oldValues[i]);
                 size++;
             }
         }
