@@ -43,14 +43,14 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
             return hasNull;
         }
 
-        int index = getStartIndex(element, elements.length - 1);
+        int index = getStartIndex(element, elements.length);
         for (int i = 0; i < elements.length; i++) {
             if (elements[index] == FREE_KEY) {
                 return false;
             } else if (elements[index].equals(element)) {
                 return true;
             }
-            index = getNextIndex(index, elements.length - 1);
+            index = getNextIndex(index, elements.length);
         }
         return false;
     }
@@ -89,7 +89,7 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
         }
 
         int firstRemoved = -1;
-        int index = getStartIndex(element, elements.length - 1);
+        int index = getStartIndex(element, elements.length);
         Object obj;
         for (int i = 0; i < elements.length; i++) {
             obj = elements[index];
@@ -103,7 +103,7 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
             } else if (obj == REMOVED_KEY && firstRemoved == -1) {
                 firstRemoved = index;
             }
-            index = getNextIndex(index, elements.length - 1);
+            index = getNextIndex(index, elements.length);
         }
 
         if (firstRemoved != -1) {
@@ -121,7 +121,7 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
             return removeNull();
         }
 
-        int index = getStartIndex(element, elements.length - 1);
+        int index = getStartIndex(element, elements.length);
         Object obj;
         for (int i = 0; i < elements.length; i++) {
             obj = elements[index];
@@ -129,21 +129,20 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
                 return false;
             } else if (obj.equals(element)) {
                 --size;
-                if (elements[getNextIndex(index, elements.length - 1)] == FREE_KEY) {
+                if (elements[getNextIndex(index, elements.length)] == FREE_KEY) {
                     elements[index] = FREE_KEY;
                 } else {
                     elements[index] = REMOVED_KEY;
                 }
                 return true;
             }
-            index = getNextIndex(index, elements.length - 1);
+            index = getNextIndex(index, elements.length);
         }
         return false;
     }
 
     @Override
     public boolean containsAll(final Collection<?> collection) {
-        //TODO: if there's a better way
         for (final Object element : collection) {
             if (!contains(element)) {
                 return false;

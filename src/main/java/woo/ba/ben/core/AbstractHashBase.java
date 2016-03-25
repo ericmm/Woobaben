@@ -43,11 +43,11 @@ public abstract class AbstractHashBase {
         }
     }
 
-    protected int getStartIndex(final Object key, final int modeSize) {
-        return key.hashCode() & modeSize;
+    protected int getStartIndex(final Object key, final int arraySize) {
+        return key.hashCode() & (arraySize -1);
     }
 
-    protected int getNextIndex(final int index, final int modeSize) {
-        return (index + 1) & modeSize;
+    protected int getNextIndex(final int index, final int arraySize) {
+        return (index + 1) & (arraySize - 1);
     }
 }

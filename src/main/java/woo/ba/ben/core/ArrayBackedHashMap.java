@@ -44,7 +44,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
             return (V) valueForNullKey;
         }
 
-        int index = getStartIndex(key, keys.length - 1);
+        int index = getStartIndex(key, keys.length);
         Object objKey;
         for (int i = 0; i < keys.length; i++) {
             objKey = keys[index];
@@ -53,7 +53,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
             } else if (objKey.equals(key)) {
                 return (V) values[index];
             }
-            index = getNextIndex(index, keys.length - 1);
+            index = getNextIndex(index, keys.length);
         }
         return null;
     }
@@ -65,7 +65,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
         }
 
         int firstRemoved = -1;
-        int index = getStartIndex(key, keys.length - 1);
+        int index = getStartIndex(key, keys.length);
         Object objKey;
         for (int i = 0; i < keys.length; i++) {
             objKey = keys[index];
@@ -79,7 +79,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
             } else if (objKey == REMOVED_KEY && firstRemoved == -1) {
                 firstRemoved = index; //we may find a key later
             }
-            index = getNextIndex(index, keys.length - 1);
+            index = getNextIndex(index, keys.length);
         }
 
         if (firstRemoved != -1) {
@@ -97,7 +97,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
             return removeNullKey();
         }
 
-        int index = getStartIndex(key, keys.length - 1);
+        int index = getStartIndex(key, keys.length);
         Object objKey;
         for (int i = 0; i < keys.length; i++) {
             objKey = keys[index];
@@ -105,14 +105,14 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
                 return null;
             } else if (objKey.equals(key)) {
                 --size;
-                if (keys[getNextIndex(index, keys.length - 1)] == FREE_KEY) {
+                if (keys[getNextIndex(index, keys.length)] == FREE_KEY) {
                     keys[index] = FREE_KEY;
                 } else {
                     keys[index] = REMOVED_KEY;
                 }
                 return replaceValue(index, null);
             }
-            index = getNextIndex(index, keys.length - 1);
+            index = getNextIndex(index, keys.length);
         }
         return null;
     }
@@ -142,14 +142,14 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
             return hasNull;
         }
 
-        int index = getStartIndex(key, keys.length - 1);
+        int index = getStartIndex(key, keys.length);
         for (int i = 0; i < keys.length; i++) {
             if (keys[index] == FREE_KEY) {
                 return false;
             }else if (keys[index].equals(key)) {
                 return true;
             }
-            index = getNextIndex(index, keys.length - 1);
+            index = getNextIndex(index, keys.length);
         }
         return false;
     }
