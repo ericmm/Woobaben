@@ -1,10 +1,14 @@
 package woo.ba.ben.core;
 
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Set;
 
 import static java.util.Arrays.copyOf;
 import static java.util.Arrays.fill;
+import static java.util.Objects.requireNonNull;
 
 public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
     private final float fillFactor;
@@ -76,23 +80,23 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
             return insertNull();
         }
 
-        int firstRemoved = -1;
+        int firstRemoved = NOT_FOUND_INDEX;
         int index = getStartIndex(element, elements.length);
         for (int i = 0; i < elements.length; i++) {
             if (elements[index] == FREE_KEY) { //end of chain
-                if (firstRemoved != -1) {
+                if (firstRemoved != NOT_FOUND_INDEX) {
                     index = firstRemoved;
                 }
                 return putValue(element, index);
             } else if (elements[index].equals(element)) {
                 return false;
-            } else if (elements[index] == REMOVED_KEY && firstRemoved == -1) {
+            } else if (elements[index] == REMOVED_KEY && firstRemoved == NOT_FOUND_INDEX) {
                 firstRemoved = index;
             }
             index = getNextIndex(index, elements.length);
         }
 
-        if (firstRemoved != -1) {
+        if (firstRemoved != NOT_FOUND_INDEX) {
             return putValue(element, firstRemoved);
         } else {
             final String message = "Cannot find a place to put, this should never happen! \n"
@@ -118,18 +122,23 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
 
     @Override
     public boolean containsAll(final Collection<?> collection) {
-        //TODO Iterator, loop through smaller collection
-        for (final Object element : collection) {
-            if (!contains(element)) {
-                return false;
-            }
+        requireNonNull(collection);
+        if (collection.isEmpty()) {
+            return size == 0;
         }
-        return true;
+
+        //loop through smaller collection
+        final int collectionSize = collection.size();
+        if (collectionSize > size) {
+            return containsCollection(this, collection);
+        } else {
+            return containsCollection(collection, this);
+        }
     }
 
     @Override
     public boolean addAll(final Collection<? extends E> collection) {
-        Objects.requireNonNull(collection);
+        requireNonNull(collection);
         if (collection.isEmpty()) {
             return false;
         }
@@ -150,7 +159,7 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
 
     @Override
     public boolean retainAll(final Collection<?> collection) {
-        Objects.requireNonNull(collection);
+        requireNonNull(collection);
         if (collection.isEmpty()) {
             clear();
             return false;
@@ -170,9 +179,7 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
 
     @Override
     public boolean removeAll(final Collection<?> collection) {
-        //TODO: if there's a better way
-
-        Objects.requireNonNull(collection);
+        requireNonNull(collection);
         if (collection.isEmpty()) {
             return false;
         }
@@ -259,5 +266,14 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
                 size++;
             }
         }
+    }
+
+    private boolean containsCollection(final Collection<?> smallerCollection, final Collection<?> largeCollection) {
+        for (final Object element : smallerCollection) {
+            if (!largeCollection.contains(element)) {
+                return false;
+            }
+        }
+        return true;
     }
 }
