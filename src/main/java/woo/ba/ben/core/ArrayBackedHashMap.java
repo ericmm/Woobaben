@@ -44,7 +44,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
             return (V) valueForNullKey;
         }
 
-        final int foundIndex = foundAt(keys, key);
+        final int foundIndex = findIndex(keys, key);
         if (foundIndex != NOT_FOUND_INDEX) {
             return (V) values[foundIndex];
         }
@@ -59,17 +59,15 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
 
         int firstRemoved = -1;
         int index = getStartIndex(key, keys.length);
-        Object objKey;
         for (int i = 0; i < keys.length; i++) {
-            objKey = keys[index];
-            if (objKey == FREE_KEY) { //end of chain
+            if (keys[index] == FREE_KEY) { //end of chain
                 if (firstRemoved != -1) {
                     index = firstRemoved;
                 }
                 return putValue(key, value, index);
-            } else if (objKey.equals(key)) {
+            } else if (keys[index].equals(key)) {
                 return replaceValue(index, value);
-            } else if (objKey == REMOVED_KEY && firstRemoved == -1) {
+            } else if (keys[index] == REMOVED_KEY && firstRemoved == -1) {
                 firstRemoved = index; //we may find a key later
             }
             index = getNextIndex(index, keys.length);
@@ -90,7 +88,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
             return removeNullKey();
         }
 
-        final int foundIndex = foundAt(keys, key);
+        final int foundIndex = findIndex(keys, key);
         if (foundIndex != NOT_FOUND_INDEX) {
             --size;
             removeAt(keys, foundIndex);
@@ -123,17 +121,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
         if (key == null) {
             return hasNull;
         }
-
-        int index = getStartIndex(key, keys.length);
-        for (int i = 0; i < keys.length; i++) {
-            if (keys[index] == FREE_KEY) {
-                return false;
-            } else if (keys[index].equals(key)) {
-                return true;
-            }
-            index = getNextIndex(index, keys.length);
-        }
-        return false;
+        return findIndex(keys, key) != NOT_FOUND_INDEX;
     }
 
     @Override

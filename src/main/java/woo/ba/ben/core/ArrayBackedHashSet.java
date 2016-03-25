@@ -40,7 +40,7 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
         if (element == null) {
             return hasNull;
         }
-        return foundAt(elements, element) != NOT_FOUND_INDEX;
+        return findIndex(elements, element) != NOT_FOUND_INDEX;
     }
 
     @Override
@@ -107,7 +107,7 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
             return removeNull();
         }
 
-        final int foundIndex = foundAt(elements, element);
+        final int foundIndex = findIndex(elements, element);
         if (foundIndex != NOT_FOUND_INDEX) {
             --size;
             removeAt(elements, foundIndex);
@@ -151,7 +151,7 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
     @Override
     public boolean retainAll(final Collection<?> collection) {
         Objects.requireNonNull(collection);
-        if(collection.isEmpty()) {
+        if (collection.isEmpty()) {
             clear();
             return false;
         }
@@ -173,7 +173,7 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
         //TODO: if there's a better way
 
         Objects.requireNonNull(collection);
-        if(collection.isEmpty()) {
+        if (collection.isEmpty()) {
             return false;
         }
 

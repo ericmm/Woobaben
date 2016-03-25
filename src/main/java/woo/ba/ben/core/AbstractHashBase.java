@@ -6,13 +6,13 @@ import static woo.ba.ben.util.Util.nextPowerOfTwo;
 public abstract class AbstractHashBase {
     protected static final Object FREE_KEY = new Object() {
         @Override
-        public String toString(){
+        public String toString() {
             return "#FREE#";
         }
     };
-    protected static final Object REMOVED_KEY = new Object(){
+    protected static final Object REMOVED_KEY = new Object() {
         @Override
-        public String toString(){
+        public String toString() {
             return "#REMOVED#";
         }
     };
@@ -46,14 +46,14 @@ public abstract class AbstractHashBase {
     }
 
     protected int getStartIndex(final Object key, final int arraySize) {
-        return key.hashCode() & (arraySize -1);
+        return key.hashCode() & (arraySize - 1);
     }
 
     protected int getNextIndex(final int index, final int arraySize) {
         return (index + 1) & (arraySize - 1);
     }
 
-    protected int foundAt(final Object[] elements, final Object element) {
+    protected int findIndex(final Object[] elements, final Object element) {
         int index = getStartIndex(element, elements.length);
         for (int i = 0; i < elements.length; i++) {
             if (elements[index] == FREE_KEY) {
@@ -65,7 +65,6 @@ public abstract class AbstractHashBase {
         }
         return NOT_FOUND_INDEX;
     }
-
 
     protected void removeAt(final Object[] elements, final int foundIndex) {
         if (elements[getNextIndex(foundIndex, elements.length)] == FREE_KEY) {
