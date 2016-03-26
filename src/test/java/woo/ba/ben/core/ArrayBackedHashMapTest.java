@@ -60,6 +60,18 @@ public class ArrayBackedHashMapTest {
         assertThat(simpleMap.get("notNullValue"), notNullValue());
 
         assertThat(simpleMap.get("notInMap"), nullValue());
+
+        simpleMap = new ArrayBackedHashMap<String, String>(1);
+        assertThat(simpleMap.size(), is(0));
+
+        simpleMap.put("1", "2");
+        assertThat(simpleMap.size(), is(1));
+        assertThat(simpleMap.get("1"), is("2"));
+
+        simpleMap.put("2", "5");
+        simpleMap.put("3", "6");
+        simpleMap.put("4", "7");
+        assertThat(simpleMap.size(), is(4));
     }
 
     @Test

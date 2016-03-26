@@ -252,7 +252,6 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
         for (int i = 0; i < oldKeys.length; i++) {
             if (oldKeys[i] != FREE_KEY && oldKeys[i] != REMOVED_KEY) {
                 put((K) oldKeys[i], (V) oldValues[i]);
-                size++;
             }
         }
     }

@@ -263,7 +263,6 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
         for (int i = 0; i < oldElements.length; i++) {
             if (oldElements[i] != FREE_KEY && oldElements[i] != REMOVED_KEY) {
                 add((E) oldElements[i]);
-                size++;
             }
         }
     }
