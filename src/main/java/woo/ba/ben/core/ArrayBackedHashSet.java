@@ -267,12 +267,31 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
         }
     }
 
-    private boolean containsCollection(final Collection<?> smallerCollection, final Collection<?> largeCollection) {
-        for (final Object element : smallerCollection) {
+    private boolean containsCollection(final Collection<?> smallCollection, final Collection<?> largeCollection) {
+        for (final Object element : smallCollection) {
             if (!largeCollection.contains(element)) {
                 return false;
             }
         }
         return true;
+    }
+
+    private class SetIterator<E> implements Iterator<E> {
+        private int index;
+
+        @Override
+        public boolean hasNext() {
+            return false;
+        }
+
+        @Override
+        public E next() {
+            return null;
+        }
+
+        @Override
+        public void remove() {
+
+        }
     }
 }
