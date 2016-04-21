@@ -19,7 +19,7 @@ public abstract class AbstractHashBase {
     protected static final float DEFAULT_LOAD_FACTOR = 0.75f;
     protected static final int DEFAULT_INITIAL_CAPACITY = 12;
 
-    protected static final int NOT_FOUND_INDEX = -1;
+    protected static final int NOT_FOUND_INDEX = -100;
 
     private static final int MAXIMUM_CAPACITY = 1 << 30;
 

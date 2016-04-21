@@ -1,24 +1,25 @@
 package woo.ba.ben.core;
 
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Arrays.copyOf;
 import static java.util.Arrays.fill;
 import static java.util.Objects.requireNonNull;
 
 public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
+    private static final int INITIAL_INDEX = -3;
+    private static final int NULL_ELEMENT_INDEX = -2;
+
     private final float fillFactor;
     private Object[] elements;
     private boolean hasNull = false;
     private int threshold;
     private int size;
+    private int updateVersion;
 
     public ArrayBackedHashSet() {
-        this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR);
+        this(DEFAULT_INITIAL_CAPACITY);
     }
 
     public ArrayBackedHashSet(final int size) {
@@ -28,11 +29,13 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
     public ArrayBackedHashSet(final int size, final float fillFactor) {
         checkFillFactorAndSize(size, fillFactor);
         this.fillFactor = fillFactor;
+        this.updateVersion = 0;
         initDataBlock(size);
     }
 
     ArrayBackedHashSet(final Object[] elements, final int size, final float fillFactor, final boolean hasNull, final int threshold) {
         this.fillFactor = fillFactor;
+        this.updateVersion = 0;
         this.size = size;
         this.threshold = threshold;
         this.hasNull = hasNull;
@@ -49,8 +52,7 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
 
     @Override
     public Iterator<E> iterator() {
-        //TODO
-        throw new UnsupportedOperationException();
+        return new SetIterator();
     }
 
     @Override
@@ -114,6 +116,7 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
         final int foundIndex = findIndex(elements, element);
         if (foundIndex != NOT_FOUND_INDEX) {
             --size;
+            ++updateVersion;
             removeAt(elements, foundIndex);
             return true;
         }
@@ -154,6 +157,10 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
                 modified = true;
             }
         }
+
+        if (modified) {
+            ++updateVersion;
+        }
         return modified;
     }
 
@@ -161,18 +168,31 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
     public boolean retainAll(final Collection<?> collection) {
         requireNonNull(collection);
         if (collection.isEmpty()) {
-            clear();
+            if (size > 0) {
+                clear();
+                return true;
+            }
             return false;
         }
 
-        //TODO Iterator
+        //check null
         boolean modified = false;
-        final Iterator<E> it = iterator();
-        while (it.hasNext()) {
-            if (!collection.contains(it.next())) {
-                it.remove();
+        if (!collection.contains(null) && hasNull) {
+            modified = true;
+            removeNullSurely();
+        }
+
+        //TODO: loop through smaller collection?
+        for (int i = 0; i < elements.length; i++) {
+            if (elements[i] != FREE_KEY && elements[i] != REMOVED_KEY && !collection.contains(elements[i])) {
+                --size;
                 modified = true;
+                removeAt(elements, i);
             }
+        }
+
+        if (modified) {
+            ++updateVersion;
         }
         return modified;
     }
@@ -184,14 +204,24 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
             return false;
         }
 
-        //TODO Iterator
+        //check null
         boolean modified = false;
-        final Iterator<?> it = iterator();
-        while (it.hasNext()) {
-            if (collection.contains(it.next())) {
-                it.remove();
+        if (collection.contains(null) && hasNull) {
+            modified = true;
+            removeNullSurely();
+        }
+
+        //TODO: loop through smaller collection?
+        for (int i = 0; i < elements.length; i++) {
+            if (elements[i] != FREE_KEY && elements[i] != REMOVED_KEY && collection.contains(elements[i])) {
+                --size;
                 modified = true;
+                removeAt(elements, i);
             }
+        }
+
+        if (modified) {
+            ++updateVersion;
         }
         return modified;
     }
@@ -206,6 +236,7 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
         fill(elements, FREE_KEY);
         hasNull = false;
         size = 0;
+        updateVersion = 0;
     }
 
     @Override
@@ -217,6 +248,7 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
     private boolean putValue(final E element, final int index) {
         elements[index] = element;
 
+        ++updateVersion;
         if (size >= threshold) {
             resize(size * 2);
         } else {
@@ -231,18 +263,24 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
         } else {
             hasNull = true;
             ++size;
+            ++updateVersion;
             return true;
         }
     }
 
     private boolean removeNull() {
         if (hasNull) {
-            hasNull = false;
-            --size;
+            removeNullSurely();
             return true;
         } else {
             return false;
         }
+    }
+
+    private void removeNullSurely() {
+        hasNull = false;
+        --size;
+        ++updateVersion;
     }
 
     private void initDataBlock(final int size) {
@@ -277,21 +315,77 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
     }
 
     private class SetIterator<E> implements Iterator<E> {
-        private int index;
+        private int snapshotVersion;
+        private int currentIndex;
+        private int nextIndex;
+
+        SetIterator() {
+            this.snapshotVersion = updateVersion;
+            currentIndex = INITIAL_INDEX;
+            nextIndex = INITIAL_INDEX;
+        }
 
         @Override
         public boolean hasNext() {
-            return false;
+            if (snapshotVersion != updateVersion) {
+                throw new ConcurrentModificationException();
+            }
+            nextIndex = findNextIndex();
+            return nextIndex == NULL_ELEMENT_INDEX || nextIndex != NOT_FOUND_INDEX;
+        }
+
+        private int findNextIndex() {
+            if (currentIndex == INITIAL_INDEX && hasNull) {
+                return NULL_ELEMENT_INDEX;
+            }
+
+            int index = 0;
+            if (currentIndex != INITIAL_INDEX && currentIndex != NULL_ELEMENT_INDEX) {
+                index = currentIndex;
+            }
+
+            for (int i = index; i < elements.length; i++) {
+                if (elements[i] != FREE_KEY && elements[i] != REMOVED_KEY) {
+                    return i;
+                }
+            }
+            return NOT_FOUND_INDEX;
         }
 
         @Override
         public E next() {
-            return null;
+            if (snapshotVersion != updateVersion) {
+                throw new ConcurrentModificationException();
+            }
+
+            nextIndex = findNextIndex();
+            if (nextIndex == NULL_ELEMENT_INDEX) {
+                currentIndex = NULL_ELEMENT_INDEX;
+                return null;
+            } else if (nextIndex == NOT_FOUND_INDEX) {
+                throw new NoSuchElementException();
+            } else {
+                currentIndex = nextIndex;
+                return (E) elements[currentIndex];
+            }
         }
 
         @Override
         public void remove() {
+            if (snapshotVersion != updateVersion) {
+                throw new ConcurrentModificationException();
+            }
 
+            if (currentIndex == INITIAL_INDEX) {
+                throw new IllegalStateException();
+            } else if (currentIndex == NULL_ELEMENT_INDEX) {
+                removeNullSurely();
+                snapshotVersion = updateVersion;
+            } else {
+                removeAt(elements, currentIndex);
+                updateVersion++;
+                snapshotVersion = updateVersion;
+            }
         }
     }
 }
