@@ -46,7 +46,7 @@ public class DataReader {
     }
 
     public static int readIntLittleEndian(final byte[] buffer, final int offset) {
-        return buffer[offset] & BYTE_MASK_INT
+        return (buffer[offset] & BYTE_MASK_INT)
                 | ((buffer[offset + 1] & BYTE_MASK_INT) << 8)
                 | ((buffer[offset + 2] & BYTE_MASK_INT) << 16)
                 | ((buffer[offset + 3] & BYTE_MASK_INT) << 24);
@@ -56,8 +56,16 @@ public class DataReader {
         return (short) (((buffer[offset] & BYTE_MASK_INT) << 8) | buffer[offset + 1] & BYTE_MASK_INT);
     }
 
+    public static short readShortLittleEndian(final byte[] buffer, final int offset) {
+        return (short) ((buffer[offset] & BYTE_MASK_INT) | ((buffer[offset + 1] & BYTE_MASK_INT) << 8));
+    }
+
     public static char readChar(final byte[] buffer, final int offset) {
         return (char) (((buffer[offset] & BYTE_MASK_INT) << 8) | buffer[offset + 1] & BYTE_MASK_INT);
+    }
+
+    public static char readCharLittleEndian(final byte[] buffer, final int offset) {
+        return (char) ((buffer[offset] & BYTE_MASK_INT) | ((buffer[offset + 1] & BYTE_MASK_INT) << 8));
     }
 
     public static byte readByte(final byte[] buffer, final int offset) {
