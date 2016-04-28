@@ -382,6 +382,7 @@ public class ArrayBackedHashSet<E> extends AbstractHashBase implements Set<E> {
                 removeNullSurely();
                 snapshotVersion = updateVersion;
             } else {
+                --size;
                 removeAt(elements, currentIndex);
                 updateVersion++;
                 snapshotVersion = updateVersion;

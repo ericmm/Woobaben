@@ -5,32 +5,33 @@ public class DataReader {
     private static final int BYTE_MASK_INT = 0xFF;
     private static final long BYTE_MASK_LONG = 0xFFL;
 
-    private DataReader() {}
+    private DataReader() {
+    }
 
     public static double readDouble(final byte[] buffer, final int offset) {
         return Double.longBitsToDouble(readLong(buffer, offset));
     }
 
     public static long readLong(final byte[] buffer, final int offset) {
-        return (normalizeLong(buffer[offset]) << 56)
-                | (normalizeLong(buffer[offset + 1]) << 48)
-                | (normalizeLong(buffer[offset + 2]) << 40)
-                | (normalizeLong(buffer[offset + 3]) << 32)
-                | (normalizeLong(buffer[offset + 4]) << 24)
-                | (normalizeLong(buffer[offset + 5]) << 16)
-                | (normalizeLong(buffer[offset + 6]) << 8)
-                | normalizeLong(buffer[offset + 7]);
+        return ((buffer[offset] & BYTE_MASK_LONG) << 56)
+                | ((buffer[offset + 1] & BYTE_MASK_LONG) << 48)
+                | ((buffer[offset + 2] & BYTE_MASK_LONG) << 40)
+                | ((buffer[offset + 3] & BYTE_MASK_LONG) << 32)
+                | ((buffer[offset + 4] & BYTE_MASK_LONG) << 24)
+                | ((buffer[offset + 5] & BYTE_MASK_LONG) << 16)
+                | ((buffer[offset + 6] & BYTE_MASK_LONG) << 8)
+                | buffer[offset + 7] & BYTE_MASK_LONG;
     }
 
     public static final long readLongLittleEndian(final byte[] buffer, final int offset) {
-        return (normalizeLong(buffer[offset + 7]) << 56)
-                | (normalizeLong(buffer[offset + 6]) << 48)
-                | (normalizeLong(buffer[offset + 5]) << 40)
-                | (normalizeLong(buffer[offset + 4]) << 32)
-                | (normalizeLong(buffer[offset + 3]) << 24)
-                | (normalizeLong(buffer[offset + 2]) << 16)
-                | (normalizeLong(buffer[offset + 1]) << 8)
-                | normalizeLong(buffer[offset]);
+        return ((buffer[offset + 7] & BYTE_MASK_LONG) << 56)
+                | ((buffer[offset + 6] & BYTE_MASK_LONG) << 48)
+                | ((buffer[offset + 5] & BYTE_MASK_LONG) << 40)
+                | ((buffer[offset + 4] & BYTE_MASK_LONG) << 32)
+                | ((buffer[offset + 3] & BYTE_MASK_LONG) << 24)
+                | ((buffer[offset + 2] & BYTE_MASK_LONG) << 16)
+                | ((buffer[offset + 1] & BYTE_MASK_LONG) << 8)
+                | buffer[offset] & BYTE_MASK_LONG;
     }
 
     public static float readFloat(final byte[] buffer, final int offset) {
@@ -38,40 +39,32 @@ public class DataReader {
     }
 
     public static int readInt(final byte[] buffer, final int offset) {
-        return (normalizeInt(buffer[offset]) << 24)
-                | (normalizeInt(buffer[offset + 1]) << 16)
-                | (normalizeInt(buffer[offset + 2]) << 8)
-                | normalizeInt(buffer[offset + 3]);
+        return ((buffer[offset] & BYTE_MASK_INT) << 24)
+                | ((buffer[offset + 1] & BYTE_MASK_INT) << 16)
+                | ((buffer[offset + 2] & BYTE_MASK_INT) << 8)
+                | buffer[offset + 3] & BYTE_MASK_INT;
     }
 
     public static int readIntLittleEndian(final byte[] buffer, final int offset) {
-        return normalizeInt(buffer[offset])
-                | (normalizeInt(buffer[offset + 1]) << 8)
-                | (normalizeInt(buffer[offset + 2]) << 16)
-                | (normalizeInt(buffer[offset + 3]) << 24);
+        return buffer[offset] & BYTE_MASK_INT
+                | ((buffer[offset + 1] & BYTE_MASK_INT) << 8)
+                | ((buffer[offset + 2] & BYTE_MASK_INT) << 16)
+                | ((buffer[offset + 3] & BYTE_MASK_INT) << 24);
     }
 
     public static short readShort(final byte[] buffer, final int offset) {
-        return (short) ((normalizeInt(buffer[offset]) << 8) | normalizeInt(buffer[offset + 1]));
+        return (short) (((buffer[offset] & BYTE_MASK_INT) << 8) | buffer[offset + 1] & BYTE_MASK_INT);
     }
 
     public static char readChar(final byte[] buffer, final int offset) {
-        return (char) ((normalizeInt(buffer[offset]) << 8) | normalizeInt(buffer[offset + 1]));
+        return (char) (((buffer[offset] & BYTE_MASK_INT) << 8) | buffer[offset + 1] & BYTE_MASK_INT);
     }
 
     public static byte readByte(final byte[] buffer, final int offset) {
-        return (byte) normalizeInt(buffer[offset]);
+        return (byte) (buffer[offset] & BYTE_MASK_INT);
     }
 
     public static boolean readBoolean(final byte[] buffer, final int offset) {
-        return normalizeInt(buffer[offset]) != 0;
-    }
-
-    private static int normalizeInt(final byte byteValue) {
-        return byteValue & BYTE_MASK_INT;
-    }
-
-    private static long normalizeLong(final byte byteValue) {
-        return byteValue & BYTE_MASK_LONG;
+        return (buffer[offset] & BYTE_MASK_INT) != 0;
     }
 }

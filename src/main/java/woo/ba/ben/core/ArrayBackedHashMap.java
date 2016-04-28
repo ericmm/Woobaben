@@ -183,6 +183,7 @@ public class ArrayBackedHashMap<K, V> extends AbstractHashBase implements Map<K,
 
     @Override
     public Set<Entry<K, V>> entrySet() {
+        // Entry<K, V> [] entries = new Entry[size];
         //TODO
         throw new UnsupportedOperationException();
     }
