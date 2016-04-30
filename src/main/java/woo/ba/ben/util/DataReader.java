@@ -8,11 +8,15 @@ public class DataReader {
     private DataReader() {
     }
 
-    public static double readDouble(final byte[] buffer, final int offset) {
-        return Double.longBitsToDouble(readLong(buffer, offset));
+    public static double readDoubleBigEndian(final byte[] buffer, final int offset) {
+        return Double.longBitsToDouble(readLongBigEndian(buffer, offset));
     }
 
-    public static long readLong(final byte[] buffer, final int offset) {
+    public static double readDoubleLittleEndian(final byte[] buffer, final int offset) {
+        return Double.longBitsToDouble(readLongLittleEndian(buffer, offset));
+    }
+
+    public static long readLongBigEndian(final byte[] buffer, final int offset) {
         return ((buffer[offset] & BYTE_MASK_LONG) << 56)
                 | ((buffer[offset + 1] & BYTE_MASK_LONG) << 48)
                 | ((buffer[offset + 2] & BYTE_MASK_LONG) << 40)
@@ -34,11 +38,15 @@ public class DataReader {
                 | buffer[offset] & BYTE_MASK_LONG;
     }
 
-    public static float readFloat(final byte[] buffer, final int offset) {
-        return Float.intBitsToFloat(readInt(buffer, offset));
+    public static float readFloatBigEndian(final byte[] buffer, final int offset) {
+        return Float.intBitsToFloat(readIntBigEndian(buffer, offset));
     }
 
-    public static int readInt(final byte[] buffer, final int offset) {
+    public static float readFloatLittleEndian(final byte[] buffer, final int offset) {
+        return Float.intBitsToFloat(readIntLittleEndian(buffer, offset));
+    }
+
+    public static int readIntBigEndian(final byte[] buffer, final int offset) {
         return ((buffer[offset] & BYTE_MASK_INT) << 24)
                 | ((buffer[offset + 1] & BYTE_MASK_INT) << 16)
                 | ((buffer[offset + 2] & BYTE_MASK_INT) << 8)
@@ -52,7 +60,7 @@ public class DataReader {
                 | ((buffer[offset + 3] & BYTE_MASK_INT) << 24);
     }
 
-    public static short readShort(final byte[] buffer, final int offset) {
+    public static short readShortBigEndian(final byte[] buffer, final int offset) {
         return (short) (((buffer[offset] & BYTE_MASK_INT) << 8) | buffer[offset + 1] & BYTE_MASK_INT);
     }
 
@@ -60,7 +68,7 @@ public class DataReader {
         return (short) ((buffer[offset] & BYTE_MASK_INT) | ((buffer[offset + 1] & BYTE_MASK_INT) << 8));
     }
 
-    public static char readChar(final byte[] buffer, final int offset) {
+    public static char readCharBigEndian(final byte[] buffer, final int offset) {
         return (char) (((buffer[offset] & BYTE_MASK_INT) << 8) | buffer[offset + 1] & BYTE_MASK_INT);
     }
 
@@ -74,5 +82,35 @@ public class DataReader {
 
     public static boolean readBoolean(final byte[] buffer, final int offset) {
         return (buffer[offset] & BYTE_MASK_INT) != 0;
+    }
+
+    public static boolean arrayEquals(final byte[] left, final byte[] right) {
+        if (left == right) {
+            return true;
+        }
+        if (left == null || right == null) {
+            return false;
+        }
+
+        if (right.length != left.length) {
+            return false;
+        }
+
+        final int loopTimes = left.length / Long.BYTES;
+        final int loopLength = loopTimes * Long.BYTES;
+        for (int offset = 0; offset < loopLength; offset += Long.BYTES) {
+            if ((readLongBigEndian(left, offset) ^ readLongBigEndian(right, offset)) != 0) {
+                return false;
+            }
+        }
+
+        // for remaining
+        for (int i = loopLength; i < left.length; i++) {
+            if (left[i] != right[i]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

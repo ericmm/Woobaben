@@ -1,10 +1,6 @@
 package woo.ba.ben.util;
 
 
-import com.google.common.primitives.Longs;
-
-import static woo.ba.ben.util.DataReader.readLong;
-
 public class Util {
     private Util() {
     }
@@ -30,36 +26,5 @@ public class Util {
         x |= x >> 8;
         x |= x >> 16;
         return (x | x >> 32) + 1;
-    }
-
-    public boolean arrayEquals(final byte[] left, final byte[] right) {
-        if (left == right) {
-            return true;
-        }
-        if (left == null || right == null) {
-            return false;
-        }
-
-        if (right.length != left.length) {
-            return false;
-        }
-
-        //TODO: check CPU 32-bit or 64-bit, that determines (LittleEndian or BigEndian) & (Integer or Long)
-        final int loopTimes = left.length / Longs.BYTES;
-        final int loopLength = loopTimes * Longs.BYTES;
-        for (int offset = 0; offset < loopLength; offset += Longs.BYTES) {
-            if ((readLong(left, offset) ^ readLong(right, offset)) != 0) {
-                return false;
-            }
-        }
-
-        // for remaining
-        for (int i = loopLength; i < left.length; i++) {
-            if (left[i] != right[i]) {
-                return false;
-            }
-        }
-
-        return true;
     }
 }
