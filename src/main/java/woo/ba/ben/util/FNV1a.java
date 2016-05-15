@@ -1,8 +1,6 @@
 package woo.ba.ben.util;
 
 
-import static woo.ba.ben.util.Util.checkNotNull;
-
 /*
  * from https://github.com/prasanthj/hasher/blob/master/src/main/java/hasher/FNV1a.java
  */
@@ -12,7 +10,9 @@ public class FNV1a {
     private static final long FNV1_64_INIT = 0xcbf29ce484222325L;
     private static final long FNV1_PRIME_64 = 1099511628211L;
 
-    private FNV1a(){}
+    private FNV1a() {
+    }
+
     /**
      * FNV1a 32 bit variant.
      *
@@ -20,7 +20,7 @@ public class FNV1a {
      * @return - hashcode
      */
     public static int hash32(final byte[] data) {
-        checkNotNull(data);
+        assert data != null;
         return hash32(data, data.length);
     }
 
@@ -41,7 +41,7 @@ public class FNV1a {
      * @return - hashcode
      */
     public static long hash64(final byte[] data) {
-        checkNotNull(data);
+        assert data != null;
         return hash64(data, data.length);
     }
 

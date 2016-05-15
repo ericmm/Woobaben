@@ -1,12 +1,12 @@
 package woo.ba.ben.obj;
 
 
-import woo.ba.ben.core.ArrayBackedHashMap;
 import woo.ba.ben.core.ClassStruct;
 import woo.ba.ben.core.ClassStructFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.Map;
 
 public class HeapObjectSerializer {
@@ -16,7 +16,7 @@ public class HeapObjectSerializer {
             return;
         }
 
-        final Map<Integer, Object> objectMap = new ArrayBackedHashMap<>();
+        final Map<Integer, Object> objectMap = new HashMap<>();
         if (object.getClass().isArray()) {
 //            writeArray(out, object, objectMap);
         }

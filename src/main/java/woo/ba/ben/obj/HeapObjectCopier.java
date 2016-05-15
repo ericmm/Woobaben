@@ -1,12 +1,12 @@
 package woo.ba.ben.obj;
 
-import woo.ba.ben.core.ArrayBackedHashMap;
 import woo.ba.ben.core.ClassStruct;
 import woo.ba.ben.core.ClassStructFactory;
 import woo.ba.ben.core.FieldStruct;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -18,22 +18,22 @@ import static java.lang.reflect.Array.newInstance;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 public class HeapObjectCopier {
-    private static final Set<Class> UNSUPPORTED_CLASS_SET = new HashSet<>();
+    private static final Set<Class> UNSUPPORTED_CLASSES_SET = new HashSet<>();
 
     static {
-        UNSUPPORTED_CLASS_SET.add(Class.class);
-        UNSUPPORTED_CLASS_SET.add(Enum.class);
-        UNSUPPORTED_CLASS_SET.add(Annotation.class);
-        UNSUPPORTED_CLASS_SET.add(Field.class);
-        UNSUPPORTED_CLASS_SET.add(System.class);
-        UNSUPPORTED_CLASS_SET.add(HeapObjectCopier.class);
+        UNSUPPORTED_CLASSES_SET.add(Class.class);
+        UNSUPPORTED_CLASSES_SET.add(Enum.class);
+        UNSUPPORTED_CLASSES_SET.add(Annotation.class);
+        UNSUPPORTED_CLASSES_SET.add(Field.class);
+        UNSUPPORTED_CLASSES_SET.add(System.class);
+        UNSUPPORTED_CLASSES_SET.add(HeapObjectCopier.class);
     }
 
     private HeapObjectCopier() {
     }
 
     public static boolean addSingletonClass(final Class singletonClass) {
-        return UNSUPPORTED_CLASS_SET.add(singletonClass);
+        return UNSUPPORTED_CLASSES_SET.add(singletonClass);
     }
 
     public static <T> T deepCopy(final T originalObj) {
@@ -41,7 +41,7 @@ public class HeapObjectCopier {
             return originalObj;
         }
 
-        final Map<Integer, Object> objectMap = new ArrayBackedHashMap<>();
+        final Map<Integer, Object> objectMap = new HashMap<>();
         if (originalObj.getClass().isArray()) {
             return copyArray(originalObj, objectMap);
         }
@@ -49,12 +49,7 @@ public class HeapObjectCopier {
     }
 
     private static <T> boolean isCloneable(final T originalObj) {
-        for (final Class clazz : UNSUPPORTED_CLASS_SET) {
-            if (clazz.isInstance(originalObj)) {
-                return false;
-            }
-        }
-        return true;
+        return !UNSUPPORTED_CLASSES_SET.contains(originalObj.getClass());
     }
 
     private static <T> T copyObject(final T originalObj, final Map<Integer, Object> objectMap) {

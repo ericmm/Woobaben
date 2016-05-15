@@ -6,7 +6,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
-import static woo.ba.ben.util.Util.checkNotNull;
 
 public class FieldStruct {
 
@@ -16,7 +15,7 @@ public class FieldStruct {
     public final Field realField;
 
     FieldStruct(final Field field) {
-        checkNotNull(field);
+        assert field != null;
 
         this.realField = field;
         this.name = field.getName();
@@ -50,7 +49,7 @@ public class FieldStruct {
 
     public Type getFirstParameterizedType() {
         final Type[] typeArguments = getParameterizedTypes();
-        if(typeArguments!=null && typeArguments.length > 0) {
+        if (typeArguments != null && typeArguments.length > 0) {
             return typeArguments[0];
         }
         return null;
@@ -59,6 +58,7 @@ public class FieldStruct {
     public boolean isStatic() {
         return Modifier.isStatic(realField.getModifiers());
     }
+
     public boolean isTransient() {
         return Modifier.isTransient(realField.getModifiers());
     }

@@ -1,7 +1,5 @@
-package woo.ba.ben.core;
+package woo.ba.ben.experimental;
 
-
-import static woo.ba.ben.util.Util.nextPowerOfTwo;
 
 public abstract class AbstractHashBase {
     protected static final Object FREE_KEY = new Object() {
@@ -34,6 +32,17 @@ public abstract class AbstractHashBase {
             throw new RuntimeException("Too large (" + expectedSize + " expected elements with load factor "
                     + fillFactor + "), maximum capacity is " + MAXIMUM_CAPACITY + ".");
         }
+    }
+
+    public static long nextPowerOfTwo(long x) {
+        if (x == 0) return 1;
+        x--;
+        x |= x >> 1;
+        x |= x >> 2;
+        x |= x >> 4;
+        x |= x >> 8;
+        x |= x >> 16;
+        return (x | x >> 32) + 1;
     }
 
     protected void checkFillFactorAndSize(final int size, final float fillFactor) {

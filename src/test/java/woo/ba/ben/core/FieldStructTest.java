@@ -77,14 +77,4 @@ public class FieldStructTest {
         final FieldStruct fieldStruct1 = new FieldStruct(testInt);
         assertThat(fieldStruct1.toString(), is("FieldStruct{name='testInt', type=int, offset=120, realField=private static int woo.ba.ben.core.TestFieldObj.testInt}"));
     }
-
-    @Test
-    public void shouldFailToCreateFieldStructWhenFieldIsNull() {
-        try {
-            new FieldStruct(null);
-            fail();
-        } catch (final NullPointerException e) {
-            assertThat(e.getMessage(), is("The 1 parameter is null!"));
-        }
-    }
 }

@@ -1,11 +1,10 @@
 package woo.ba.ben.field;
 
-import woo.ba.ben.core.ArrayBackedHashMap;
-
+import java.util.HashMap;
 import java.util.Map;
 
 public class ValueAccessorFactory {
-    private final static Map<Class, IPropertyAccessor> ACCESSOR_MAP = new ArrayBackedHashMap<>(9);
+    private final static Map<Class, IPropertyAccessor> ACCESSOR_MAP = new HashMap<>();
 
     static {
         ACCESSOR_MAP.put(boolean.class, BooleanValueAccessor.getInstance());

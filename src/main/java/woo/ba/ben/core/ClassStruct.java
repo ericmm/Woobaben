@@ -1,10 +1,7 @@
 package woo.ba.ben.core;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.util.Collections.sort;
 import static java.util.Collections.unmodifiableList;
@@ -105,7 +102,7 @@ public class ClassStruct {
         final Field[] declaredFields = currentClass.getDeclaredFields();
         if (declaredFields.length > 0) {
             FieldStruct fieldStruct;
-            fieldMap = new ArrayBackedHashMap<>(declaredFields.length);
+            fieldMap = new HashMap<>(declaredFields.length);
             for (final Field field : declaredFields) {
                 fieldStruct = new FieldStruct(field);
                 fieldMap.put(field.getName(), fieldStruct);
