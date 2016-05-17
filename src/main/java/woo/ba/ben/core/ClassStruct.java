@@ -1,159 +1,57 @@
 package woo.ba.ben.core;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static java.util.Collections.sort;
-import static java.util.Collections.unmodifiableList;
-import static woo.ba.ben.core.UnsafeFactory.getTypeSize;
+import static java.lang.reflect.Modifier.isStatic;
 
-public class ClassStruct {
-    public static final int OFFSET_NOT_AVAILABLE = -1;
-    private static final Comparator<FieldStruct> FIELD_STRUCT_OFFSET_COMPARATOR = new Comparator<FieldStruct>() {
-        @Override
-        public int compare(final FieldStruct f1, final FieldStruct f2) {
-            return (int) (f1.offset - f2.offset);
+class ClassStruct {
+    final String className;
+    private long firstInstanceFieldStartOffset = Long.MAX_VALUE;
+    private long lastInstanceFieldEndOffset = -1;
+    private Map<String, FieldStruct> instanceFieldMap;
+
+    ClassStruct(final Class realClass) {
+        if (!isValidClass(realClass)) {
+            throw new IllegalArgumentException("Unsupported class: " + realClass);
         }
-    };
 
-    public final Class realClass;
-    public final ClassStruct parent;
+        this.className = realClass.getName();
 
-    private Map<String, FieldStruct> fieldMap;
-    private List<FieldStruct> sortedInstanceFields;
-
-    ClassStruct(final Class realClass, final ClassStruct parent) {
-        this.realClass = realClass;
-        this.parent = parent;
-
-        parseFields(realClass);
-        addInherentFieldsFromParent(parent);
-        sortFields();
-    }
-
-    private static void sortFieldByOffset(final List<FieldStruct> fieldStructs) {
-        if (hasFields(fieldStructs)) {
-            sort(fieldStructs, FIELD_STRUCT_OFFSET_COMPARATOR);
+        final List<Class> classChain = getClassChain(realClass);
+        final int instanceFieldCount = getInstanceFieldCount(classChain);
+        if (instanceFieldCount > 0) {
+            instanceFieldMap = new HashMap<>(instanceFieldCount);
+            processClassChain(classChain);
         }
     }
 
-    private static boolean hasFields(final List<FieldStruct> fields) {
-        return fields != null && fields.size() > 0;
+    FieldStruct getInstanceField(final String fieldName) {
+        return instanceFieldMap == null ? null : instanceFieldMap.get(fieldName);
     }
 
-    private void addInherentFieldsFromParent(final ClassStruct parent) {
-        if (parent != null && parent.getSortedInstanceFields() != null) {
-            sortedInstanceFields = getOrCreateList(sortedInstanceFields);
-            sortedInstanceFields.addAll(parent.getSortedInstanceFields());
-        }
+    long getFirstInstanceFieldStartOffset() {
+        return firstInstanceFieldStartOffset;
     }
 
-    public FieldStruct getDeclaredField(final String fieldName) {
-        return fieldMap == null ? null : fieldMap.get(fieldName);
+    long getLastInstanceFieldEndOffset() {
+        return lastInstanceFieldEndOffset;
     }
 
-    public FieldStruct getField(final String fieldName) {
-        ClassStruct current = this;
-        while (current.realClass.getSuperclass() != null) {
-            final FieldStruct fieldStruct = current.getDeclaredField(fieldName);
-            if (fieldStruct != null) {
-                return fieldStruct;
-            }
-            if (current.parent == null) {
-                break;
-            }
-            current = current.parent;
-        }
-        return null;
+    boolean hasInstanceFields() {
+        return lastInstanceFieldEndOffset > 0;
     }
 
-    public String getClassName() {
-        return realClass.getName();
+    int getFieldCount() {
+        return instanceFieldMap == null ? 0 : instanceFieldMap.size();
     }
 
-    public List<FieldStruct> getSortedInstanceFields() {
-        return sortedInstanceFields;
-    }
-
-    public boolean hasInstanceFields() {
-        return hasFields(sortedInstanceFields);
-    }
-
-    public long getFristInstanceFieldStartPosition() {
-        if (hasInstanceFields()) {
-            return sortedInstanceFields.get(0).offset;
-        }
-        return OFFSET_NOT_AVAILABLE;
-    }
-
-    public long getLastInstanceFieldEndPosition() {
-        if (hasInstanceFields()) {
-            final FieldStruct lastFieldStruct = sortedInstanceFields.get(sortedInstanceFields.size() - 1);
-            return lastFieldStruct.offset + getTypeSize(lastFieldStruct.type);
-        }
-        return OFFSET_NOT_AVAILABLE;
-    }
-
-    public int getFieldCount() {
-        return fieldMap == null ? 0 : fieldMap.size();
-    }
-
-    private void parseFields(final Class currentClass) {
-        final Field[] declaredFields = currentClass.getDeclaredFields();
-        if (declaredFields.length > 0) {
-            FieldStruct fieldStruct;
-            fieldMap = new HashMap<>(declaredFields.length);
-            for (final Field field : declaredFields) {
-                fieldStruct = new FieldStruct(field);
-                fieldMap.put(field.getName(), fieldStruct);
-
-                if (!fieldStruct.isStatic()) {
-                    sortedInstanceFields = getOrCreateList(sortedInstanceFields);
-                    sortedInstanceFields.add(fieldStruct);
-                }
-            }
-        }
-    }
-
-    private List<FieldStruct> getOrCreateList(final List<FieldStruct> fields) {
-        if (fields == null) {
-            return new ArrayList<>();
-        }
-        return fields;
-    }
-
-//    public FieldStruct getField(final String fieldName) {
-//        int matchedIndex = getMatchedIndex(sortedInstanceFields, fieldName);
-//        if (matchedIndex > -1) {
-//            return sortedInstanceFields.get(matchedIndex);
-//        }
-//
-//        matchedIndex = getMatchedIndex(sortedStaticFields, fieldName);
-//        if (matchedIndex > -1) {
-//            return sortedStaticFields.get(matchedIndex);
-//        }
-//
-//        return null;
-//    }
-
-//    private int getMatchedIndex(final List<FieldStruct> fieldStructs, final String fieldName) {
-//        if (hasFields(fieldStructs)) {
-//            FieldStruct struct;
-//            for (int i = fieldStructs.size() - 1; i >= 0; i--) {
-//                struct = fieldStructs.get(i);
-//                if (fieldName.equals(struct.name)) {
-//                    return i;
-//                }
-//            }
-//        }
-//        return -1;
-//    }
-
-    private void sortFields() {
-        sortFieldByOffset(sortedInstanceFields);
-        if (hasInstanceFields()) {
-            sortedInstanceFields = unmodifiableList(sortedInstanceFields);
-        }
+    @Override
+    public String toString() {
+        return "ClassStruct{" + "className=" + className + '}';
     }
 
     @Override
@@ -162,19 +60,63 @@ public class ClassStruct {
         if (o == null || getClass() != o.getClass()) return false;
 
         final ClassStruct that = (ClassStruct) o;
-
-        return realClass.equals(that.realClass);
+        return className.equals(that.className);
     }
 
     @Override
     public int hashCode() {
-        return realClass.hashCode();
+        return className.hashCode();
     }
 
-    @Override
-    public String toString() {
-        return "ClassStruct{" +
-                "realClass=" + realClass +
-                ", parent=" + parent + '}';
+    private void parseFields(final Class currentClass) {
+        FieldStruct fieldStruct;
+        final Field[] declaredFields = currentClass.getDeclaredFields();
+        for (int i = declaredFields.length; --i >= 0; ) {
+            if (!isStatic(declaredFields[i].getModifiers())) {
+                fieldStruct = new FieldStruct(declaredFields[i]);
+                instanceFieldMap.put(declaredFields[i].getName(), fieldStruct);
+
+                if (fieldStruct.offset < firstInstanceFieldStartOffset) {
+                    firstInstanceFieldStartOffset = fieldStruct.offset;
+                }
+
+                if (fieldStruct.offset > lastInstanceFieldEndOffset) {
+                    lastInstanceFieldEndOffset = fieldStruct.offset;
+                }
+            }
+        }
+    }
+
+    private void processClassChain(final List<Class> classChain) {
+        final int length = classChain.size();
+        for (int i = length; --i >= 0; ) {
+            parseFields(classChain.get(i));
+        }
+    }
+
+    private int getInstanceFieldCount(final List<Class> classChain) {
+        int result = 0;
+        final int length = classChain.size();
+        for (int i = length; --i >= 0; ) {
+            result += classChain.get(i).getDeclaredFields().length;
+        }
+        return result;
+
+    }
+
+    private List<Class> getClassChain(final Class realClass) {
+        final List<Class> classChain = new ArrayList<>();
+
+        Class currentClass = realClass;
+        while (currentClass.getSuperclass() != null) { //except Object.class
+            classChain.add(currentClass);
+            currentClass = currentClass.getSuperclass();
+        }
+        return classChain;
+    }
+
+    private boolean isValidClass(final Class realClass) {
+        return realClass != null && realClass != Object.class
+                && !realClass.isAnnotation() && !realClass.isInterface();
     }
 }

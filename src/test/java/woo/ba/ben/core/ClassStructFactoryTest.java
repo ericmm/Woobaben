@@ -21,18 +21,18 @@ public class ClassStructFactoryTest {
         final ClassStruct testClassObjStruct = ClassStructFactory.get(TestClassObj.class);
         assertThat(testClassObjStruct, notNullValue());
 
-        assertThat(testClassObjStruct.getField("testInt").isPrimitive(), is(true));
+        assertThat(testClassObjStruct.getInstanceField("testInt").isPrimitive(), is(true));
     }
 
     @Test
     public void shouldGetClassStruct() {
-        final ClassStruct testFieldObjStruct = new ClassStruct(TestFieldObj.class, null);
+        final ClassStruct testFieldObjStruct = new ClassStruct(TestFieldObj.class);
         assertThat(testFieldObjStruct, notNullValue());
 
         final ClassStruct testClassObjStruct = ClassStructFactory.get(TestClassObj.class);
         assertThat(testClassObjStruct, notNullValue());
 
-        assertThat(testClassObjStruct.getField("testInt").isPrimitive(), is(true));
+        assertThat(testClassObjStruct.getInstanceField("testInt").isPrimitive(), is(true));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -88,7 +88,7 @@ public class ClassStructFactoryTest {
         System.out.println("getter/setter takes " + (end - start));
 
 
-        final FieldStruct testPrimitiveByte = classObjStruct.getField("testPrimitiveByte");
+        final FieldStruct testPrimitiveByte = classObjStruct.getInstanceField("testPrimitiveByte");
         final long offset = testPrimitiveByte.offset;
         start = System.currentTimeMillis();
         for (int i = 0; i < LOOP_COUNTS; i++) {
@@ -145,25 +145,25 @@ public class ClassStructFactoryTest {
         testClassObj.setIntFieldInClassObj(100);
         testClassObj.setTestPrimitiveByte((byte) 1);
 
-        long fieldOffset = classObjStruct.getField("intFieldInClassObj").offset;
+        final long fieldOffset = classObjStruct.getInstanceField("intFieldInClassObj").offset;
         final TestClassObj copiedTestClassObj = new TestClassObj();
 
-        int value = unsafe.getInt(testClassObj, fieldOffset);
+        final int value = unsafe.getInt(testClassObj, fieldOffset);
         assertThat(value, is(100));
 
         unsafe.putInt(copiedTestClassObj, fieldOffset, value);
-        int gotValue = unsafe.getInt(copiedTestClassObj, fieldOffset);
+        final int gotValue = unsafe.getInt(copiedTestClassObj, fieldOffset);
         assertThat(copiedTestClassObj.getIntFieldInClassObj(), is(100));
         assertThat(gotValue, is(100));
 
-        long minInstanceOffset = classObjStruct.getFristInstanceFieldStartPosition();
-        long maxInstanceOffset = classObjStruct.getLastInstanceFieldEndPosition();
+        final long minInstanceOffset = classObjStruct.getFirstInstanceFieldStartOffset();
+        final long maxInstanceOffset = classObjStruct.getLastInstanceFieldEndOffset();
         final long instanceFieldsSize = maxInstanceOffset - minInstanceOffset;
-        byte[] dataArray = new byte[(int) instanceFieldsSize];
+        final byte[] dataArray = new byte[(int) instanceFieldsSize];
         testClassObj.setIntFieldInClassObj(10);
-        int BYTES_OFFSET = unsafe.arrayBaseOffset(byte[].class);
+        final int BYTES_OFFSET = unsafe.arrayBaseOffset(byte[].class);
         unsafe.copyMemory(testClassObj, minInstanceOffset, dataArray, BYTES_OFFSET, instanceFieldsSize);
-        int newOffset = (int) (fieldOffset - minInstanceOffset);
+        final int newOffset = (int) (fieldOffset - minInstanceOffset);
 
         for (int i = 0; i < dataArray.length; i++) {
             System.out.println("data[" + i + "]=" + dataArray[i]);

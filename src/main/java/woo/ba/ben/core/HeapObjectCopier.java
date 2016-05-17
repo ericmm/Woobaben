@@ -1,8 +1,4 @@
-package woo.ba.ben.obj;
-
-import woo.ba.ben.core.ClassStruct;
-import woo.ba.ben.core.ClassStructFactory;
-import woo.ba.ben.core.FieldStruct;
+package woo.ba.ben.core;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -64,19 +60,19 @@ public class HeapObjectCopier {
         }
 
         Object attributeInOriginalObj, attributeInTargetObj;
-        for (final FieldStruct fieldStruct : classStruct.getSortedInstanceFields()) {
-            if (fieldStruct.type.isPrimitive()) {
-                copyPrimitive(originalObj, targetObject, fieldStruct);
-            } else {
-                attributeInOriginalObj = UNSAFE.getObject(originalObj, fieldStruct.offset);
-                if (fieldStruct.type.isArray()) {
-                    attributeInTargetObj = copyArray(attributeInOriginalObj, objectMap);
-                } else {
-                    attributeInTargetObj = copyObject(attributeInOriginalObj, objectMap);
-                }
-                UNSAFE.putObject(targetObject, fieldStruct.offset, attributeInTargetObj);
-            }
-        }
+//        for (final FieldStruct fieldStruct : classStruct.getSortedInstanceFields()) {
+//            if (fieldStruct.type.isPrimitive()) {
+//                copyPrimitive(originalObj, targetObject, fieldStruct);
+//            } else {
+//                attributeInOriginalObj = UNSAFE.getObject(originalObj, fieldStruct.offset);
+//                if (fieldStruct.type.isArray()) {
+//                    attributeInTargetObj = copyArray(attributeInOriginalObj, objectMap);
+//                } else {
+//                    attributeInTargetObj = copyObject(attributeInOriginalObj, objectMap);
+//                }
+//                UNSAFE.putObject(targetObject, fieldStruct.offset, attributeInTargetObj);
+//            }
+//        }
         return targetObject;
     }
 
@@ -128,7 +124,7 @@ public class HeapObjectCopier {
         final Integer originalObjId = identityHashCode(originalObj);
         T targetObject = (T) objectMap.get(originalObjId);
         if (targetObject == null) {
-            Class<T> objClass = (Class<T>) originalObj.getClass();
+            final Class<T> objClass = (Class<T>) originalObj.getClass();
             if (objClass.isArray()) {
                 targetObject = createArrayInstance(originalObj, objClass);
             } else {
@@ -152,7 +148,7 @@ public class HeapObjectCopier {
                 UNSAFE.ensureClassInitialized(objClass);
             }
             return objectInstance;
-        } catch (InstantiationException e) {
+        } catch (final InstantiationException e) {
             throw new RuntimeException(e);
         }
     }

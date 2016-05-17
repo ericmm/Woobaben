@@ -8,12 +8,12 @@ import java.nio.ByteOrder;
 
 import static java.nio.ByteOrder.BIG_ENDIAN;
 
-public class UnsafeFactory {
-    public static final boolean IS_64_BIT;
-    public static final boolean IS_NATIVE_ORDER_BIG_ENDIAN;
-    public static final int ADDRESS_SIZE;
-    public static final int OBJECT_REF_SIZE;
-    public static final Unsafe UNSAFE;
+class UnsafeFactory {
+    static final boolean IS_64_BIT;
+    static final boolean IS_NATIVE_ORDER_BIG_ENDIAN;
+    static final int ADDRESS_SIZE;
+    static final int OBJECT_REF_SIZE;
+    static final Unsafe UNSAFE;
 
     static {
         try {
@@ -33,7 +33,7 @@ public class UnsafeFactory {
     private UnsafeFactory() {
     }
 
-    public static int getTypeSize(final Class classType) {
+    static int getTypeSize(final Class classType) {
         return UNSAFE.arrayIndexScale(classType);
     }
 }

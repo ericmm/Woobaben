@@ -2,9 +2,9 @@ package woo.ba.ben.field;
 
 import org.junit.Before;
 import org.junit.Test;
+import woo.ba.ben.core.HeapObjectCopier;
 import woo.ba.ben.core.TestClassObj;
 import woo.ba.ben.core.TestFieldObj;
-import woo.ba.ben.obj.HeapObjectCopier;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

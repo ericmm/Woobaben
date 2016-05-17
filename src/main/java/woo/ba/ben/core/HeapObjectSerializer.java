@@ -1,8 +1,5 @@
-package woo.ba.ben.obj;
+package woo.ba.ben.core;
 
-
-import woo.ba.ben.core.ClassStruct;
-import woo.ba.ben.core.ClassStructFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;

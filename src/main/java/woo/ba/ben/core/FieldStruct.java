@@ -7,12 +7,12 @@ import java.lang.reflect.Type;
 
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
-public class FieldStruct {
+class FieldStruct {
 
-    public final String name;
-    public final Class type;
-    public final long offset;
-    public final Field realField;
+    final String name;
+    final Class type;
+    final long offset;
+    final Field realField;
 
     FieldStruct(final Field field) {
         assert field != null;
@@ -23,23 +23,23 @@ public class FieldStruct {
         this.offset = isStatic() ? UNSAFE.staticFieldOffset(field) : UNSAFE.objectFieldOffset(field);
     }
 
-    public boolean isArray() {
+    boolean isArray() {
         return type.isArray();
     }
 
-    public Class getArrayType() {
+    Class getArrayType() {
         return isArray() ? type.getComponentType() : null;
     }
 
-    public boolean isPrimitive() {
+    boolean isPrimitive() {
         return type.isPrimitive();
     }
 
-    public boolean hasParameterizedType() {
+    boolean hasParameterizedType() {
         return realField.getGenericType() instanceof ParameterizedType;
     }
 
-    public Type[] getParameterizedTypes() {
+    Type[] getParameterizedTypes() {
         final Type genericType = realField.getGenericType();
         if (genericType instanceof ParameterizedType) {
             return ((ParameterizedType) genericType).getActualTypeArguments();
@@ -47,7 +47,7 @@ public class FieldStruct {
         return null;
     }
 
-    public Type getFirstParameterizedType() {
+    Type getFirstParameterizedType() {
         final Type[] typeArguments = getParameterizedTypes();
         if (typeArguments != null && typeArguments.length > 0) {
             return typeArguments[0];
@@ -55,11 +55,11 @@ public class FieldStruct {
         return null;
     }
 
-    public boolean isStatic() {
+    boolean isStatic() {
         return Modifier.isStatic(realField.getModifiers());
     }
 
-    public boolean isTransient() {
+    boolean isTransient() {
         return Modifier.isTransient(realField.getModifiers());
     }
 
