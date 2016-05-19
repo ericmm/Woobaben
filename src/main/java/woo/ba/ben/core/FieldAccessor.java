@@ -13,7 +13,7 @@ public class FieldAccessor {
     }
 
     private static FieldStruct getFieldStruct(final Class objClass, final String field) {
-        final FieldStruct fieldStruct = ClassStructFactory.get(objClass).getInstanceField(field);
+        final FieldStruct fieldStruct = ClassStructFactory.get(objClass).getField(field);
         if (fieldStruct == null) {
             throw new IllegalArgumentException("Field [" + field + "] does not exist on Class [" + objClass + "] or its Super Classes!");
         }

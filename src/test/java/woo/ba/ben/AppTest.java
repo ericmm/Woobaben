@@ -1,6 +1,5 @@
 package woo.ba.ben;
 
-import com.alibaba.fastjson.JSON;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -20,13 +19,5 @@ public class AppTest extends TestCase {
 
     public void testApp() {
         assertTrue(true);
-
-        final Person person = new Person();
-        person.setAge(new Short((short)30));
-        person.setName("John");
-        person.setId(120);
-
-        final String json = JSON.toJSONString(person);
-        System.out.println(json);
     }
 }

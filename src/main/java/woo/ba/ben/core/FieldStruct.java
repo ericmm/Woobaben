@@ -8,18 +8,17 @@ import java.lang.reflect.Type;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 class FieldStruct {
-
     final String name;
     final Class type;
     final long offset;
-    final Field realField;
+    final int modifiers;
 
     FieldStruct(final Field field) {
         assert field != null;
 
-        this.realField = field;
         this.name = field.getName();
         this.type = field.getType();
+        this.modifiers = field.getModifiers();
         this.offset = isStatic() ? UNSAFE.staticFieldOffset(field) : UNSAFE.objectFieldOffset(field);
     }
 
@@ -35,20 +34,20 @@ class FieldStruct {
         return type.isPrimitive();
     }
 
-    boolean hasParameterizedType() {
-        return realField.getGenericType() instanceof ParameterizedType;
+    boolean hasParameterizedType(final Field field) {
+        return field.getGenericType() instanceof ParameterizedType;
     }
 
-    Type[] getParameterizedTypes() {
-        final Type genericType = realField.getGenericType();
+    Type[] getParameterizedTypes(final Field field) {
+        final Type genericType = field.getGenericType();
         if (genericType instanceof ParameterizedType) {
             return ((ParameterizedType) genericType).getActualTypeArguments();
         }
         return null;
     }
 
-    Type getFirstParameterizedType() {
-        final Type[] typeArguments = getParameterizedTypes();
+    Type getFirstParameterizedType(final Field field) {
+        final Type[] typeArguments = getParameterizedTypes(field);
         if (typeArguments != null && typeArguments.length > 0) {
             return typeArguments[0];
         }
@@ -56,35 +55,37 @@ class FieldStruct {
     }
 
     boolean isStatic() {
-        return Modifier.isStatic(realField.getModifiers());
-    }
-
-    boolean isTransient() {
-        return Modifier.isTransient(realField.getModifiers());
+        return Modifier.isStatic(modifiers);
     }
 
     @Override
-    public boolean equals(final Object o) {
+    public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        final FieldStruct that = (FieldStruct) o;
+        FieldStruct that = (FieldStruct) o;
 
-        return realField.equals(that.realField);
+        if (offset != that.offset) return false;
+        if (modifiers != that.modifiers) return false;
+        if (!name.equals(that.name)) return false;
+        return type.equals(that.type);
     }
 
     @Override
     public int hashCode() {
-        return realField.hashCode();
+        int result = name.hashCode();
+        result = 31 * result + type.hashCode();
+        return result;
     }
 
     @Override
     public String toString() {
-        return "FieldStruct{" +
-                "name='" + name + '\'' +
-                ", type=" + type +
-                ", offset=" + offset +
-                ", realField=" + realField +
-                '}';
+        final StringBuilder sb = new StringBuilder("FieldStruct{");
+        sb.append("name='").append(name).append('\'');
+        sb.append(", type=").append(type);
+        sb.append(", offset=").append(offset);
+        sb.append(", modifiers=").append(modifiers);
+        sb.append('}');
+        return sb.toString();
     }
 }

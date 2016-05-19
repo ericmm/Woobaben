@@ -24,44 +24,41 @@ public class FieldStructTest {
         final FieldStruct fieldStruct = new FieldStruct(testInt);
 
         assertThat(fieldStruct.name, is("testInt"));
-        assertThat(fieldStruct.realField, is(testInt));
         assertTrue(fieldStruct.type == int.class);
         assertTrue(fieldStruct.offset > 0);
 
         assertFalse(fieldStruct.isArray());
         assertTrue(fieldStruct.getArrayType() == null);
-        assertThat(fieldStruct.getParameterizedTypes(), nullValue());
+        assertThat(fieldStruct.getParameterizedTypes(testInt), nullValue());
         assertTrue(fieldStruct.isPrimitive());
-        assertTrue(fieldStruct.isStatic());
-        assertFalse(fieldStruct.hasParameterizedType());
+        assertFalse(fieldStruct.hasParameterizedType(testInt));
 
         final FieldStruct integerFieldStruct = new FieldStruct(integerValue);
         assertFalse(integerFieldStruct.isPrimitive());
-        assertFalse(integerFieldStruct.isStatic());
 
         final FieldStruct stringsFieldStruct = new FieldStruct(strings);
         assertTrue(stringsFieldStruct.isArray());
-        assertThat(stringsFieldStruct.getFirstParameterizedType(), nullValue());
+        assertThat(stringsFieldStruct.getFirstParameterizedType(strings), nullValue());
 
         final FieldStruct twoDimensionShortsFieldStruct = new FieldStruct(twoDimensionShorts);
         assertTrue(twoDimensionShortsFieldStruct.isArray());
 
         final FieldStruct stringListFieldStruct = new FieldStruct(stringList);
-        assertThat(stringListFieldStruct.getParameterizedTypes(), is(new Type[]{String.class}));
-        assertThat(stringListFieldStruct.getFirstParameterizedType(), is((Type) String.class));
+        assertThat(stringListFieldStruct.getParameterizedTypes(stringList), is(new Type[]{String.class}));
+        assertThat(stringListFieldStruct.getFirstParameterizedType(stringList), is((Type) String.class));
 
         final FieldStruct byteBooleanMapFieldStruct = new FieldStruct(byteBooleanMap);
-        assertThat(byteBooleanMapFieldStruct.getParameterizedTypes(), is(new Type[]{Byte.class, Boolean.class}));
-        assertThat(byteBooleanMapFieldStruct.getFirstParameterizedType(), is((Type) Byte.class));
+        assertThat(byteBooleanMapFieldStruct.getParameterizedTypes(byteBooleanMap), is(new Type[]{Byte.class, Boolean.class}));
+        assertThat(byteBooleanMapFieldStruct.getFirstParameterizedType(byteBooleanMap), is((Type) Byte.class));
     }
 
     @Test
-    public void shouldEqualWhenRealFieldIsSame() throws NoSuchFieldException {
+    public void shouldNotEqualEvenWhenRealFieldIsSame() throws NoSuchFieldException {
         final Field testInt = TestFieldObj.class.getDeclaredField("testInt");
         final FieldStruct fieldStruct1 = new FieldStruct(testInt);
         final FieldStruct fieldStruct2 = new FieldStruct(testInt);
 
-        assertTrue(fieldStruct1.equals(fieldStruct2));
+        assertFalse(fieldStruct1.equals(fieldStruct2));
     }
 
     @Test
@@ -75,6 +72,6 @@ public class FieldStructTest {
     public void shouldGenerateToString() throws NoSuchFieldException {
         final Field testInt = TestFieldObj.class.getDeclaredField("testInt");
         final FieldStruct fieldStruct1 = new FieldStruct(testInt);
-        assertThat(fieldStruct1.toString(), is("FieldStruct{name='testInt', type=int, offset=120, realField=private static int woo.ba.ben.core.TestFieldObj.testInt}"));
+        assertThat(fieldStruct1.toString(), is("FieldStruct{name='testInt', type=int, offset=120, modifiers=10}"));
     }
 }

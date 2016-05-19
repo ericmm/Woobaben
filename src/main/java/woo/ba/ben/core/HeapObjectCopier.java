@@ -60,19 +60,21 @@ public class HeapObjectCopier {
         }
 
         Object attributeInOriginalObj, attributeInTargetObj;
-//        for (final FieldStruct fieldStruct : classStruct.getSortedInstanceFields()) {
-//            if (fieldStruct.type.isPrimitive()) {
-//                copyPrimitive(originalObj, targetObject, fieldStruct);
-//            } else {
-//                attributeInOriginalObj = UNSAFE.getObject(originalObj, fieldStruct.offset);
-//                if (fieldStruct.type.isArray()) {
-//                    attributeInTargetObj = copyArray(attributeInOriginalObj, objectMap);
-//                } else {
-//                    attributeInTargetObj = copyObject(attributeInOriginalObj, objectMap);
-//                }
-//                UNSAFE.putObject(targetObject, fieldStruct.offset, attributeInTargetObj);
-//            }
-//        }
+        final FieldStruct[] instanceFields = classStruct.getInstanceFields();
+        for (final FieldStruct fieldStruct : instanceFields) {
+            //System.out.println("class:"+classStruct + ", total field size: "+instanceFields.length+", field:"+fieldStruct);
+            if (fieldStruct.type.isPrimitive()) {
+                copyPrimitive(originalObj, targetObject, fieldStruct);
+            } else {
+                attributeInOriginalObj = UNSAFE.getObject(originalObj, fieldStruct.offset);
+                if (fieldStruct.type.isArray()) {
+                    attributeInTargetObj = copyArray(attributeInOriginalObj, objectMap);
+                } else {
+                    attributeInTargetObj = copyObject(attributeInOriginalObj, objectMap);
+                }
+                UNSAFE.putObject(targetObject, fieldStruct.offset, attributeInTargetObj);
+            }
+        }
         return targetObject;
     }
 

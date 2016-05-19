@@ -6,13 +6,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static java.lang.reflect.Modifier.isStatic;
-
 class ClassStruct {
     final String className;
+
+    private FieldStruct[] instanceFields;
     private long firstInstanceFieldStartOffset = Long.MAX_VALUE;
     private long lastInstanceFieldEndOffset = -1;
-    private Map<String, FieldStruct> instanceFieldMap;
+    private Map<String, FieldStruct> fieldMap;
 
     ClassStruct(final Class realClass) {
         if (!isValidClass(realClass)) {
@@ -22,15 +22,16 @@ class ClassStruct {
         this.className = realClass.getName();
 
         final List<Class> classChain = getClassChain(realClass);
-        final int instanceFieldCount = getInstanceFieldCount(classChain);
-        if (instanceFieldCount > 0) {
-            instanceFieldMap = new HashMap<>(instanceFieldCount);
-            processClassChain(classChain);
+        final int fieldCount = getFieldCount(classChain);
+        if (fieldCount > 0) {
+            fieldMap = new HashMap<>(fieldCount);
+            final int instanceFieldCount = processClassChain(classChain);
+            initInstanceFields(instanceFieldCount);
         }
     }
 
-    FieldStruct getInstanceField(final String fieldName) {
-        return instanceFieldMap == null ? null : instanceFieldMap.get(fieldName);
+    FieldStruct getField(final String fieldName) {
+        return fieldMap == null ? null : fieldMap.get(fieldName);
     }
 
     long getFirstInstanceFieldStartOffset() {
@@ -46,7 +47,11 @@ class ClassStruct {
     }
 
     int getFieldCount() {
-        return instanceFieldMap == null ? 0 : instanceFieldMap.size();
+        return fieldMap == null ? 0 : fieldMap.size();
+    }
+
+    FieldStruct[] getInstanceFields() {
+        return instanceFields;
     }
 
     @Override
@@ -68,13 +73,28 @@ class ClassStruct {
         return className.hashCode();
     }
 
-    private void parseFields(final Class currentClass) {
+
+    private void initInstanceFields(final int totalInstanceFieldCount) {
+        instanceFields = new FieldStruct[totalInstanceFieldCount];
+        int index = 0;
+        for (final FieldStruct fieldStruct : fieldMap.values()) {
+            if (!fieldStruct.isStatic()) {
+                instanceFields[index++] = fieldStruct;
+            }
+        }
+    }
+
+    private int parseFields(final Class currentClass) {
+        int instanceFieldCount = 0;
         FieldStruct fieldStruct;
         final Field[] declaredFields = currentClass.getDeclaredFields();
+
         for (int i = declaredFields.length; --i >= 0; ) {
-            if (!isStatic(declaredFields[i].getModifiers())) {
-                fieldStruct = new FieldStruct(declaredFields[i]);
-                instanceFieldMap.put(declaredFields[i].getName(), fieldStruct);
+            fieldStruct = new FieldStruct(declaredFields[i]);
+            fieldMap.put(fieldStruct.name, fieldStruct);
+
+            if (!fieldStruct.isStatic()) {
+                instanceFieldCount++;
 
                 if (fieldStruct.offset < firstInstanceFieldStartOffset) {
                     firstInstanceFieldStartOffset = fieldStruct.offset;
@@ -85,23 +105,25 @@ class ClassStruct {
                 }
             }
         }
+        return instanceFieldCount;
     }
 
-    private void processClassChain(final List<Class> classChain) {
+    private int processClassChain(final List<Class> classChain) {
+        int instanceFieldCount = 0;
         final int length = classChain.size();
         for (int i = length; --i >= 0; ) {
-            parseFields(classChain.get(i));
+            instanceFieldCount += parseFields(classChain.get(i));
         }
+        return instanceFieldCount;
     }
 
-    private int getInstanceFieldCount(final List<Class> classChain) {
+    private int getFieldCount(final List<Class> classChain) {
         int result = 0;
         final int length = classChain.size();
         for (int i = length; --i >= 0; ) {
             result += classChain.get(i).getDeclaredFields().length;
         }
         return result;
-
     }
 
     private List<Class> getClassChain(final Class realClass) {
@@ -116,7 +138,6 @@ class ClassStruct {
     }
 
     private boolean isValidClass(final Class realClass) {
-        return realClass != null && realClass != Object.class
-                && !realClass.isAnnotation() && !realClass.isInterface();
+        return realClass != null && realClass != Object.class && !realClass.isAnnotation() && !realClass.isInterface();
     }
 }

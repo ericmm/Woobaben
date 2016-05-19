@@ -41,8 +41,8 @@ public class HeapBeanCopierTest {
 
     @Test
     public void shouldCopyHeapBean() throws InstantiationException {
-        final TestFieldObj copiedTestFieldObj = HeapObjectCopier.deepCopy(testFieldObj);
         final TestClassObj copiedTestClassObj = HeapObjectCopier.deepCopy(testClassObj);
+        final TestFieldObj copiedTestFieldObj = HeapObjectCopier.deepCopy(testFieldObj);
 
         assertThat(copiedTestFieldObj, notNullValue());
         assertThat(copiedTestFieldObj.bigDecimal, is(new BigDecimal("12345.67893")));
