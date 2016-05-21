@@ -138,6 +138,6 @@ class ClassStruct {
     }
 
     private boolean isValidClass(final Class realClass) {
-        return realClass != null && realClass != Object.class && !realClass.isAnnotation() && !realClass.isInterface();
+        return realClass != null && realClass.isAnnotationPresent(CacheAware.class);
     }
 }

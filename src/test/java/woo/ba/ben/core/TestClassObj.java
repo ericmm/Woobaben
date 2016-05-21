@@ -3,6 +3,7 @@ package woo.ba.ben.core;
 
 import java.util.Date;
 
+@CacheAware
 public class TestClassObj extends TestEmptyObj {
     private String stringFieldInClassObj;
     protected int intFieldInClassObj;

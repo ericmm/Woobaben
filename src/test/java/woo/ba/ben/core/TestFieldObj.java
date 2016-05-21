@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@CacheAware
 public class TestFieldObj {
     private static final double staticDoubleValue = 20.5d;
     private static int testInt = 50;

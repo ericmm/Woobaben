@@ -2,8 +2,6 @@ package woo.ba.ben.core;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
@@ -32,26 +30,6 @@ class FieldStruct {
 
     boolean isPrimitive() {
         return type.isPrimitive();
-    }
-
-    boolean hasParameterizedType(final Field field) {
-        return field.getGenericType() instanceof ParameterizedType;
-    }
-
-    Type[] getParameterizedTypes(final Field field) {
-        final Type genericType = field.getGenericType();
-        if (genericType instanceof ParameterizedType) {
-            return ((ParameterizedType) genericType).getActualTypeArguments();
-        }
-        return null;
-    }
-
-    Type getFirstParameterizedType(final Field field) {
-        final Type[] typeArguments = getParameterizedTypes(field);
-        if (typeArguments != null && typeArguments.length > 0) {
-            return typeArguments[0];
-        }
-        return null;
     }
 
     boolean isStatic() {

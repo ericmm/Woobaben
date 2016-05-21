@@ -12,9 +12,10 @@ public class ClassStructFactory {
     private ClassStructFactory() {
     }
 
-    static ClassStruct get(final Class realClass) {
+    public static ClassStruct get(final Class realClass) {
+        assert realClass != null;
         ClassStruct classStruct = CACHE.get(realClass);
-        if(classStruct == null) {
+        if(classStruct == null && realClass.isAnnotationPresent(CacheAware.class)) {
             classStruct = new ClassStruct(realClass);
             CACHE.put(classStruct.className, classStruct);
         }

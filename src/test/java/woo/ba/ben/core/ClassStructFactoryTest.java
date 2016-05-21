@@ -5,8 +5,7 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 
 
@@ -35,24 +34,9 @@ public class ClassStructFactoryTest {
         assertThat(testClassObjStruct.getField("testPrimitiveByte").isPrimitive(), is(true));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldThrowIllegalArgumentExceptionWhenNull() {
-        ClassStructFactory.get(null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldThrowIllegalArgumentExceptionWhenObjectClass() {
-        ClassStructFactory.get(Object.class);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldThrowIllegalArgumentExceptionWhenAnnotationClass() {
-        ClassStructFactory.get(Test.class);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldThrowIllegalArgumentExceptionWhenInterface() {
-        ClassStructFactory.get(Runnable.class);
+    @Test
+    public void shouldGetNullWhenInputIsNotPresentedWithCacheAwareAnnotation() {
+        assertThat(ClassStructFactory.get(Object.class), nullValue());
     }
 
     @Test
