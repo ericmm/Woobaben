@@ -102,6 +102,30 @@ public class ClassStructFactoryTest {
         System.out.println("direct takes " + (end - start));
 
 
+        start = System.currentTimeMillis();
+        for (int i = 0; i < LOOP_COUNTS; i++) {
+            //FIXME: two objects have same attributes
+            value = FieldAccessor.getByte(testFieldObj, "testPrimitiveByte");
+            value = FieldAccessor.getByte(testEmptyObj, "testPrimitiveByte");
+            value = FieldAccessor.getByte(testClassObj, "testPrimitiveByte");
+
+            FieldAccessor.setByte(testFieldObj, "testPrimitiveByte", (byte) 4);
+            FieldAccessor.setByte(testEmptyObj, "testPrimitiveByte", (byte) 4);
+            FieldAccessor.setByte(testClassObj, "testPrimitiveByte", (byte) 4);
+        }
+        end = System.currentTimeMillis();
+        System.out.println("field accessor takes " + (end - start));
+
+//        value = FieldAccessor.getByte(testFieldObj, "testPrimitiveByte");
+//        FieldAccessor.setByte(testFieldObj, "testPrimitiveByte", (byte) 4);
+//
+//        value = FieldAccessor.getByte(testEmptyObj, "testPrimitiveByte");
+//        FieldAccessor.setByte(testEmptyObj, "testPrimitiveByte", (byte) 4);
+//
+//        value = FieldAccessor.getByte(testClassObj, "testPrimitiveByte");
+//        FieldAccessor.setByte(testClassObj, "testPrimitiveByte", (byte) 4);
+
+
         final Field field1 = TestFieldObj.class.getField("testPrimitiveByte");
         final Field field2 = TestEmptyObj.class.getField("testPrimitiveByte");
         final Field field3 = TestClassObj.class.getField("testPrimitiveByte");
@@ -154,7 +178,7 @@ public class ClassStructFactoryTest {
         }
         System.out.println("newOffset=" + newOffset + ", type is int, size is 4");
 
-        System.out.print(unsafe.ARRAY_OBJECT_INDEX_SCALE +","+ unsafe.ARRAY_INT_INDEX_SCALE);
+        System.out.print(unsafe.ARRAY_OBJECT_INDEX_SCALE + "," + unsafe.ARRAY_INT_INDEX_SCALE);
 //        unsafe.putByte(copiedTestClassObj, minInstanceOffset, );
 
 //        unsafe.copyMemory(testClassObj, minInstanceOffset, copiedTestClassObj, minInstanceOffset, 4);

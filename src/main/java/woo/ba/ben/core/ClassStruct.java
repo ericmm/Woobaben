@@ -30,6 +30,21 @@ class ClassStruct {
         }
     }
 
+    static Field getField(Class clazz, String filedName) {
+        Field[] declaredFields;
+        Class currentClass = clazz;
+        while (currentClass.getSuperclass() != null) { //except Object.class
+            declaredFields = currentClass.getDeclaredFields();
+            for (int i = 0; i < declaredFields.length; i++) {
+                if (declaredFields[i].getName().equals(filedName)) {
+                    return declaredFields[i];
+                }
+            }
+            currentClass = currentClass.getSuperclass();
+        }
+        return null;
+    }
+
     FieldStruct getField(final String fieldName) {
         return fieldMap == null ? null : fieldMap.get(fieldName);
     }
@@ -72,7 +87,6 @@ class ClassStruct {
     public int hashCode() {
         return className.hashCode();
     }
-
 
     private void initInstanceFields(final int totalInstanceFieldCount) {
         instanceFields = new FieldStruct[totalInstanceFieldCount];
