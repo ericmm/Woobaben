@@ -44,15 +44,14 @@ class FieldStruct {
         FieldStruct that = (FieldStruct) o;
 
         if (offset != that.offset) return false;
-        if (modifiers != that.modifiers) return false;
-        if (!name.equals(that.name)) return false;
-        return type.equals(that.type);
+        return name.equals(that.name);
+
     }
 
     @Override
     public int hashCode() {
         int result = name.hashCode();
-        result = 31 * result + type.hashCode();
+        result = 31 * result + (int) (offset ^ (offset >>> 32));
         return result;
     }
 

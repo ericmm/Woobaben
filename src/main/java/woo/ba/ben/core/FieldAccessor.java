@@ -12,455 +12,524 @@ public class FieldAccessor {
 
     //Boolean
     public static boolean getBoolean(final Object obj, final String field) throws NoSuchFieldException {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            return UNSAFE.getBoolean(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset);
-        }
+        return getBoolean(obj, getFieldObj(getObjectClass(obj), field));
+    }
 
-        final Field fieldObj = getFieldObj(objClass, field);
+    public static boolean getBoolean(final Object obj, final Field fieldObj) {
         if (isStatic(fieldObj.getModifiers())) {
-            return UNSAFE.getBoolean(objClass, UNSAFE.staticFieldOffset(fieldObj));
+            return UNSAFE.getBoolean(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj));
         } else {
             return UNSAFE.getBoolean(obj, UNSAFE.objectFieldOffset(fieldObj));
         }
     }
 
-    public static boolean getBooleanArrayElementAt(final Object obj, final String field, final int index) {
-        final boolean[] array = (boolean[]) getArrayObject(obj, field, boolean.class);
-        checkArrayIndex(array.length, index);
-        return array[index];
+    public static boolean getBooleanCached(final Object obj, final FieldStruct fieldStruct) {
+        return UNSAFE.getBoolean(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
-    public static void setBoolean(final Object obj, final String field, final boolean value) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            UNSAFE.putBoolean(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset, value);
+    public static void setBoolean(final Object obj, final String field, final boolean value) throws NoSuchFieldException {
+        setBoolean(obj, getFieldObj(getObjectClass(obj), field), value);
+    }
+
+    public static void setBoolean(final Object obj, final Field fieldObj, final boolean value) {
+        if (isStatic(fieldObj.getModifiers())) {
+            UNSAFE.putBoolean(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj), value);
         } else {
-            final Field fieldObj = getFieldObj(objClass, field);
-            if (isStatic(fieldObj.getModifiers())) {
-                UNSAFE.putBoolean(objClass, UNSAFE.staticFieldOffset(fieldObj), value);
-            } else {
-                UNSAFE.putBoolean(obj, UNSAFE.objectFieldOffset(fieldObj), value);
-            }
+            UNSAFE.putBoolean(obj, UNSAFE.objectFieldOffset(fieldObj), value);
         }
     }
 
-    public static void setBooleanArrayElementAt(final Object obj, final String field, final int index, final boolean value) {
-        final boolean[] array = (boolean[]) getArrayObject(obj, field, boolean.class);
-        checkArrayIndex(array.length, index);
-        array[index] = value;
+    public static void setBooleanCached(final Object obj, final FieldStruct fieldStruct, final boolean value) {
+        UNSAFE.putBoolean(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
     }
+
+    public static boolean getBooleanArrayElementAt(final Object obj, final String field, final int index) throws NoSuchFieldException {
+        return ((boolean[]) getObject(obj, field))[index];
+    }
+
+    public static boolean getBooleanArrayElementAt(final Object obj, final Field fieldObj, final int index) {
+        return ((boolean[]) getObject(obj, fieldObj))[index];
+    }
+
+    public static boolean getBooleanArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index) {
+        return ((boolean[]) getObjectCached(obj, fieldStruct))[index];
+    }
+
+    public static void setBooleanArrayElementAt(final Object obj, final String field, final int index, final boolean value) throws NoSuchFieldException {
+        ((boolean[]) getObject(obj, field))[index] = value;
+    }
+
+    public static void setBooleanArrayElementAt(final Object obj, final Field fieldObj, final int index, final boolean value) {
+        ((boolean[]) getObject(obj, fieldObj))[index] = value;
+    }
+
+    public static void setBooleanArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index, final boolean value) {
+        ((boolean[]) getObjectCached(obj, fieldStruct))[index] = value;
+    }
+
 
     //Byte
-    public static byte getByte(final Object obj, final String field) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            return UNSAFE.getByte(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset);
-        }
+    public static byte getByte(final Object obj, final String field) throws NoSuchFieldException {
+        return getByte(obj, getFieldObj(getObjectClass(obj), field));
+    }
 
-        final Field fieldObj = getFieldObj(objClass, field);
+    public static byte getByte(final Object obj, final Field fieldObj) {
         if (isStatic(fieldObj.getModifiers())) {
-            return UNSAFE.getByte(objClass, UNSAFE.staticFieldOffset(fieldObj));
+            return UNSAFE.getByte(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj));
         } else {
             return UNSAFE.getByte(obj, UNSAFE.objectFieldOffset(fieldObj));
         }
     }
 
-    public static byte getByteArrayElementAt(final Object obj, final String field, final int index) {
-        final byte[] array = (byte[]) getArrayObject(obj, field, byte.class);
-        checkArrayIndex(array.length, index);
-        return array[index];
+    public static byte getByteCached(final Object obj, final FieldStruct fieldStruct) {
+        return UNSAFE.getByte(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
-    public static void setByte(final Object obj, final String field, final byte value) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            UNSAFE.putByte(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset, value);
+    public static void setByte(final Object obj, final String field, final byte value) throws NoSuchFieldException {
+        setByte(obj, getFieldObj(getObjectClass(obj), field), value);
+    }
+
+    public static void setByte(final Object obj, final Field fieldObj, final byte value) {
+        if (isStatic(fieldObj.getModifiers())) {
+            UNSAFE.putByte(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj), value);
         } else {
-            final Field fieldObj = getFieldObj(objClass, field);
-            if (isStatic(fieldObj.getModifiers())) {
-                UNSAFE.putByte(objClass, UNSAFE.staticFieldOffset(fieldObj), value);
-            } else {
-                UNSAFE.putByte(obj, UNSAFE.objectFieldOffset(fieldObj), value);
-            }
+            UNSAFE.putByte(obj, UNSAFE.objectFieldOffset(fieldObj), value);
         }
     }
 
-    public static void setByteArrayElementAt(final Object obj, final String field, final int index, final byte value) {
-        final byte[] array = (byte[]) getArrayObject(obj, field, byte.class);
-        checkArrayIndex(array.length, index);
-        array[index] = value;
+    public static void setByteCached(final Object obj, final FieldStruct fieldStruct, final byte value) {
+        UNSAFE.putByte(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
+    }
+
+    public static byte getByteArrayElementAt(final Object obj, final String field, final int index) throws NoSuchFieldException {
+        return ((byte[]) getObject(obj, field))[index];
+    }
+
+    public static byte getByteArrayElementAt(final Object obj, final Field fieldObj, final int index) {
+        return ((byte[]) getObject(obj, fieldObj))[index];
+    }
+
+    public static byte getByteArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index) {
+        return ((byte[]) getObjectCached(obj, fieldStruct))[index];
+    }
+
+    public static void setByteArrayElementAt(final Object obj, final String field, final int index, final byte value) throws NoSuchFieldException {
+        ((byte[]) getObject(obj, field))[index] = value;
+    }
+
+    public static void setByteArrayElementAt(final Object obj, final Field fieldObj, final int index, final byte value) {
+        ((byte[]) getObject(obj, fieldObj))[index] = value;
+    }
+
+    public static void setByteArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index, final byte value) {
+        ((byte[]) getObjectCached(obj, fieldStruct))[index] = value;
     }
 
     //Char
-    public static char getChar(final Object obj, final String field) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            return UNSAFE.getChar(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset);
-        }
+    public static char getChar(final Object obj, final String field) throws NoSuchFieldException {
+        return getChar(obj, getFieldObj(getObjectClass(obj), field));
+    }
 
-        final Field fieldObj = getFieldObj(objClass, field);
+    public static char getChar(final Object obj, final Field fieldObj) {
         if (isStatic(fieldObj.getModifiers())) {
-            return UNSAFE.getChar(objClass, UNSAFE.staticFieldOffset(fieldObj));
+            return UNSAFE.getChar(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj));
         } else {
             return UNSAFE.getChar(obj, UNSAFE.objectFieldOffset(fieldObj));
         }
     }
 
-    public static char getCharArrayElementAt(final Object obj, final String field, final int index) {
-        final char[] array = (char[]) getArrayObject(obj, field, char.class);
-        checkArrayIndex(array.length, index);
-        return array[index];
+    public static char getCharCached(final Object obj, final FieldStruct fieldStruct) {
+        return UNSAFE.getChar(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
-    public static void setChar(final Object obj, final String field, final char value) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            UNSAFE.putChar(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset, value);
+    public static void setChar(final Object obj, final String field, final char value) throws NoSuchFieldException {
+        setChar(obj, getFieldObj(getObjectClass(obj), field), value);
+    }
+
+    public static void setChar(final Object obj, final Field fieldObj, final char value) {
+        if (isStatic(fieldObj.getModifiers())) {
+            UNSAFE.putChar(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj), value);
         } else {
-            final Field fieldObj = getFieldObj(objClass, field);
-            if (isStatic(fieldObj.getModifiers())) {
-                UNSAFE.putChar(objClass, UNSAFE.staticFieldOffset(fieldObj), value);
-            } else {
-                UNSAFE.putChar(obj, UNSAFE.objectFieldOffset(fieldObj), value);
-            }
+            UNSAFE.putChar(obj, UNSAFE.objectFieldOffset(fieldObj), value);
         }
     }
 
-    public static void setCharArrayElementAt(final Object obj, final String field, final int index, final char value) {
-        final char[] array = (char[]) getArrayObject(obj, field, char.class);
-        checkArrayIndex(array.length, index);
-        array[index] = value;
+    public static void setCharCached(final Object obj, final FieldStruct fieldStruct, final char value) {
+        UNSAFE.putChar(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
+    }
+
+    public static char getCharArrayElementAt(final Object obj, final String field, final int index) throws NoSuchFieldException {
+        return ((char[]) getObject(obj, field))[index];
+    }
+
+    public static char getCharArrayElementAt(final Object obj, final Field fieldObj, final int index) {
+        return ((char[]) getObject(obj, fieldObj))[index];
+    }
+
+    public static char getCharArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index) {
+        return ((char[]) getObjectCached(obj, fieldStruct))[index];
+    }
+
+    public static void setCharArrayElementAt(final Object obj, final String field, final int index, final char value) throws NoSuchFieldException {
+        ((char[]) getObject(obj, field))[index] = value;
+    }
+
+    public static void setCharArrayElementAt(final Object obj, final Field fieldObj, final int index, final char value) {
+        ((char[]) getObject(obj, fieldObj))[index] = value;
+    }
+
+    public static void setCharArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index, final char value) {
+        ((char[]) getObjectCached(obj, fieldStruct))[index] = value;
     }
 
     //Double
-    public static double getDouble(final Object obj, final String field) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            return UNSAFE.getDouble(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset);
-        }
+    public static double getDouble(final Object obj, final String field) throws NoSuchFieldException {
+        return getDouble(obj, getFieldObj(getObjectClass(obj), field));
+    }
 
-        final Field fieldObj = getFieldObj(objClass, field);
+    public static double getDouble(final Object obj, final Field fieldObj) {
         if (isStatic(fieldObj.getModifiers())) {
-            return UNSAFE.getDouble(objClass, UNSAFE.staticFieldOffset(fieldObj));
+            return UNSAFE.getDouble(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj));
         } else {
             return UNSAFE.getDouble(obj, UNSAFE.objectFieldOffset(fieldObj));
         }
     }
 
-    public static double getDoubleArrayElementAt(final Object obj, final String field, final int index) {
-        final double[] array = (double[]) getArrayObject(obj, field, double.class);
-        checkArrayIndex(array.length, index);
-        return array[index];
+    public static double getDoubleCached(final Object obj, final FieldStruct fieldStruct) {
+        return UNSAFE.getDouble(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
-    public static void setDouble(final Object obj, final String field, final double value) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            UNSAFE.putDouble(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset, value);
+    public static void setDouble(final Object obj, final String field, final double value) throws NoSuchFieldException {
+        setDouble(obj, getFieldObj(getObjectClass(obj), field), value);
+    }
+
+    public static void setDouble(final Object obj, final Field fieldObj, final double value) {
+        if (isStatic(fieldObj.getModifiers())) {
+            UNSAFE.putDouble(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj), value);
         } else {
-            final Field fieldObj = getFieldObj(objClass, field);
-            if (isStatic(fieldObj.getModifiers())) {
-                UNSAFE.putDouble(objClass, UNSAFE.staticFieldOffset(fieldObj), value);
-            } else {
-                UNSAFE.putDouble(obj, UNSAFE.objectFieldOffset(fieldObj), value);
-            }
+            UNSAFE.putDouble(obj, UNSAFE.objectFieldOffset(fieldObj), value);
         }
     }
 
-    public static void setDoubleArrayElementAt(final Object obj, final String field, final int index, final double value) {
-        final double[] array = (double[]) getArrayObject(obj, field, double.class);
-        checkArrayIndex(array.length, index);
-        array[index] = value;
+    public static void setDoubleCached(final Object obj, final FieldStruct fieldStruct, final double value) {
+        UNSAFE.putDouble(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
+    }
+
+    public static double getDoubleArrayElementAt(final Object obj, final String field, final int index) throws NoSuchFieldException {
+        return ((double[]) getObject(obj, field))[index];
+    }
+
+    public static double getDoubleArrayElementAt(final Object obj, final Field fieldObj, final int index) {
+        return ((double[]) getObject(obj, fieldObj))[index];
+    }
+
+    public static double getDoubleArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index) {
+        return ((double[]) getObjectCached(obj, fieldStruct))[index];
+    }
+
+    public static void setDoubleArrayElementAt(final Object obj, final String field, final int index, final double value) throws NoSuchFieldException {
+        ((double[]) getObject(obj, field))[index] = value;
+    }
+
+    public static void setDoubleArrayElementAt(final Object obj, final Field fieldObj, final int index, final double value) {
+        ((double[]) getObject(obj, fieldObj))[index] = value;
+    }
+
+    public static void setDoubleArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index, final double value) {
+        ((double[]) getObjectCached(obj, fieldStruct))[index] = value;
     }
 
     //Float
-    public static float getFloat(final Object obj, final String field) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            return UNSAFE.getFloat(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset);
-        }
+    public static float getFloat(final Object obj, final String field) throws NoSuchFieldException {
+        return getFloat(obj, getFieldObj(getObjectClass(obj), field));
+    }
 
-        final Field fieldObj = getFieldObj(objClass, field);
+    public static float getFloat(final Object obj, final Field fieldObj) {
         if (isStatic(fieldObj.getModifiers())) {
-            return UNSAFE.getFloat(objClass, UNSAFE.staticFieldOffset(fieldObj));
+            return UNSAFE.getFloat(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj));
         } else {
             return UNSAFE.getFloat(obj, UNSAFE.objectFieldOffset(fieldObj));
         }
     }
 
-    public static float getFloatArrayElementAt(final Object obj, final String field, final int index) {
-        final float[] array = (float[]) getArrayObject(obj, field, float.class);
-        checkArrayIndex(array.length, index);
-        return array[index];
+    public static float getFloatCached(final Object obj, final FieldStruct fieldStruct) {
+        return UNSAFE.getFloat(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
-    public static void setFloat(final Object obj, final String field, final float value) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            UNSAFE.putFloat(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset, value);
+    public static void setFloat(final Object obj, final String field, final float value) throws NoSuchFieldException {
+        setFloat(obj, getFieldObj(getObjectClass(obj), field), value);
+    }
+
+    public static void setFloat(final Object obj, final Field fieldObj, final float value) {
+        if (isStatic(fieldObj.getModifiers())) {
+            UNSAFE.putFloat(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj), value);
         } else {
-            final Field fieldObj = getFieldObj(objClass, field);
-            if (isStatic(fieldObj.getModifiers())) {
-                UNSAFE.putFloat(objClass, UNSAFE.staticFieldOffset(fieldObj), value);
-            } else {
-                UNSAFE.putFloat(obj, UNSAFE.objectFieldOffset(fieldObj), value);
-            }
+            UNSAFE.putFloat(obj, UNSAFE.objectFieldOffset(fieldObj), value);
         }
     }
 
-    public static void setFloatArrayElementAt(final Object obj, final String field, final int index, final float value) {
-        final float[] array = (float[]) getArrayObject(obj, field, float.class);
-        checkArrayIndex(array.length, index);
-        array[index] = value;
+    public static void setFloatCached(final Object obj, final FieldStruct fieldStruct, final float value) {
+        UNSAFE.putFloat(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
+    }
+
+    public static float getFloatArrayElementAt(final Object obj, final String field, final int index) throws NoSuchFieldException {
+        return ((float[]) getObject(obj, field))[index];
+    }
+
+    public static float getFloatArrayElementAt(final Object obj, final Field fieldObj, final int index) {
+        return ((float[]) getObject(obj, fieldObj))[index];
+    }
+
+    public static float getFloatArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index) {
+        return ((float[]) getObjectCached(obj, fieldStruct))[index];
+    }
+
+    public static void setFloatArrayElementAt(final Object obj, final String field, final int index, final float value) throws NoSuchFieldException {
+        ((float[]) getObject(obj, field))[index] = value;
+    }
+
+    public static void setFloatArrayElementAt(final Object obj, final Field fieldObj, final int index, final float value) {
+        ((float[]) getObject(obj, fieldObj))[index] = value;
+    }
+
+    public static void setFloatArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index, final float value) {
+        ((float[]) getObjectCached(obj, fieldStruct))[index] = value;
     }
 
     //Int
-    public static int getInt(final Object obj, final String field) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            return UNSAFE.getInt(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset);
-        }
+    public static int getInt(final Object obj, final String field) throws NoSuchFieldException {
+        return getInt(obj, getFieldObj(getObjectClass(obj), field));
+    }
 
-        final Field fieldObj = getFieldObj(objClass, field);
+    public static int getInt(final Object obj, final Field fieldObj) {
         if (isStatic(fieldObj.getModifiers())) {
-            return UNSAFE.getInt(objClass, UNSAFE.staticFieldOffset(fieldObj));
+            return UNSAFE.getInt(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj));
         } else {
             return UNSAFE.getInt(obj, UNSAFE.objectFieldOffset(fieldObj));
         }
     }
 
-    public static int getIntArrayElementAt(final Object obj, final String field, final int index) {
-        final int[] array = (int[]) getArrayObject(obj, field, int.class);
-        checkArrayIndex(array.length, index);
-        return array[index];
+    public static int getIntCached(final Object obj, final FieldStruct fieldStruct) {
+        return UNSAFE.getInt(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
-    public static void setInt(final Object obj, final String field, final int value) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            UNSAFE.putInt(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset, value);
+    public static void setInt(final Object obj, final String field, final int value) throws NoSuchFieldException {
+        setInt(obj, getFieldObj(getObjectClass(obj), field), value);
+    }
+
+    public static void setInt(final Object obj, final Field fieldObj, final int value) {
+        if (isStatic(fieldObj.getModifiers())) {
+            UNSAFE.putInt(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj), value);
         } else {
-            final Field fieldObj = getFieldObj(objClass, field);
-            if (isStatic(fieldObj.getModifiers())) {
-                UNSAFE.putInt(objClass, UNSAFE.staticFieldOffset(fieldObj), value);
-            } else {
-                UNSAFE.putInt(obj, UNSAFE.objectFieldOffset(fieldObj), value);
-            }
+            UNSAFE.putInt(obj, UNSAFE.objectFieldOffset(fieldObj), value);
         }
     }
 
-    public static void setIntArrayElementAt(final Object obj, final String field, final int index, final int value) {
-        final int[] array = (int[]) getArrayObject(obj, field, int.class);
-        checkArrayIndex(array.length, index);
-        array[index] = value;
+    public static void setIntCached(final Object obj, final FieldStruct fieldStruct, final int value) {
+        UNSAFE.putInt(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
+    }
+
+    public static int getIntArrayElementAt(final Object obj, final String field, final int index) throws NoSuchFieldException {
+        return ((int[]) getObject(obj, field))[index];
+    }
+
+    public static int getIntArrayElementAt(final Object obj, final Field fieldObj, final int index) {
+        return ((int[]) getObject(obj, fieldObj))[index];
+    }
+
+    public static int getIntArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index) {
+        return ((int[]) getObjectCached(obj, fieldStruct))[index];
+    }
+
+    public static void setIntArrayElementAt(final Object obj, final String field, final int index, final int value) throws NoSuchFieldException {
+        ((int[]) getObject(obj, field))[index] = value;
+    }
+
+    public static void setIntArrayElementAt(final Object obj, final Field fieldObj, final int index, final int value) {
+        ((int[]) getObject(obj, fieldObj))[index] = value;
+    }
+
+    public static void setIntArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index, final int value) {
+        ((int[]) getObjectCached(obj, fieldStruct))[index] = value;
     }
 
     //Long
-    public static long getLong(final Object obj, final String field) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            return UNSAFE.getLong(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset);
-        }
+    public static long getLong(final Object obj, final String field) throws NoSuchFieldException {
+        return getLong(obj, getFieldObj(getObjectClass(obj), field));
+    }
 
-        final Field fieldObj = getFieldObj(objClass, field);
+    public static long getLong(final Object obj, final Field fieldObj) {
         if (isStatic(fieldObj.getModifiers())) {
-            return UNSAFE.getLong(objClass, UNSAFE.staticFieldOffset(fieldObj));
+            return UNSAFE.getLong(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj));
         } else {
             return UNSAFE.getLong(obj, UNSAFE.objectFieldOffset(fieldObj));
         }
     }
 
-    public static long getLongArrayElementAt(final Object obj, final String field, final int index) {
-        final long[] array = (long[]) getArrayObject(obj, field, long.class);
-        checkArrayIndex(array.length, index);
-        return array[index];
+    public static long getLongCached(final Object obj, final FieldStruct fieldStruct) {
+        return UNSAFE.getLong(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
-    public static void setLong(final Object obj, final String field, final long value) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            UNSAFE.putLong(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset, value);
+    public static void setLong(final Object obj, final String field, final long value) throws NoSuchFieldException {
+        setLong(obj, getFieldObj(getObjectClass(obj), field), value);
+    }
+
+    public static void setLong(final Object obj, final Field fieldObj, final long value) {
+        if (isStatic(fieldObj.getModifiers())) {
+            UNSAFE.putLong(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj), value);
         } else {
-            final Field fieldObj = getFieldObj(objClass, field);
-            if (isStatic(fieldObj.getModifiers())) {
-                UNSAFE.putLong(objClass, UNSAFE.staticFieldOffset(fieldObj), value);
-            } else {
-                UNSAFE.putLong(obj, UNSAFE.objectFieldOffset(fieldObj), value);
-            }
+            UNSAFE.putLong(obj, UNSAFE.objectFieldOffset(fieldObj), value);
         }
     }
 
-    public static void setLongArrayElementAt(final Object obj, final String field, final int index, final long value) {
-        final long[] array = (long[]) getArrayObject(obj, field, long.class);
-        checkArrayIndex(array.length, index);
-        array[index] = value;
+    public static void setLongCached(final Object obj, final FieldStruct fieldStruct, final long value) {
+        UNSAFE.putLong(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
+    }
+
+    public static long getLongArrayElementAt(final Object obj, final String field, final int index) throws NoSuchFieldException {
+        return ((long[]) getObject(obj, field))[index];
+    }
+
+    public static long getLongArrayElementAt(final Object obj, final Field fieldObj, final int index) {
+        return ((long[]) getObject(obj, fieldObj))[index];
+    }
+
+    public static long getLongArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index) {
+        return ((long[]) getObjectCached(obj, fieldStruct))[index];
+    }
+
+    public static void setLongArrayElementAt(final Object obj, final String field, final int index, final long value) throws NoSuchFieldException {
+        ((long[]) getObject(obj, field))[index] = value;
+    }
+
+    public static void setLongArrayElementAt(final Object obj, final Field fieldObj, final int index, final long value) {
+        ((long[]) getObject(obj, fieldObj))[index] = value;
+    }
+
+    public static void setLongArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index, final long value) {
+        ((long[]) getObjectCached(obj, fieldStruct))[index] = value;
     }
 
     //Short
-    public static short getShort(final Object obj, final String field) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            return UNSAFE.getShort(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset);
-        }
+    public static short getShort(final Object obj, final String field) throws NoSuchFieldException {
+        return getShort(obj, getFieldObj(getObjectClass(obj), field));
+    }
 
-        final Field fieldObj = getFieldObj(objClass, field);
+    public static short getShort(final Object obj, final Field fieldObj) {
         if (isStatic(fieldObj.getModifiers())) {
-            return UNSAFE.getShort(objClass, UNSAFE.staticFieldOffset(fieldObj));
+            return UNSAFE.getShort(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj));
         } else {
             return UNSAFE.getShort(obj, UNSAFE.objectFieldOffset(fieldObj));
         }
     }
 
-    public static short getShortArrayElementAt(final Object obj, final String field, final int index) {
-        final short[] array = (short[]) getArrayObject(obj, field, short.class);
-        checkArrayIndex(array.length, index);
-        return array[index];
+    public static short getShortCached(final Object obj, final FieldStruct fieldStruct) {
+        return UNSAFE.getShort(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
-    public static void setShort(final Object obj, final String field, final short value) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            UNSAFE.putShort(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset, value);
+    public static void setShort(final Object obj, final String field, final short value) throws NoSuchFieldException {
+        setShort(obj, getFieldObj(getObjectClass(obj), field), value);
+    }
+
+    public static void setShort(final Object obj, final Field fieldObj, final short value) {
+        if (isStatic(fieldObj.getModifiers())) {
+            UNSAFE.putShort(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj), value);
         } else {
-            final Field fieldObj = getFieldObj(objClass, field);
-            if (isStatic(fieldObj.getModifiers())) {
-                UNSAFE.putShort(objClass, UNSAFE.staticFieldOffset(fieldObj), value);
-            } else {
-                UNSAFE.putShort(obj, UNSAFE.objectFieldOffset(fieldObj), value);
-            }
+            UNSAFE.putShort(obj, UNSAFE.objectFieldOffset(fieldObj), value);
         }
     }
 
-    public static void setShortArrayElementAt(final Object obj, final String field, final int index, final short value) {
-        final short[] array = (short[]) getArrayObject(obj, field, short.class);
-        checkArrayIndex(array.length, index);
-        array[index] = value;
+    public static void setShortCached(final Object obj, final FieldStruct fieldStruct, final short value) {
+        UNSAFE.putShort(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
+    }
+
+    public static short getShortArrayElementAt(final Object obj, final String field, final int index) throws NoSuchFieldException {
+        return ((short[]) getObject(obj, field))[index];
+    }
+
+    public static short getShortArrayElementAt(final Object obj, final Field fieldObj, final int index) {
+        return ((short[]) getObject(obj, fieldObj))[index];
+    }
+
+    public static short getShortArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index) {
+        return ((short[]) getObjectCached(obj, fieldStruct))[index];
+    }
+
+    public static void setShortArrayElementAt(final Object obj, final String field, final int index, final short value) throws NoSuchFieldException {
+        ((short[]) getObject(obj, field))[index] = value;
+    }
+
+    public static void setShortArrayElementAt(final Object obj, final Field fieldObj, final int index, final short value) {
+        ((short[]) getObject(obj, fieldObj))[index] = value;
+    }
+
+    public static void setShortArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index, final short value) {
+        ((short[]) getObjectCached(obj, fieldStruct))[index] = value;
     }
 
     //Object
-    public static Object get(final Object obj, final String field) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            return UNSAFE.getObject(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset);
-        }
+    public static Object getObject(final Object obj, final String field) throws NoSuchFieldException {
+        return getObject(obj, getFieldObj(getObjectClass(obj), field));
+    }
 
-        final Field fieldObj = getFieldObj(objClass, field);
+    public static Object getObject(final Object obj, final Field fieldObj) {
         if (isStatic(fieldObj.getModifiers())) {
-            return UNSAFE.getObject(objClass, UNSAFE.staticFieldOffset(fieldObj));
+            return UNSAFE.getObject(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj));
         } else {
             return UNSAFE.getObject(obj, UNSAFE.objectFieldOffset(fieldObj));
         }
     }
 
-    public static Object getArrayElementAt(final Object obj, final String field, final int index) {
-        final Object[] array = (Object[]) getArrayObject(obj, field, Object.class);
-        checkArrayIndex(array.length, index);
-        return array[index];
+    public static Object getObjectCached(final Object obj, final FieldStruct fieldStruct) {
+        return UNSAFE.getObject(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
-    public static void set(final Object obj, final String field, final Object value) {
-        final Class objClass = getObjectClass(obj);
-        if (objClass.isAnnotationPresent(CacheAware.class)) {
-            final FieldStruct fieldStruct = getFieldStruct(objClass, field);
-            UNSAFE.putObject(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset, value);
+    public static void setObject(final Object obj, final String field, final Object value) throws NoSuchFieldException {
+        setObject(obj, getFieldObj(getObjectClass(obj), field), value);
+    }
+
+    public static void setObject(final Object obj, final Field fieldObj, final Object value) {
+        if (isStatic(fieldObj.getModifiers())) {
+            UNSAFE.putObject(getObjectClass(obj), UNSAFE.staticFieldOffset(fieldObj), value);
         } else {
-            final Field fieldObj = getFieldObj(objClass, field);
-            if (isStatic(fieldObj.getModifiers())) {
-                UNSAFE.putObject(objClass, UNSAFE.staticFieldOffset(fieldObj), value);
-            } else {
-                UNSAFE.putObject(obj, UNSAFE.objectFieldOffset(fieldObj), value);
-            }
+            UNSAFE.putObject(obj, UNSAFE.objectFieldOffset(fieldObj), value);
         }
     }
 
-    public static void setArrayElementAt(final Object obj, final String field, final int index, final Object value) {
-        final Object[] array = (Object[]) getArrayObject(obj, field, Object.class);
-        checkArrayIndex(array.length, index);
-        array[index] = value;
+    public static void setObjectCached(final Object obj, final FieldStruct fieldStruct, final Object value) {
+        UNSAFE.putObject(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
     }
 
+    public static Object getObjectArrayElementAt(final Object obj, final String field, final int index) throws NoSuchFieldException {
+        return ((Object[]) getObject(obj, field))[index];
+    }
+
+    public static Object getObjectArrayElementAt(final Object obj, final Field fieldObj, final int index) {
+        return ((Object[]) getObject(obj, fieldObj))[index];
+    }
+
+    public static Object getObjectArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index) {
+        return ((Object[]) getObjectCached(obj, fieldStruct))[index];
+    }
+
+    public static void setObjectArrayElementAt(final Object obj, final String field, final int index, final Object value) throws NoSuchFieldException {
+        ((Object[]) getObject(obj, field))[index] = value;
+    }
+
+    public static void setObjectArrayElementAt(final Object obj, final Field fieldObj, final int index, final Object value) {
+        ((Object[]) getObject(obj, fieldObj))[index] = value;
+    }
+
+    public static void setObjectArrayCachedElementAt(final Object obj, final FieldStruct fieldStruct, final int index, final Object value) {
+        ((Object[]) getObjectCached(obj, fieldStruct))[index] = value;
+    }
+
+
     private static Class getObjectClass(final Object obj) {
-        assert obj != null;
         return obj instanceof Class ? (Class) obj : obj.getClass();
     }
 
-    private static FieldStruct getFieldStruct(final Class objClass, final String field) {
-        final FieldStruct fieldStruct = ClassStructFactory.get(objClass).getField(field);
-        if (fieldStruct == null) {
-            throw new IllegalArgumentException("Field [" + field + "] does not exist on Class [" + objClass + "] or its Super Classes!");
-        }
-        return fieldStruct;
-    }
-
-    private static Field getFieldObj(final Class objClass, final String field) {
-        final Field objField = ClassStruct.getField(objClass, field);
-        if (objField == null) {
-            throw new IllegalArgumentException("Field [" + field + "] does not exist on Class [" + objClass + "] or its Super Classes!");
-        }
-        return objField;
-    }
-
-    private static Object getArrayObject(final Object obj, final String field, final Class componentType) {
-        final Class objClass = getObjectClass(obj);
-        FieldStruct fieldStruct = null;
-        Field objField = null;
-        final boolean cacheAware = objClass.isAnnotationPresent(CacheAware.class);
-        if (cacheAware) {
-            fieldStruct = getFieldStruct(objClass, field);
-        } else {
-            objField = getFieldObj(objClass, field);
-        }
-
-        if (!isFieldArrayAndAssignable(fieldStruct, objField, componentType)) {
-            throw new IllegalArgumentException("Field [" + field + "] on Class [" + objClass + "] is not an array of type [" + componentType.getSimpleName() + "]!");
-        }
-
-        final Object arrayObj;
-        if (cacheAware) {
-            arrayObj = UNSAFE.getObject(fieldStruct.isStatic() ? objClass : obj, fieldStruct.offset);
-        } else {
-            if (isStatic(objField.getModifiers())) {
-                arrayObj = UNSAFE.getObject(objClass, UNSAFE.staticFieldOffset(objField));
-            } else {
-                arrayObj = UNSAFE.getObject(obj, UNSAFE.objectFieldOffset(objField));
-            }
-        }
-        if (arrayObj == null) {
-            throw new IllegalArgumentException("Field [" + field + "] on Class [" + objClass + "] is NULL");
-        }
-        return arrayObj;
-    }
-
-    private static boolean isFieldArrayAndAssignable(final FieldStruct fieldStruct, final Field objField, final Class componentType) {
-        if (fieldStruct != null) {
-            return fieldStruct.isArray() && componentType.isAssignableFrom(fieldStruct.type.getComponentType());
-        } else if (objField != null) {
-            return objField.getType().isArray() && componentType.isAssignableFrom(objField.getType().getComponentType());
-        }
-        return false;
-    }
-
-    private static void checkArrayIndex(final int length, final int index) {
-        if (index >= length) {
-            throw new IndexOutOfBoundsException("Array index [" + index + "] is greater than array length [" + length + "]!");
-        }
+    private static Field getFieldObj(final Class objClass, final String field) throws NoSuchFieldException {
+        return ClassStruct.getField(objClass, field);
     }
 }

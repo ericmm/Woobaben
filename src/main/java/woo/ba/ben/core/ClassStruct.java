@@ -30,7 +30,7 @@ class ClassStruct {
         }
     }
 
-    static Field getField(Class clazz, String filedName) {
+    static Field getField(Class clazz, String filedName) throws NoSuchFieldException {
         Field[] declaredFields;
         Class currentClass = clazz;
         while (currentClass.getSuperclass() != null) { //except Object.class
@@ -42,7 +42,7 @@ class ClassStruct {
             }
             currentClass = currentClass.getSuperclass();
         }
-        return null;
+        throw new NoSuchFieldException("No filed [" + filedName + "] found on class [" + clazz + "]");
     }
 
     FieldStruct getField(final String fieldName) {

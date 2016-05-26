@@ -15,7 +15,7 @@ public class ClassStructFactory {
     public static ClassStruct get(final Class realClass) {
         assert realClass != null;
         ClassStruct classStruct = CACHE.get(realClass);
-        if(classStruct == null && realClass.isAnnotationPresent(CacheAware.class)) {
+        if (classStruct == null) {
             classStruct = new ClassStruct(realClass);
             CACHE.put(classStruct.className, classStruct);
         }

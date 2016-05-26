@@ -5,7 +5,8 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
 
@@ -34,9 +35,9 @@ public class ClassStructFactoryTest {
         assertThat(testClassObjStruct.getField("testPrimitiveByte").isPrimitive(), is(true));
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void shouldGetNullWhenInputIsNotPresentedWithCacheAwareAnnotation() {
-        assertThat(ClassStructFactory.get(Object.class), nullValue());
+        ClassStructFactory.get(Object.class);
     }
 
     @Test
@@ -102,39 +103,49 @@ public class ClassStructFactoryTest {
         System.out.println("direct takes " + (end - start));
 
 
-        start = System.currentTimeMillis();
-        for (int i = 0; i < LOOP_COUNTS; i++) {
-            //FIXME: two objects have same attributes
-            value = FieldAccessor.getByte(testFieldObj, "testPrimitiveByte");
-            value = FieldAccessor.getByte(testEmptyObj, "testPrimitiveByte");
-            value = FieldAccessor.getByte(testClassObj, "testPrimitiveByte");
-
-            FieldAccessor.setByte(testFieldObj, "testPrimitiveByte", (byte) 4);
-            FieldAccessor.setByte(testEmptyObj, "testPrimitiveByte", (byte) 4);
-            FieldAccessor.setByte(testClassObj, "testPrimitiveByte", (byte) 4);
-        }
-        end = System.currentTimeMillis();
-        System.out.println("field accessor takes " + (end - start));
-
-//        value = FieldAccessor.getByte(testFieldObj, "testPrimitiveByte");
-//        FieldAccessor.setByte(testFieldObj, "testPrimitiveByte", (byte) 4);
-//
-//        value = FieldAccessor.getByte(testEmptyObj, "testPrimitiveByte");
-//        FieldAccessor.setByte(testEmptyObj, "testPrimitiveByte", (byte) 4);
-//
-//        value = FieldAccessor.getByte(testClassObj, "testPrimitiveByte");
-//        FieldAccessor.setByte(testClassObj, "testPrimitiveByte", (byte) 4);
-
-
         final Field field1 = TestFieldObj.class.getField("testPrimitiveByte");
         final Field field2 = TestEmptyObj.class.getField("testPrimitiveByte");
         final Field field3 = TestClassObj.class.getField("testPrimitiveByte");
 
         start = System.currentTimeMillis();
         for (int i = 0; i < LOOP_COUNTS; i++) {
+            //FIXME: two objects have same attributes
+            value = FieldAccessor.getByte(testFieldObj, field1);
+            value = FieldAccessor.getByte(testEmptyObj, field2);
+            value = FieldAccessor.getByte(testClassObj, field3);
+
+            FieldAccessor.setByte(testFieldObj, field1, (byte) 4);
+            FieldAccessor.setByte(testEmptyObj, field2, (byte) 5);
+            FieldAccessor.setByte(testClassObj, field3, (byte) 6);
+        }
+        end = System.currentTimeMillis();
+        System.out.println("field accessor (fieldObj) takes " + (end - start));
+
+
+        FieldStruct fieldStruct1 = classObjStruct.getField("testPrimitiveByte");
+        FieldStruct fieldStruct2 = emptyObjStruct.getField("testPrimitiveByte");
+        FieldStruct fieldStruct3 = fieldObjStruct.getField("testPrimitiveByte");
+
+        start = System.currentTimeMillis();
+        for (int i = 0; i < LOOP_COUNTS; i++) {
+            //FIXME: two objects have same attributes
+            value = FieldAccessor.getByteCached(testFieldObj, fieldStruct1);
+            value = FieldAccessor.getByteCached(testEmptyObj, fieldStruct2);
+            value = FieldAccessor.getByteCached(testClassObj, fieldStruct3);
+
+            FieldAccessor.setByteCached(testFieldObj, fieldStruct1, (byte) 4);
+            FieldAccessor.setByteCached(testEmptyObj, fieldStruct2, (byte) 5);
+            FieldAccessor.setByteCached(testClassObj, fieldStruct3, (byte) 6);
+        }
+        end = System.currentTimeMillis();
+        System.out.println("field accessor (fieldStruct) takes " + (end - start));
+
+
+        start = System.currentTimeMillis();
+        for (int i = 0; i < LOOP_COUNTS; i++) {
             value = field1.getByte(testFieldObj);
-            value = field1.getByte(testEmptyObj);
-            value = field1.getByte(testClassObj);
+            value = field2.getByte(testEmptyObj);
+            value = field3.getByte(testClassObj);
 
             field1.setByte(testFieldObj, (byte) 4);
             field2.setByte(testEmptyObj, (byte) 5);
