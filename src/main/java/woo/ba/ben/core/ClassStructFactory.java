@@ -13,7 +13,10 @@ public class ClassStructFactory {
     }
 
     public static ClassStruct get(final Class realClass) {
-        assert realClass != null;
+        if (realClass == null) {
+            return null;
+        }
+
         ClassStruct classStruct = CACHE.get(realClass);
         if (classStruct == null) {
             classStruct = new ClassStruct(realClass);

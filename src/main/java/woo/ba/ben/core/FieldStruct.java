@@ -5,34 +5,32 @@ import java.lang.reflect.Modifier;
 
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
-class FieldStruct {
-    final String name;
-    final Class type;
-    final long offset;
-    final int modifiers;
+public class FieldStruct {
+    public final String name;
+    public final Class type;
+    public final long offset;
+    public final int modifiers;
 
-    FieldStruct(final Field field) {
-        assert field != null;
-
+    public FieldStruct(final Field field) {
         this.name = field.getName();
         this.type = field.getType();
         this.modifiers = field.getModifiers();
         this.offset = isStatic() ? UNSAFE.staticFieldOffset(field) : UNSAFE.objectFieldOffset(field);
     }
 
-    boolean isArray() {
+    public boolean isArray() {
         return type.isArray();
     }
 
-    Class getArrayType() {
+    public Class getArrayType() {
         return isArray() ? type.getComponentType() : null;
     }
 
-    boolean isPrimitive() {
+    public boolean isPrimitive() {
         return type.isPrimitive();
     }
 
-    boolean isStatic() {
+    public boolean isStatic() {
         return Modifier.isStatic(modifiers);
     }
 

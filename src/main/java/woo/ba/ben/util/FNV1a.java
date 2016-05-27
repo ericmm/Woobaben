@@ -20,7 +20,6 @@ public class FNV1a {
      * @return - hashcode
      */
     public static int hash32(final byte[] data) {
-        assert data != null;
         return hash32(data, data.length);
     }
 
@@ -41,7 +40,6 @@ public class FNV1a {
      * @return - hashcode
      */
     public static long hash64(final byte[] data) {
-        assert data != null;
         return hash64(data, data.length);
     }
 

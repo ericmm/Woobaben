@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class ClassStruct {
-    final String className;
+public class ClassStruct {
+    public final String className;
 
     private FieldStruct[] instanceFields;
     private long firstInstanceFieldStartOffset = Long.MAX_VALUE;
@@ -30,7 +30,7 @@ class ClassStruct {
         }
     }
 
-    static Field getField(Class clazz, String filedName) throws NoSuchFieldException {
+    public static Field getField(Class clazz, String filedName) throws NoSuchFieldException {
         Field[] declaredFields;
         Class currentClass = clazz;
         while (currentClass.getSuperclass() != null) { //except Object.class
@@ -45,27 +45,27 @@ class ClassStruct {
         throw new NoSuchFieldException("No filed [" + filedName + "] found on class [" + clazz + "]");
     }
 
-    FieldStruct getField(final String fieldName) {
+    public FieldStruct getField(final String fieldName) {
         return fieldMap == null ? null : fieldMap.get(fieldName);
     }
 
-    long getFirstInstanceFieldStartOffset() {
+    public long getFirstInstanceFieldStartOffset() {
         return firstInstanceFieldStartOffset;
     }
 
-    long getLastInstanceFieldEndOffset() {
+    public long getLastInstanceFieldEndOffset() {
         return lastInstanceFieldEndOffset;
     }
 
-    boolean hasInstanceFields() {
+    public boolean hasInstanceFields() {
         return lastInstanceFieldEndOffset > 0;
     }
 
-    int getFieldCount() {
+    public int getFieldCount() {
         return fieldMap == null ? 0 : fieldMap.size();
     }
 
-    FieldStruct[] getInstanceFields() {
+    public FieldStruct[] getInstanceFields() {
         return instanceFields;
     }
 
