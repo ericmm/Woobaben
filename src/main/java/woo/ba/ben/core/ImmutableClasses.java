@@ -51,7 +51,6 @@ public class ImmutableClasses {
         IMMUTABLE_CLASS_SET.add(java.nio.file.Files.class);
         IMMUTABLE_CLASS_SET.add(java.nio.file.FileSystems.class);
         IMMUTABLE_CLASS_SET.add(java.nio.file.Paths.class);
-        IMMUTABLE_CLASS_SET.add(java.rmi.server.RMIClassLoader.class);
         IMMUTABLE_CLASS_SET.add(java.rmi.server.UID.class);
         IMMUTABLE_CLASS_SET.add(java.security.AccessController.class);
         IMMUTABLE_CLASS_SET.add(java.security.AllPermission.class);

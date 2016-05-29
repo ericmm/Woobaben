@@ -1,10 +1,7 @@
 package woo.ba.ben.core;
 
-import java.lang.reflect.Field;
 import java.util.IdentityHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.System.arraycopy;
 import static java.lang.reflect.Array.getLength;
@@ -14,8 +11,6 @@ import static woo.ba.ben.core.ImmutableClasses.isImmutable;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 public class HeapObjectCopier {
-    private static final ConcurrentHashMap<Class, List<Field>> FIELD_CACHE = new ConcurrentHashMap<>();
-
     private HeapObjectCopier() {
     }
 
@@ -50,7 +45,7 @@ public class HeapObjectCopier {
                 copyPrimitive(originalObj, targetObject, fieldStruct);
             } else {
                 attributeInOriginalObj = UNSAFE.getObject(originalObj, fieldStruct.offset);
-                if(attributeInOriginalObj == null) {
+                if (attributeInOriginalObj == null) {
                     continue;
                 }
 
@@ -101,11 +96,20 @@ public class HeapObjectCopier {
         } else {
             final Object[] originalArray = (Object[]) arrayObj;
             final Object[] targetArray = (Object[]) copiedArrayObj;
+            Object objInArray;
+            Class objectClass;
             for (int i = 0; i < length; i++) {
-                if(originalArray[i] == null) {
+                objInArray = originalArray[i];
+                if (objInArray == null) {
                     continue;
                 }
-                targetArray[i] = copyObject(originalArray[i], getObjectClass(originalArray[i]), objectMap);
+
+                objectClass = getObjectClass(objInArray);
+                if(objectClass.isArray()){
+                    targetArray[i] = copyArray(objInArray, objectClass, objectMap);
+                } else {
+                    targetArray[i] = copyObject(objInArray, objectClass, objectMap);
+                }
             }
         }
         return copiedArrayObj;
@@ -133,7 +137,7 @@ public class HeapObjectCopier {
             }
             return targetObject;
         } catch (final InstantiationException e) {
-            throw new RuntimeException("Cannot instantiate class:" + objectClass, e);
+            throw new RuntimeException("Cannot instantiate class:" + objectClass.getName(), e);
         }
     }
 }
