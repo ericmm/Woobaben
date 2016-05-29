@@ -1,8 +1,7 @@
 package woo.ba.ben.core;
 
 
-import java.lang.reflect.Field;
-
+import static woo.ba.ben.core.ClassStruct.getObjectClass;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 public class FieldAccessor {
@@ -449,14 +448,5 @@ public class FieldAccessor {
 
     public static void setStaticObjectArrayElementAt(final Class objClass, final FieldStruct fieldStruct, final int index, final Object value) {
         ((Object[]) getStaticObject(objClass, fieldStruct))[index] = value;
-    }
-
-
-    private static Class getObjectClass(final Object obj) {
-        return obj instanceof Class ? (Class) obj : obj.getClass();
-    }
-
-    private static Field getFieldObj(final Class objClass, final String field) throws NoSuchFieldException {
-        return ClassStruct.getField(objClass, field);
     }
 }

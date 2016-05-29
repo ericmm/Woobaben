@@ -78,20 +78,23 @@ public class ImmutableClasses {
         IMMUTABLE_CLASS_SET.add(java.time.LocalDate.class);
         IMMUTABLE_CLASS_SET.add(java.time.LocalTime.class);
         IMMUTABLE_CLASS_SET.add(java.time.LocalDateTime.class);
+        IMMUTABLE_CLASS_SET.add(HeapObjectCopier.class);
+        IMMUTABLE_CLASS_SET.add(UnsafeFactory.class);
+        IMMUTABLE_CLASS_SET.add(ClassStructFactory.class);
     }
 
     private ImmutableClasses() {
     }
 
-    public boolean addImmutableClass(final Class clazz) {
+    public static boolean addImmutableClass(final Class clazz) {
         return IMMUTABLE_CLASS_SET.add(clazz);
     }
 
-    public boolean isImmutable(final Class clazz) {
+    public static boolean isImmutable(final Class clazz) {
         return IMMUTABLE_CLASS_SET.contains(clazz) || isAnnotationOrEnumOrInterface(clazz);
     }
 
-    private boolean isAnnotationOrEnumOrInterface(final Class clazz) {
+    private static boolean isAnnotationOrEnumOrInterface(final Class clazz) {
         return clazz.isAnnotation() || clazz.isEnum() || clazz.isInterface();
     }
 }

@@ -1,35 +1,22 @@
 package woo.ba.ben.core;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.System.arraycopy;
-import static java.lang.System.identityHashCode;
 import static java.lang.reflect.Array.getLength;
 import static java.lang.reflect.Array.newInstance;
+import static woo.ba.ben.core.ClassStruct.getObjectClass;
+import static woo.ba.ben.core.ImmutableClasses.isImmutable;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 public class HeapObjectCopier {
-    private static final Set<Class> UNSUPPORTED_CLASSES_SET = new HashSet<>();
-
-    static {
-        UNSUPPORTED_CLASSES_SET.add(Class.class);
-        UNSUPPORTED_CLASSES_SET.add(Enum.class);
-        UNSUPPORTED_CLASSES_SET.add(Annotation.class);
-        UNSUPPORTED_CLASSES_SET.add(Field.class);
-        UNSUPPORTED_CLASSES_SET.add(System.class);
-        UNSUPPORTED_CLASSES_SET.add(HeapObjectCopier.class);
-    }
+    private static final ConcurrentHashMap<Class, List<Field>> FIELD_CACHE = new ConcurrentHashMap<>();
 
     private HeapObjectCopier() {
-    }
-
-    public static boolean addSingletonClass(final Class singletonClass) {
-        return UNSUPPORTED_CLASSES_SET.add(singletonClass);
     }
 
     public static <T> T deepCopy(final T originalObj) {
@@ -37,24 +24,21 @@ public class HeapObjectCopier {
             return originalObj;
         }
 
-        final Map<Integer, Object> objectMap = new HashMap<>();
-        if (originalObj.getClass().isArray()) {
-            return copyArray(originalObj, objectMap);
+        final Map<Object, Object> objectMap = new IdentityHashMap<>();
+        final Class<T> objectClass = getObjectClass(originalObj);
+        if (objectClass.isArray()) {
+            return copyArray(originalObj, objectClass, objectMap);
         }
-        return copyObject(originalObj, objectMap);
+        return copyObject(originalObj, objectClass, objectMap);
     }
 
-    private static <T> boolean isCloneable(final T originalObj) {
-        return !UNSUPPORTED_CLASSES_SET.contains(originalObj.getClass());
-    }
-
-    private static <T> T copyObject(final T originalObj, final Map<Integer, Object> objectMap) {
-        if (originalObj == null || !isCloneable(originalObj)) {
+    private static <T> T copyObject(final T originalObj, final Class<T> objectClass, final Map<Object, Object> objectMap) {
+        if (originalObj == null || isImmutable(objectClass)) {
             return originalObj;
         }
 
-        final T targetObject = createInstance(originalObj, objectMap);
-        final ClassStruct classStruct = ClassStructFactory.get(originalObj.getClass());
+        final T targetObject = createNonArrayInstance(originalObj, objectClass, objectMap);
+        final ClassStruct classStruct = ClassStructFactory.get(objectClass);
         if (!classStruct.hasInstanceFields()) {
             return targetObject;
         }
@@ -62,15 +46,18 @@ public class HeapObjectCopier {
         Object attributeInOriginalObj, attributeInTargetObj;
         final FieldStruct[] instanceFields = classStruct.getInstanceFields();
         for (final FieldStruct fieldStruct : instanceFields) {
-            //System.out.println("class:"+classStruct + ", total field size: "+instanceFields.length+", field:"+fieldStruct);
-            if (fieldStruct.type.isPrimitive()) {
+            if (fieldStruct.isPrimitive()) {
                 copyPrimitive(originalObj, targetObject, fieldStruct);
             } else {
                 attributeInOriginalObj = UNSAFE.getObject(originalObj, fieldStruct.offset);
-                if (fieldStruct.type.isArray()) {
-                    attributeInTargetObj = copyArray(attributeInOriginalObj, objectMap);
+                if(attributeInOriginalObj == null) {
+                    continue;
+                }
+
+                if (fieldStruct.isArray()) {
+                    attributeInTargetObj = copyArray(attributeInOriginalObj, getObjectClass(attributeInOriginalObj), objectMap);
                 } else {
-                    attributeInTargetObj = copyObject(attributeInOriginalObj, objectMap);
+                    attributeInTargetObj = copyObject(attributeInOriginalObj, getObjectClass(attributeInOriginalObj), objectMap);
                 }
                 UNSAFE.putObject(targetObject, fieldStruct.offset, attributeInTargetObj);
             }
@@ -98,60 +85,55 @@ public class HeapObjectCopier {
         }
     }
 
-    private static <T> T copyArray(final T arrayObj, final Map<Integer, Object> objectMap) {
+    private static <T> T copyArray(final T arrayObj, final Class<T> arrayClass, final Map<Object, Object> objectMap) {
         if (arrayObj == null) {
             return arrayObj;
         }
 
-        final T copiedArrayObj = createInstance(arrayObj, objectMap);
         final int length = getLength(arrayObj);
+        final T copiedArrayObj = createArrayInstance(arrayObj, length, arrayClass, objectMap);
         if (length == 0) {
             return copiedArrayObj;
         }
 
-        if (arrayObj.getClass().getComponentType().isPrimitive()) {
+        if (arrayClass.getComponentType().isPrimitive()) {
             arraycopy(arrayObj, 0, copiedArrayObj, 0, length);
         } else {
             final Object[] originalArray = (Object[]) arrayObj;
             final Object[] targetArray = (Object[]) copiedArrayObj;
             for (int i = 0; i < length; i++) {
-                targetArray[i] = copyObject(originalArray[i], objectMap);
-                ;
+                if(originalArray[i] == null) {
+                    continue;
+                }
+                targetArray[i] = copyObject(originalArray[i], getObjectClass(originalArray[i]), objectMap);
             }
         }
         return copiedArrayObj;
     }
 
-    private static <T> T createInstance(final T originalObj, final Map<Integer, Object> objectMap) {
-        final Integer originalObjId = identityHashCode(originalObj);
-        T targetObject = (T) objectMap.get(originalObjId);
-        if (targetObject == null) {
-            final Class<T> objClass = (Class<T>) originalObj.getClass();
-            if (objClass.isArray()) {
-                targetObject = createArrayInstance(originalObj, objClass);
-            } else {
-                targetObject = createNonArrayInstance(objClass);
-            }
-            objectMap.put(originalObjId, targetObject);
+    private static <T> T createArrayInstance(final T originalObj, final int length, final Class<T> objClass, final Map<Object, Object> objectMap) {
+        T targetArray = (T) objectMap.get(originalObj);
+        if (targetArray == null) {
+            final Class componentType = objClass.getComponentType();
+            targetArray = (T) newInstance(componentType, length);
+            objectMap.put(originalObj, targetArray);
         }
-        return targetObject;
+        return targetArray;
     }
 
-    private static <T> T createArrayInstance(final T originalObj, final Class<T> objClass) {
-        final Class componentType = objClass.getComponentType();
-        final int length = getLength(originalObj);
-        return (T) newInstance(componentType, length);
-    }
-
-    private static <T> T createNonArrayInstance(final Class<T> objClass) {
+    private static <T> T createNonArrayInstance(final T originalObj, final Class<T> objectClass, final Map<Object, Object> objectMap) {
         try {
-            final T objectInstance = (T) UNSAFE.allocateInstance(objClass);
-            if (!UNSAFE.shouldBeInitialized(objClass)) {
-                UNSAFE.ensureClassInitialized(objClass);
+            T targetObject = (T) objectMap.get(originalObj);
+            if (targetObject == null) {
+                targetObject = (T) UNSAFE.allocateInstance(objectClass);
+                if (!UNSAFE.shouldBeInitialized(objectClass)) {
+                    UNSAFE.ensureClassInitialized(objectClass);
+                }
+                objectMap.put(originalObj, targetObject);
             }
-            return objectInstance;
+            return targetObject;
         } catch (final InstantiationException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Cannot instantiate class:" + objectClass, e);
         }
     }
 }

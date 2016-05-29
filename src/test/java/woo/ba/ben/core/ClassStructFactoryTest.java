@@ -5,8 +5,7 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 
 
@@ -35,9 +34,14 @@ public class ClassStructFactoryTest {
         assertThat(testClassObjStruct.getField("testPrimitiveByte").isPrimitive(), is(true));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldGetNullWhenInputIsNotPresentedWithCacheAwareAnnotation() {
-        ClassStructFactory.get(Object.class);
+    @Test
+    public void shouldGetClassStructForAnyNotNullClass() {
+        assertThat(ClassStructFactory.get(Object.class), notNullValue());
+    }
+
+    @Test
+    public void shouldGetNullWhenInputIsNull() {
+        assertThat(ClassStructFactory.get(null), nullValue());
     }
 
     @Test
@@ -160,8 +164,9 @@ public class ClassStructFactoryTest {
         assertThat(copiedTestClassObj.getIntFieldInClassObj(), is(100));
         assertThat(gotValue, is(100));
 
-        final long minInstanceOffset = classObjStruct.getFirstInstanceFieldStartOffset();
-        final long maxInstanceOffset = classObjStruct.getLastInstanceFieldEndOffset();
+        final FieldStruct[] instanceFields = classObjStruct.getInstanceFields();
+        final long minInstanceOffset = instanceFields[0].offset;
+        final long maxInstanceOffset = instanceFields[instanceFields.length - 1].offset;
         final long instanceFieldsSize = maxInstanceOffset - minInstanceOffset;
         final byte[] dataArray = new byte[(int) instanceFieldsSize];
         testClassObj.setIntFieldInClassObj(10);

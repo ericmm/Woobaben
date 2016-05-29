@@ -12,7 +12,7 @@ public class ClassStructTest {
         final ClassStruct classStruct = new ClassStruct(TestClassObj.class);
         assertThat(classStruct.getField("abc"), nullValue());
         assertThat(classStruct.getField("bigInteger"), notNullValue());
-        assertThat(classStruct.className, is("woo.ba.ben.core.TestClassObj"));
+        assertThat(classStruct.realClass, equalTo(TestClassObj.class));
     }
 
     @Test
@@ -32,6 +32,6 @@ public class ClassStructTest {
     @Test
     public void shouldGenerateToString() {
         final ClassStruct classStruct1 = new ClassStruct(TestFieldObj.class);
-        assertThat(classStruct1.toString(), is("ClassStruct{className=woo.ba.ben.core.TestFieldObj}"));
+        assertThat(classStruct1.toString(), is("ClassStruct{realClass=class woo.ba.ben.core.TestFieldObj}"));
     }
 }
