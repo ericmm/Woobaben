@@ -113,4 +113,8 @@ public class DataReader {
 
         return true;
     }
+
+    public static long unsignedInt(final int num) {
+        return num & 0xFFFFFFFFL;
+    }
 }

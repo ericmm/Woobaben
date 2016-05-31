@@ -1,5 +1,7 @@
 package woo.ba.ben.core;
 
+import sun.misc.Unsafe;
+
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -7,8 +9,10 @@ import static java.lang.System.arraycopy;
 import static java.lang.reflect.Array.getLength;
 import static java.lang.reflect.Array.newInstance;
 import static woo.ba.ben.core.ClassStruct.getObjectClass;
+import static woo.ba.ben.core.ClassStruct.sizeOf;
 import static woo.ba.ben.core.ImmutableClasses.isImmutable;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
+import static woo.ba.ben.util.DataReader.unsignedInt;
 
 public class HeapObjectCopier {
     private HeapObjectCopier() {
@@ -105,7 +109,7 @@ public class HeapObjectCopier {
                 }
 
                 objectClass = getObjectClass(objInArray);
-                if(objectClass.isArray()){
+                if (objectClass.isArray()) {
                     targetArray[i] = copyArray(objInArray, objectClass, objectMap);
                 } else {
                     targetArray[i] = copyObject(objInArray, objectClass, objectMap);
@@ -139,5 +143,28 @@ public class HeapObjectCopier {
         } catch (final InstantiationException e) {
             throw new RuntimeException("Cannot instantiate class:" + objectClass.getName(), e);
         }
+    }
+
+    //!!Unsafe - not verified!!
+    static Object shallowCopy(final Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        final long size = sizeOf(obj);
+        final long start = toAddress(obj);
+        final long address = UNSAFE.allocateMemory(size);
+        UNSAFE.copyMemory(start, address, size);
+        return fromAddress(address);
+    }
+
+    private static long toAddress(final Object obj) {
+        final Object[] array = new Object[]{obj};
+        return unsignedInt(UNSAFE.getInt(array, (long) Unsafe.ARRAY_OBJECT_BASE_OFFSET));
+    }
+
+    private static Object fromAddress(final long address) {
+        final Object[] array = new Object[]{null};
+        UNSAFE.putLong(array, (long) Unsafe.ARRAY_OBJECT_BASE_OFFSET, address);
+        return array[0];
     }
 }

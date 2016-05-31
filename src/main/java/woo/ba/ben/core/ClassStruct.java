@@ -3,19 +3,14 @@ package woo.ba.ben.core;
 import java.lang.reflect.Field;
 import java.util.*;
 
+import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
+import static woo.ba.ben.util.DataReader.unsignedInt;
+
 public class ClassStruct {
     private static final Comparator<FieldStruct> FIELD_STRUCT_OFFSET_COMPARATOR = new Comparator<FieldStruct>() {
         @Override
         public int compare(final FieldStruct f1, final FieldStruct f2) {
-//            if (f1 == f2) {
-//                return 0;
-//            } else if (f1 == null && f2 != null) {
-//                return -1;
-//            } else if (f1 != null && f2 == null) {
-//                return 1;
-//            } else {
             return (int) (f1.offset - f2.offset);
-//            }
         }
     };
 
@@ -40,7 +35,7 @@ public class ClassStruct {
         }
     }
 
-    public static Field getField(Class clazz, String filedName) throws NoSuchFieldException {
+    public static Field getField(final Class clazz, final String filedName) throws NoSuchFieldException {
         Field[] declaredFields;
         Class currentClass = clazz;
         while (currentClass.getSuperclass() != null) { //except Object.class
@@ -59,6 +54,14 @@ public class ClassStruct {
         return obj instanceof Class ? (Class) obj : obj.getClass();
     }
 
+    //!!Unsafe - not verified!!
+    public static long sizeOf(final Object object) {
+        if (object == null) {
+            return -1;
+        }
+        return UNSAFE.getAddress(unsignedInt(UNSAFE.getInt(object, 4L)) + 12L);
+    }
+
     public FieldStruct getField(final String fieldName) {
         return fieldMap == null ? null : fieldMap.get(fieldName);
     }
@@ -73,6 +76,14 @@ public class ClassStruct {
 
     public boolean hasInstanceFields() {
         return instanceFields != null;
+    }
+
+    //!!Unsafe - not verified!!
+    public long sizeOf() {
+        if (instanceFields == null) {
+            return -1;
+        }
+        return ((instanceFields[instanceFields.length - 1].offset / 8) + 1) * 8;   // padding
     }
 
     @Override
@@ -96,13 +107,13 @@ public class ClassStruct {
 
     private FieldStruct[] initInstanceFields(final List<FieldStruct> instanceFieldList) {
         Collections.sort(instanceFieldList, FIELD_STRUCT_OFFSET_COMPARATOR);
-        FieldStruct[] instanceFields = new FieldStruct[instanceFieldList.size()];
+        final FieldStruct[] instanceFields = new FieldStruct[instanceFieldList.size()];
         return instanceFieldList.toArray(instanceFields);
     }
 
     private List<FieldStruct> parseFields(final Class realClass, final int fieldCount) {
         fieldMap = new HashMap<>(fieldCount);
-        List<FieldStruct> instanceFields = new ArrayList<>(fieldCount);
+        final List<FieldStruct> instanceFields = new ArrayList<>(fieldCount);
 
         FieldStruct fieldStruct;
         Field[] declaredFields;

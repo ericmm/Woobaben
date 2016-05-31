@@ -107,9 +107,9 @@ public class ClassStructFactoryTest {
         System.out.println("direct takes " + (end - start));
 
 
-        FieldStruct fieldStruct1 = classObjStruct.getField("testPrimitiveByte");
-        FieldStruct fieldStruct2 = emptyObjStruct.getField("testPrimitiveByte");
-        FieldStruct fieldStruct3 = fieldObjStruct.getField("testPrimitiveByte");
+        final FieldStruct fieldStruct1 = classObjStruct.getField("testPrimitiveByte");
+        final FieldStruct fieldStruct2 = emptyObjStruct.getField("testPrimitiveByte");
+        final FieldStruct fieldStruct3 = fieldObjStruct.getField("testPrimitiveByte");
 
         start = System.currentTimeMillis();
         for (int i = 0; i < LOOP_COUNTS; i++) {
@@ -179,7 +179,7 @@ public class ClassStructFactoryTest {
         }
         System.out.println("newOffset=" + newOffset + ", type is int, size is 4");
 
-        System.out.print(unsafe.ARRAY_OBJECT_INDEX_SCALE + "," + unsafe.ARRAY_INT_INDEX_SCALE);
+        System.out.println(unsafe.ARRAY_OBJECT_INDEX_SCALE + "," + unsafe.ARRAY_INT_INDEX_SCALE);
 //        unsafe.putByte(copiedTestClassObj, minInstanceOffset, );
 
 //        unsafe.copyMemory(testClassObj, minInstanceOffset, copiedTestClassObj, minInstanceOffset, 4);
