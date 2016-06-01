@@ -45,7 +45,7 @@ public class ClassStructFactoryTest {
     }
 
     @Test
-    public void shouldGetBlock() throws NoSuchFieldException, IllegalAccessException {
+    public void shouldTestPerformance() throws NoSuchFieldException, IllegalAccessException {
         final Unsafe unsafe = UnsafeFactory.UNSAFE;
 
         final ClassStruct classObjStruct = ClassStructFactory.get(TestClassObj.class);
@@ -143,71 +143,4 @@ public class ClassStructFactoryTest {
         end = System.currentTimeMillis();
         System.out.println("reflection takes " + (end - start));
     }
-
-    @Test
-    public void shouldCopyBean() {
-        final Unsafe unsafe = UnsafeFactory.UNSAFE;
-
-        final ClassStruct classObjStruct = ClassStructFactory.get(TestClassObj.class);
-        final TestClassObj testClassObj = new TestClassObj();
-        testClassObj.setIntFieldInClassObj(100);
-        testClassObj.setTestPrimitiveByte((byte) 1);
-
-        final long fieldOffset = classObjStruct.getField("intFieldInClassObj").offset;
-        final TestClassObj copiedTestClassObj = new TestClassObj();
-
-        final int value = unsafe.getInt(testClassObj, fieldOffset);
-        assertThat(value, is(100));
-
-        unsafe.putInt(copiedTestClassObj, fieldOffset, value);
-        final int gotValue = unsafe.getInt(copiedTestClassObj, fieldOffset);
-        assertThat(copiedTestClassObj.getIntFieldInClassObj(), is(100));
-        assertThat(gotValue, is(100));
-
-        final FieldStruct[] instanceFields = classObjStruct.getInstanceFields();
-        final long minInstanceOffset = instanceFields[0].offset;
-        final long maxInstanceOffset = instanceFields[instanceFields.length - 1].offset;
-        final long instanceFieldsSize = maxInstanceOffset - minInstanceOffset;
-        final byte[] dataArray = new byte[(int) instanceFieldsSize];
-        testClassObj.setIntFieldInClassObj(10);
-        final int BYTES_OFFSET = unsafe.arrayBaseOffset(byte[].class);
-        unsafe.copyMemory(testClassObj, minInstanceOffset, dataArray, BYTES_OFFSET, instanceFieldsSize);
-        final int newOffset = (int) (fieldOffset - minInstanceOffset);
-
-        for (int i = 0; i < dataArray.length; i++) {
-            System.out.println("data[" + i + "]=" + dataArray[i]);
-        }
-        System.out.println("newOffset=" + newOffset + ", type is int, size is 4");
-
-        System.out.println(unsafe.ARRAY_OBJECT_INDEX_SCALE + "," + unsafe.ARRAY_INT_INDEX_SCALE);
-//        unsafe.putByte(copiedTestClassObj, minInstanceOffset, );
-
-//        unsafe.copyMemory(testClassObj, minInstanceOffset, copiedTestClassObj, minInstanceOffset, 4);
-//        unsafe.copyMemory(dataArray, BYTES_OFFSET, copiedTestClassObj, minInstanceOffset, instanceFieldsSize);
-//        assertThat(copiedTestClassObj.getIntFieldInClassObj(), is(10));
-
-
-//        unsafe.copyMemory(testClassObj, fieldOffset, copiedTestClassObj, fieldOffset, unsafe.ARRAY_INT_INDEX_SCALE);
-//
-//        assertThat(copiedTestClassObj.getIntFieldInClassObj(), is(200));
-
-//        unsafe.copyMemory(testClassObj, minInstanceOffset, copiedTestClassObj, minInstanceOffset,  instanceFieldsSize);
-
-//        assertThat(copiedTestClassObj.getIntFieldInClassObj(), is(100));
-//        assertThat(copiedTestClassObj.getTestPrimitiveByte(), is((byte)1));
-
-//        final long allocatedMemoryAddress = unsafe.allocateMemory(instanceFieldsSize);
-//        unsafe.copyMemory();
-
-//        unsafe.freeMemory(allocatedMemoryAddress);
-
-
-    }
-
-//    private Object[] holder = new Object[1];
-//
-//    private long getAddress(final Object obj) {
-//        final Unsafe unsafe = UnsafeFactory.get();
-//        holder[0] = obj;
-//    }
 }

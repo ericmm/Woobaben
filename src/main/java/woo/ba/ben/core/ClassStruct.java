@@ -7,13 +7,13 @@ import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 import static woo.ba.ben.util.DataReader.unsignedInt;
 
 public class ClassStruct {
+    public static final String FIELD_SEPARATOR = "#";
     private static final Comparator<FieldStruct> FIELD_STRUCT_OFFSET_COMPARATOR = new Comparator<FieldStruct>() {
         @Override
         public int compare(final FieldStruct f1, final FieldStruct f2) {
             return (int) (f1.offset - f2.offset);
         }
     };
-
     public final Class realClass;
 
     private FieldStruct[] instanceFields;
@@ -122,7 +122,11 @@ public class ClassStruct {
             declaredFields = currentClass.getDeclaredFields();
             for (int i = declaredFields.length; --i >= 0; ) {
                 fieldStruct = new FieldStruct(declaredFields[i]);
-                fieldMap.put(fieldStruct.name, fieldStruct);
+                if (fieldMap.containsKey(fieldStruct.name)) {
+                    fieldMap.put(fieldStruct.name + FIELD_SEPARATOR + currentClass.getSimpleName(), fieldStruct);
+                } else {
+                    fieldMap.put(fieldStruct.name, fieldStruct);
+                }
 
                 if (!fieldStruct.isStatic()) {
                     instanceFields.add(fieldStruct);
