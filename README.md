@@ -10,10 +10,10 @@ Talk is cheap, show me the code.
 <li>Faster java heap object copy (clone) by sun.misc.Unsafe  --Done
 
 <b>Near plan</b>
+<li>Custom UTF8 String - InProgress
 <li>MethodHandle 
 <li>Java Field access, OGNL support
 <li>Heap object serialiser and deserialiser (JSON/binary format)
-<li>Custom UTF8 String
 <li>String search / replace library
 <li>Template engine
 <li>Off-heap object facility
