@@ -5,10 +5,14 @@ import java.util.*;
 
 import static java.util.Collections.sort;
 import static java.util.Collections.unmodifiableList;
+import static woo.ba.ben.core.DataReaderFactory.unsignedInt;
+import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 import static woo.ba.ben.core.UnsafeFactory.getTypeSize;
 
 public class ClassStruct {
     public static final String FIELD_SEPARATOR = "#";
+    public static final int INVALID = -1;
+
     private static final Comparator<FieldStruct> FIELD_STRUCT_OFFSET_COMPARATOR = (f1, f2) -> (int) (f1.offset - f2.offset);
 
     public final Class realClass;
@@ -61,14 +65,30 @@ public class ClassStruct {
         return transientFields != null && !transientFields.isEmpty();
     }
 
+    public long getInstanceStartOffset() {
+        if (!hasInstanceFields()) {
+            return INVALID;
+        }
+
+        return instanceFields.get(0).offset;
+    }
+
     public long getInstanceBlockSize() {
         if (!hasInstanceFields()) {
-            return 0;
+            return INVALID;
         }
 
         final FieldStruct lastFieldStruct = instanceFields.get(instanceFields.size() - 1);
         final long size = lastFieldStruct.offset - instanceFields.get(0).offset;
         return size + getTypeSize(lastFieldStruct.type);
+    }
+
+    //!!Unsafe - not verified!!
+    public static long unsafeSizeOf(final Object object) {
+        if (object == null) {
+            return INVALID;
+        }
+        return UNSAFE.getAddress(unsignedInt(UNSAFE.getInt(object, 4L)) + 12L);
     }
 
     @Override

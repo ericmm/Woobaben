@@ -54,12 +54,4 @@ public interface IDataReader {
 
         return true;
     }
-
-    default long unsignedInt(final int num) {
-        return num & 0xFFFFFFFFL;
-    }
-
-    default int unsignedShort(final short num) {
-        return num & 0xFFFF;
-    }
 }

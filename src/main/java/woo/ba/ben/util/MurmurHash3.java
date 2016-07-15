@@ -1,7 +1,7 @@
 package woo.ba.ben.util;
 
 
-import static woo.ba.ben.core.DataReader.LITTLE_ENDIAN_DATA_READER;
+import static woo.ba.ben.core.DataReaderFactory.LITTLE_ENDIAN;
 
 public class MurmurHash3 {
 
@@ -21,7 +21,7 @@ public class MurmurHash3 {
 
         for (int i = offset; i < roundedEnd; i += 4) {
             // little endian load order
-            int k1 = LITTLE_ENDIAN_DATA_READER.readInt(data, i);
+            int k1 = LITTLE_ENDIAN.readInt(data, i);
             k1 *= c1;
             k1 = (k1 << 15) | (k1 >>> 17);  // ROTL32(k1,15);
             k1 *= c2;
@@ -159,8 +159,8 @@ public class MurmurHash3 {
 
         final int roundedEnd = offset + (len & 0xFFFFFFF0);  // round down to 16 byte block
         for (int i = offset; i < roundedEnd; i += 16) {
-            long k1 = LITTLE_ENDIAN_DATA_READER.readLong(key, i);
-            long k2 = LITTLE_ENDIAN_DATA_READER.readLong(key, i + 8);
+            long k1 = LITTLE_ENDIAN.readLong(key, i);
+            long k2 = LITTLE_ENDIAN.readLong(key, i + 8);
             k1 *= c1;
             k1 = Long.rotateLeft(k1, 31);
             k1 *= c2;
