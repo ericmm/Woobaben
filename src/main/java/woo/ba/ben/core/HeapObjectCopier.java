@@ -1,7 +1,5 @@
 package woo.ba.ben.core;
 
-import sun.misc.Unsafe;
-
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -9,10 +7,8 @@ import static java.lang.System.arraycopy;
 import static java.lang.reflect.Array.getLength;
 import static java.lang.reflect.Array.newInstance;
 import static woo.ba.ben.core.ClassStruct.getObjectClass;
-import static woo.ba.ben.core.ClassStruct.sizeOf;
 import static woo.ba.ben.core.ImmutableClasses.isImmutable;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
-import static woo.ba.ben.util.DataReader.unsignedInt;
 
 public class HeapObjectCopier {
     private HeapObjectCopier() {
@@ -43,8 +39,7 @@ public class HeapObjectCopier {
         }
 
         Object attributeInOriginalObj, attributeInTargetObj;
-        final FieldStruct[] instanceFields = classStruct.getInstanceFields();
-        for (final FieldStruct fieldStruct : instanceFields) {
+        for (final FieldStruct fieldStruct : classStruct.getInstanceFields()) {
             if (fieldStruct.isPrimitive()) {
                 copyPrimitive(originalObj, targetObject, fieldStruct);
             } else {
@@ -145,26 +140,26 @@ public class HeapObjectCopier {
         }
     }
 
-    //!!Unsafe - not verified!!
-    static Object shallowCopy(final Object obj) {
-        if (obj == null) {
-            return null;
-        }
-        final long size = sizeOf(obj);
-        final long start = toAddress(obj);
-        final long address = UNSAFE.allocateMemory(size);
-        UNSAFE.copyMemory(start, address, size);
-        return fromAddress(address);
-    }
-
-    private static long toAddress(final Object obj) {
-        final Object[] array = new Object[]{obj};
-        return unsignedInt(UNSAFE.getInt(array, (long) Unsafe.ARRAY_OBJECT_BASE_OFFSET));
-    }
-
-    private static Object fromAddress(final long address) {
-        final Object[] array = new Object[]{null};
-        UNSAFE.putLong(array, (long) Unsafe.ARRAY_OBJECT_BASE_OFFSET, address);
-        return array[0];
-    }
+//    //!!Unsafe - not verified!!
+//    static Object shallowCopy(final Object obj) {
+//        if (obj == null) {
+//            return null;
+//        }
+//        final long size = sizeOf(obj);
+//        final long start = toAddress(obj);
+//        final long address = UNSAFE.allocateMemory(size);
+//        UNSAFE.copyMemory(start, address, size);
+//        return fromAddress(address);
+//    }
+//
+//    private static long toAddress(final Object obj) {
+//        final Object[] array = new Object[]{obj};
+//        return LITTLE_ENDIAN_DATA_READER.unsignedInt(UNSAFE.getInt(array, (long) Unsafe.ARRAY_OBJECT_BASE_OFFSET));
+//    }
+//
+//    private static Object fromAddress(final long address) {
+//        final Object[] array = new Object[]{null};
+//        UNSAFE.putLong(array, (long) Unsafe.ARRAY_OBJECT_BASE_OFFSET, address);
+//        return array[0];
+//    }
 }

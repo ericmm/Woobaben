@@ -9,7 +9,7 @@ public class FieldStruct {
     public final String name;
     public final Class type;
     public final long offset;
-    public final int modifiers;
+    private final int modifiers;
 
     public FieldStruct(final Field field) {
         this.name = field.getName();
@@ -34,12 +34,16 @@ public class FieldStruct {
         return Modifier.isStatic(modifiers);
     }
 
+    public boolean isTransient() {
+        return Modifier.isTransient(modifiers);
+    }
+
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        FieldStruct that = (FieldStruct) o;
+        final FieldStruct that = (FieldStruct) o;
 
         if (offset != that.offset) return false;
         return name.equals(that.name);

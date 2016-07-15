@@ -77,7 +77,7 @@ public class UTF8Utils {
                 dest[destinationOffset++] = (byte) (0x80 | charValueInInt >> 6 & 0x3F);
                 dest[destinationOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
             } else {
-                // error, clean-up byte array;
+                // error, TODO: clean-up byte array;
                 return CoderResult.OVERFLOW;
             }
         }
@@ -88,8 +88,8 @@ public class UTF8Utils {
     private static CoderResult encodeInternal(final char[] source, final int offset, final int count, final byte[] dest, final int destOffset) {
         int sourceOffset = offset, destinationOffset = destOffset;
         final int sourceLength = source.length - sourceOffset;
-        int sourceRemaining = count > sourceLength ? sourceLength : count;
-        int remainingCapacity = dest.length - destinationOffset;
+        final int sourceRemaining = count > sourceLength ? sourceLength : count;
+        final int remainingCapacity = dest.length - destinationOffset;
         if (remainingCapacity < sourceRemaining) {
             return CoderResult.OVERFLOW;
         }
@@ -152,7 +152,7 @@ public class UTF8Utils {
             }
         }
 
-        byte[] dest = new byte[targetCapacity];
+        final byte[] dest = new byte[targetCapacity];
         int destOffset = 0;
         for (int i = offset; i < count; i++) {
             charValueInInt = source[i];
@@ -263,8 +263,8 @@ public class UTF8Utils {
         int sourceOffset = offset;
         long destinationOffset = destOffset;
         final int sourceLength = source.length - sourceOffset;
-        int sourceRemaining = count > sourceLength ? sourceLength : count;
-        int remainingCapacity = (int) (destLimit - destinationOffset);
+        final int sourceRemaining = count > sourceLength ? sourceLength : count;
+        final int remainingCapacity = (int) (destLimit - destinationOffset);
         if (remainingCapacity < sourceRemaining) {
             return CoderResult.OVERFLOW;
         }

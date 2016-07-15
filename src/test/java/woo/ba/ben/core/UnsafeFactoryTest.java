@@ -12,7 +12,6 @@ public class UnsafeFactoryTest {
         final Unsafe unsafe = UnsafeFactory.UNSAFE;
 
         assertTrue(unsafe != null);
-        assertTrue(UnsafeFactory.ADDRESS_SIZE > 0);
         assertTrue(UnsafeFactory.OBJECT_REF_SIZE > 0);
     }
 

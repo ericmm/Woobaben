@@ -3,63 +3,38 @@ package woo.ba.ben.core;
 import java.lang.reflect.Field;
 import java.util.*;
 
-import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
-import static woo.ba.ben.util.DataReader.unsignedInt;
+import static java.util.Collections.sort;
+import static java.util.Collections.unmodifiableList;
+import static woo.ba.ben.core.UnsafeFactory.getTypeSize;
 
 public class ClassStruct {
     public static final String FIELD_SEPARATOR = "#";
-    private static final Comparator<FieldStruct> FIELD_STRUCT_OFFSET_COMPARATOR = new Comparator<FieldStruct>() {
-        @Override
-        public int compare(final FieldStruct f1, final FieldStruct f2) {
-            return (int) (f1.offset - f2.offset);
-        }
-    };
+    private static final Comparator<FieldStruct> FIELD_STRUCT_OFFSET_COMPARATOR = (f1, f2) -> (int) (f1.offset - f2.offset);
+
     public final Class realClass;
 
-    private FieldStruct[] instanceFields;
+    private List<FieldStruct> instanceFields;
+    private List<FieldStruct> transientFields;
     private Map<String, FieldStruct> fieldMap;
 
     public ClassStruct(final Class realClass) {
         if (realClass == null) {
-            throw new IllegalArgumentException("Unsupported class: " + realClass);
+            throw new IllegalArgumentException("Input parameter should not be null");
         }
 
         this.realClass = realClass;
 
         final int fieldCount = getFieldCount(realClass);
         if (fieldCount > 0) {
-            final List<FieldStruct> instanceFieldList = parseFields(realClass, fieldCount);
-            if (instanceFieldList.size() > 0) {
-                instanceFields = initInstanceFields(instanceFieldList);
-            }
+            parseFields(realClass, fieldCount);
+            sort(instanceFields, FIELD_STRUCT_OFFSET_COMPARATOR);
+            instanceFields = unmodifiableList(instanceFields);
+            transientFields = unmodifiableList(transientFields);
         }
-    }
-
-    public static Field getField(final Class clazz, final String filedName) throws NoSuchFieldException {
-        Field[] declaredFields;
-        Class currentClass = clazz;
-        while (currentClass.getSuperclass() != null) { //except Object.class
-            declaredFields = currentClass.getDeclaredFields();
-            for (int i = 0; i < declaredFields.length; i++) {
-                if (declaredFields[i].getName().equals(filedName)) {
-                    return declaredFields[i];
-                }
-            }
-            currentClass = currentClass.getSuperclass();
-        }
-        throw new NoSuchFieldException("No filed [" + filedName + "] found on class [" + clazz + "]");
     }
 
     public static Class getObjectClass(final Object obj) {
         return obj instanceof Class ? (Class) obj : obj.getClass();
-    }
-
-    //!!Unsafe - not verified!!
-    public static long sizeOf(final Object object) {
-        if (object == null) {
-            return -1;
-        }
-        return UNSAFE.getAddress(unsignedInt(UNSAFE.getInt(object, 4L)) + 12L);
     }
 
     public FieldStruct getField(final String fieldName) {
@@ -70,20 +45,30 @@ public class ClassStruct {
         return fieldMap == null ? 0 : fieldMap.size();
     }
 
-    public FieldStruct[] getInstanceFields() {
+    public List<FieldStruct> getInstanceFields() {
         return instanceFields;
     }
 
     public boolean hasInstanceFields() {
-        return instanceFields != null;
+        return instanceFields != null && !instanceFields.isEmpty();
     }
 
-    //!!Unsafe - not verified!!
-    public long sizeOf() {
-        if (instanceFields == null) {
-            return -1;
+    public List<FieldStruct> getTransientFields() {
+        return transientFields;
+    }
+
+    public boolean hasTransientFields() {
+        return transientFields != null && !transientFields.isEmpty();
+    }
+
+    public long getInstanceBlockSize() {
+        if (!hasInstanceFields()) {
+            return 0;
         }
-        return ((instanceFields[instanceFields.length - 1].offset / 8) + 1) * 8;   // padding
+
+        final FieldStruct lastFieldStruct = instanceFields.get(instanceFields.size() - 1);
+        final long size = lastFieldStruct.offset - instanceFields.get(0).offset;
+        return size + getTypeSize(lastFieldStruct.type);
     }
 
     @Override
@@ -105,21 +90,17 @@ public class ClassStruct {
         return realClass.hashCode();
     }
 
-    private FieldStruct[] initInstanceFields(final List<FieldStruct> instanceFieldList) {
-        Collections.sort(instanceFieldList, FIELD_STRUCT_OFFSET_COMPARATOR);
-        final FieldStruct[] instanceFields = new FieldStruct[instanceFieldList.size()];
-        return instanceFieldList.toArray(instanceFields);
-    }
-
-    private List<FieldStruct> parseFields(final Class realClass, final int fieldCount) {
+    private void parseFields(final Class realClass, final int fieldCount) {
         fieldMap = new HashMap<>(fieldCount);
-        final List<FieldStruct> instanceFields = new ArrayList<>(fieldCount);
+        instanceFields = new ArrayList<>(fieldCount);
+        transientFields = new ArrayList<>(fieldCount);
 
         FieldStruct fieldStruct;
         Field[] declaredFields;
         Class currentClass = realClass;
         while (currentClass.getSuperclass() != null) { //except Object.class
             declaredFields = currentClass.getDeclaredFields();
+
             for (int i = declaredFields.length; --i >= 0; ) {
                 fieldStruct = new FieldStruct(declaredFields[i]);
                 if (fieldMap.containsKey(fieldStruct.name)) {
@@ -131,10 +112,13 @@ public class ClassStruct {
                 if (!fieldStruct.isStatic()) {
                     instanceFields.add(fieldStruct);
                 }
+
+                if (fieldStruct.isTransient()) {
+                    transientFields.add(fieldStruct);
+                }
             }
             currentClass = currentClass.getSuperclass();
         }
-        return instanceFields;
     }
 
     private int getFieldCount(final Class realClass) {
