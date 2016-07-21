@@ -1,7 +1,5 @@
 package woo.ba.ben.core;
 
-import sun.misc.Unsafe;
-
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -9,8 +7,6 @@ import static java.lang.System.arraycopy;
 import static java.lang.reflect.Array.getLength;
 import static java.lang.reflect.Array.newInstance;
 import static woo.ba.ben.core.ClassStruct.getObjectClass;
-import static woo.ba.ben.core.ClassStruct.unsafeSizeOf;
-import static woo.ba.ben.core.DataReaderFactory.unsignedInt;
 import static woo.ba.ben.core.ImmutableClasses.isImmutable;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
@@ -36,7 +32,7 @@ public class HeapObjectCopier {
             return originalObj;
         }
 
-        final T targetObject = createNonArrayInstance(originalObj, objectClass, objectMap);
+        final T targetObject = createNonArrayInstanceIfNeeded(originalObj, objectClass, objectMap);
         final ClassStruct classStruct = ClassStructFactory.get(objectClass);
         if (!classStruct.hasInstanceFields()) {
             return targetObject;
@@ -89,7 +85,7 @@ public class HeapObjectCopier {
         }
 
         final int length = getLength(arrayObj);
-        final T copiedArrayObj = createArrayInstance(arrayObj, length, arrayClass, objectMap);
+        final T copiedArrayObj = createArrayInstanceIfNeeded(arrayObj, length, arrayClass, objectMap);
         if (length == 0) {
             return copiedArrayObj;
         }
@@ -118,24 +114,20 @@ public class HeapObjectCopier {
         return copiedArrayObj;
     }
 
-    private static <T> T createArrayInstance(final T originalObj, final int length, final Class<T> objClass, final Map<Object, Object> objectMap) {
+    private static <T> T createArrayInstanceIfNeeded(final T originalObj, final int length, final Class<T> objClass, final Map<Object, Object> objectMap) {
         T targetArray = (T) objectMap.get(originalObj);
         if (targetArray == null) {
-            final Class componentType = objClass.getComponentType();
-            targetArray = (T) newInstance(componentType, length);
+            targetArray = createArray(objClass.getComponentType(), length);
             objectMap.put(originalObj, targetArray);
         }
         return targetArray;
     }
 
-    private static <T> T createNonArrayInstance(final T originalObj, final Class<T> objectClass, final Map<Object, Object> objectMap) {
+    private static <T> T createNonArrayInstanceIfNeeded(final T originalObj, final Class<T> objectClass, final Map<Object, Object> objectMap) {
         try {
             T targetObject = (T) objectMap.get(originalObj);
             if (targetObject == null) {
-                targetObject = (T) UNSAFE.allocateInstance(objectClass);
-                if (!UNSAFE.shouldBeInitialized(objectClass)) {
-                    UNSAFE.ensureClassInitialized(objectClass);
-                }
+                targetObject = createObject(objectClass);
                 objectMap.put(originalObj, targetObject);
             }
             return targetObject;
@@ -144,10 +136,23 @@ public class HeapObjectCopier {
         }
     }
 
+    private static <T> T createArray(final Class componentType, final int length) {
+        return (T) newInstance(componentType, length);
+    }
+
+    private static <T> T createObject(final Class<T> objectClass) throws InstantiationException {
+        final T targetObject = (T) UNSAFE.allocateInstance(objectClass);
+        if (!UNSAFE.shouldBeInitialized(objectClass)) {
+            UNSAFE.ensureClassInitialized(objectClass);
+        }
+        return targetObject;
+    }
+
+    /*
     //!!Unsafe - not verified!!
     static Object unsafeShallowCopy(final Object obj) {
-        if (obj == null) {
-            return null;
+        if (obj == null || isImmutable(obj.getClass())) {
+            return obj;
         }
         final long size = unsafeSizeOf(obj);
         final long start = toAddress(obj);
@@ -158,12 +163,42 @@ public class HeapObjectCopier {
 
     private static long toAddress(final Object obj) {
         final Object[] array = new Object[]{obj};
-        return unsignedInt(UNSAFE.getInt(array, (long) Unsafe.ARRAY_OBJECT_BASE_OFFSET));
+        return unsignedInt(UNSAFE.getInt(array, (long) ARRAY_OBJECT_BASE_OFFSET));
     }
 
     private static Object fromAddress(final long address) {
         final Object[] array = new Object[]{null};
-        UNSAFE.putLong(array, (long) Unsafe.ARRAY_OBJECT_BASE_OFFSET, address);
+        UNSAFE.putLong(array, (long) ARRAY_OBJECT_BASE_OFFSET, address);
         return array[0];
     }
+
+    public static <T> T shallowCopy(final T obj) throws InstantiationException {
+        if (obj == null || isImmutable(obj.getClass())) {
+            return obj;
+        }
+
+        final Class<T> objClass = (Class<T>) obj.getClass();
+        if (objClass.isArray()) {
+            final int length = getLength(obj);
+            final T arrayObj = createArray(objClass.getComponentType(), length);
+            arraycopy(obj, 0, arrayObj, 0, length);
+            return arrayObj;
+        } else {
+            final ClassStruct struct = ClassStructFactory.get(objClass);
+            final long instanceBlockSize = struct.getInstanceBlockSize();
+            final byte[] buffer = new byte[(int) instanceBlockSize];
+
+            // copy field value block to an array buffer
+            UNSAFE.copyMemory(obj, struct.getStartOffset(), buffer, ARRAY_BYTE_BASE_OFFSET, instanceBlockSize);
+
+            final T newObj = createObject(objClass);
+            restoreFromBuffer(buffer, struct, newObj);
+            return newObj;
+        }
+    }
+
+    private static <T> void restoreFromBuffer(final byte[] buffer, final ClassStruct classStruct, final T newObj) {
+        //TODO
+    }
+    */
 }

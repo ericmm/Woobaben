@@ -6,6 +6,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET;
+import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 public class ClassStructTest {
     @Test
@@ -38,20 +39,35 @@ public class ClassStructTest {
 
     @Test
     public void shouldCopyMemory(){
-        TestClassObj obj1 = new TestClassObj();
+        final TestClassObj obj1 = new TestClassObj();
         obj1.setIntFieldInClassObj(123456);
 
-        ClassStruct struct = new ClassStruct(TestClassObj.class);
-        final long startOffset = struct.getInstanceStartOffset();
+        final ClassStruct struct = new ClassStruct(TestClassObj.class);
+        final long startOffset = struct.getStartOffset();
         final long blockSize = struct.getInstanceBlockSize();
-        byte[] obj2 = new byte[(int) blockSize];
+        final byte[] buffer = new byte[(int) blockSize];
 
         final FieldStruct fieldStruct = struct.getField("intFieldInClassObj");
-        int fieldStart = (int) (fieldStruct.offset - startOffset);
-        UnsafeFactory.UNSAFE.copyMemory(obj1, startOffset, obj2, ARRAY_BYTE_BASE_OFFSET, blockSize);
+        final int fieldStart = (int) (fieldStruct.offset - startOffset);
+        UNSAFE.copyMemory(obj1, startOffset, buffer, ARRAY_BYTE_BASE_OFFSET, blockSize);
 
-        final int readInt = DataReaderFactory.getNativeOrderDataReader().readInt(obj2, fieldStart);
-
+        final IDataReader nativeOrderDataReader = DataReaderFactory.getNativeOrderDataReader();
+        final int readInt = nativeOrderDataReader.readInt(buffer, fieldStart);
         assertThat(readInt, equalTo(123456));
+
+//        final TestClassObj obj2 = new TestClassObj();
+//        UNSAFE.copyMemory(buffer, ARRAY_BYTE_BASE_OFFSET, obj2, fieldStart, blockSize);
+
+        final int[] intArray = new int[] {12, 34, 56};
+        final Class arrayClass = intArray.getClass();
+        final ClassStruct intArrayStruct = new ClassStruct(arrayClass);
+        final long intArrayStartOffset = intArrayStruct.getStartOffset();
+        final long intArrayBlockSize = intArrayStruct.getArrayBlockSize(intArray.length);
+        final byte[] arrayBuffer = new byte[(int) intArrayBlockSize];
+
+        UNSAFE.copyMemory(intArray, intArrayStartOffset, arrayBuffer, ARRAY_BYTE_BASE_OFFSET, intArrayBlockSize);
+
+        final int element1 = nativeOrderDataReader.readInt(arrayBuffer, 1 * UNSAFE.arrayIndexScale(arrayClass));
+        assertThat(element1, is(34));
     }
 }

@@ -1,17 +1,20 @@
 package woo.ba.ben.core;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static java.util.Collections.sort;
 import static java.util.Collections.unmodifiableList;
-import static woo.ba.ben.core.DataReaderFactory.unsignedInt;
+import static sun.misc.Unsafe.INVALID_FIELD_OFFSET;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 import static woo.ba.ben.core.UnsafeFactory.getTypeSize;
 
 public class ClassStruct {
-    public static final String FIELD_SEPARATOR = "#";
-    public static final int INVALID = -1;
+    public static final String FIELD_SEPARATOR = ".";
 
     private static final Comparator<FieldStruct> FIELD_STRUCT_OFFSET_COMPARATOR = (f1, f2) -> (int) (f1.offset - f2.offset);
 
@@ -28,12 +31,14 @@ public class ClassStruct {
 
         this.realClass = realClass;
 
-        final int fieldCount = getFieldCount(realClass);
-        if (fieldCount > 0) {
-            parseFields(realClass, fieldCount);
-            sort(instanceFields, FIELD_STRUCT_OFFSET_COMPARATOR);
-            instanceFields = unmodifiableList(instanceFields);
-            transientFields = unmodifiableList(transientFields);
+        if (!realClass.isArray()) {
+            final int fieldCount = getFieldCount(realClass);
+            if (fieldCount > 0) {
+                parseFields(realClass, fieldCount);
+                sort(instanceFields, FIELD_STRUCT_OFFSET_COMPARATOR);
+                instanceFields = unmodifiableList(instanceFields);
+                transientFields = unmodifiableList(transientFields);
+            }
         }
     }
 
@@ -65,9 +70,13 @@ public class ClassStruct {
         return transientFields != null && !transientFields.isEmpty();
     }
 
-    public long getInstanceStartOffset() {
+    public long getStartOffset() {
+        if (realClass.isArray()) {
+            return UNSAFE.arrayBaseOffset(realClass);
+        }
+
         if (!hasInstanceFields()) {
-            return INVALID;
+            return INVALID_FIELD_OFFSET;
         }
 
         return instanceFields.get(0).offset;
@@ -75,7 +84,7 @@ public class ClassStruct {
 
     public long getInstanceBlockSize() {
         if (!hasInstanceFields()) {
-            return INVALID;
+            return INVALID_FIELD_OFFSET;
         }
 
         final FieldStruct lastFieldStruct = instanceFields.get(instanceFields.size() - 1);
@@ -83,13 +92,23 @@ public class ClassStruct {
         return size + getTypeSize(lastFieldStruct.type);
     }
 
+    public long getArrayBlockSize(final int length) {
+        if (!realClass.isArray() || length <= 0) {
+            return INVALID_FIELD_OFFSET;
+        }
+
+        return UNSAFE.arrayIndexScale(realClass) * length;
+    }
+
+    /*
     //!!Unsafe - not verified!!
     public static long unsafeSizeOf(final Object object) {
         if (object == null) {
-            return INVALID;
+            return INVALID_FIELD_OFFSET;
         }
         return UNSAFE.getAddress(unsignedInt(UNSAFE.getInt(object, 4L)) + 12L);
     }
+    */
 
     @Override
     public String toString() {
@@ -124,7 +143,7 @@ public class ClassStruct {
             for (int i = declaredFields.length; --i >= 0; ) {
                 fieldStruct = new FieldStruct(declaredFields[i]);
                 if (fieldMap.containsKey(fieldStruct.name)) {
-                    fieldMap.put(fieldStruct.name + FIELD_SEPARATOR + currentClass.getSimpleName(), fieldStruct);
+                    fieldMap.put(currentClass.getSimpleName() + FIELD_SEPARATOR + fieldStruct.name, fieldStruct);
                 } else {
                     fieldMap.put(fieldStruct.name, fieldStruct);
                 }
