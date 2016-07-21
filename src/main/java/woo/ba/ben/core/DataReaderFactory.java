@@ -17,13 +17,4 @@ public class DataReaderFactory {
     public static IDataReader getJvmOrNetworkDataReader() {
         return BIG_ENDIAN;
     }
-
-
-    public static long unsignedInt(final int num) {
-        return num & 0xFFFFFFFFL;
-    }
-
-    public static int unsignedShort(final short num) {
-        return num & 0xFFFF;
-    }
 }
