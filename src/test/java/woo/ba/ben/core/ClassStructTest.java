@@ -51,7 +51,7 @@ public class ClassStructTest {
         final int fieldStart = (int) (fieldStruct.offset - startOffset);
         UNSAFE.copyMemory(obj1, startOffset, buffer, ARRAY_BYTE_BASE_OFFSET, blockSize);
 
-        final IDataReader nativeOrderDataReader = DataReaderFactory.getNativeOrderDataReader();
+        final IHeapDataReader nativeOrderDataReader = DataReaderFactory.getNativeOrderHeapDataReader();
         final int readInt = nativeOrderDataReader.readInt(buffer, fieldStart);
         assertThat(readInt, equalTo(123456));
 
