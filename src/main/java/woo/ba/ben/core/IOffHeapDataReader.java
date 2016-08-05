@@ -44,7 +44,7 @@ public interface IOffHeapDataReader extends IDataReader {
         final int loopTimes = length / BYTES;
         final int loopLength = loopTimes * BYTES;
         for (int startOffset = 0; startOffset < loopLength; startOffset += BYTES) {
-            if ((readLong(startOffset) ^ readLong(startOffset)) != 0) {
+            if (0L != (UNSAFE.getLong(startOffset) ^ UNSAFE.getLong(startOffset))) {
                 return false;
             }
         }
@@ -55,7 +55,6 @@ public interface IOffHeapDataReader extends IDataReader {
                 return false;
             }
         }
-
         return true;
     }
 
