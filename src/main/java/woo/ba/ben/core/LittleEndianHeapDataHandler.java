@@ -1,8 +1,8 @@
 package woo.ba.ben.core;
 
 
-class LittleEndianHeapDataReader extends AbstractDataReader implements IHeapDataReader {
-    LittleEndianHeapDataReader() {
+class LittleEndianHeapDataHandler extends AbstractDataReader implements IHeapDataHandler {
+    LittleEndianHeapDataHandler() {
     }
 
     @Override

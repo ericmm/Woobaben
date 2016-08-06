@@ -7,8 +7,8 @@ import static java.lang.Float.intBitsToFloat;
 import static woo.ba.ben.core.UnsafeFactory.IS_NATIVE_ORDER_BIG_ENDIAN;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
-class LittleEndianOffHeapDataReader extends AbstractDataReader implements IOffHeapDataReader {
-    LittleEndianOffHeapDataReader() {
+class LittleEndianOffHeapDataHandler extends AbstractDataReader implements IOffHeapDataHandler {
+    LittleEndianOffHeapDataHandler() {
     }
 
     @Override

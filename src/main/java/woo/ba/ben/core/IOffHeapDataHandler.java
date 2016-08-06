@@ -10,7 +10,7 @@ import static woo.ba.ben.core.IDataReader.unsignedInt;
 import static woo.ba.ben.core.IDataReader.unsignedShort;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
-public interface IOffHeapDataReader extends IDataReader {
+public interface IOffHeapDataHandler extends IDataReader {
 
     default int readUnsignedShort(final long startAddress) {
         return unsignedShort(readShort(startAddress));

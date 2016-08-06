@@ -9,7 +9,7 @@ import static woo.ba.ben.core.IDataReader.unsignedInt;
 import static woo.ba.ben.core.IDataReader.unsignedShort;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
-public interface IHeapDataReader extends IDataReader {
+public interface IHeapDataHandler extends IDataReader {
 
     default int readUnsignedShort(final byte[] buffer, final int startIndex) {
         return unsignedShort(readShort(buffer, startIndex));

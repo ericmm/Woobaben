@@ -5,14 +5,15 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static woo.ba.ben.core.DataReaderFactory.OFF_HEAP_READER_B;
-import static woo.ba.ben.core.DataReaderFactory.OFF_HEAP_READER_L;
+import static woo.ba.ben.core.DataHandlerFactory.OFF_HEAP_READER_B;
+import static woo.ba.ben.core.DataHandlerFactory.OFF_HEAP_READER_L;
 import static woo.ba.ben.core.IDataReader.BYTE_MASK_LONG;
+import static woo.ba.ben.core.IDataReader.swap;
 import static woo.ba.ben.core.UnsafeFactory.IS_NATIVE_ORDER_BIG_ENDIAN;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
-public class LittleEndianOffHeapDataReaderTest {
-    private IOffHeapDataReader readerL, readerB;
+public class LittleEndianOffHeapDataHandlerTest {
+    private IOffHeapDataHandler readerL, readerB;
     private static long address;
 
     @BeforeClass
@@ -45,6 +46,7 @@ public class LittleEndianOffHeapDataReaderTest {
 
         System.out.println("System native byte order  =====>" + (IS_NATIVE_ORDER_BIG_ENDIAN ? "big endian" : "little endian"));
         System.out.println("Unsafe read value =====>" + unsafeReadValue);
+        System.out.println("Unsafe read value & bit swap =====>" + swap(unsafeReadValue));
         System.out.println("LE Reader  =====>" + littleEndianValue);
         System.out.println("LE Raw  =====>" + littleEndianRaw);
         System.out.println("BE Reader  =====>" + bigEndianValue);
@@ -52,8 +54,9 @@ public class LittleEndianOffHeapDataReaderTest {
 
         assertEquals(littleEndianValue, littleEndianRaw);
         assertEquals(bigEndianValue, bigEndianRaw);
+        assertEquals(bigEndianValue, swap(littleEndianValue));
 
-        if(IS_NATIVE_ORDER_BIG_ENDIAN) {
+        if (IS_NATIVE_ORDER_BIG_ENDIAN) {
             assertEquals(unsafeReadValue, bigEndianValue);
         } else {
             assertEquals(littleEndianValue, unsafeReadValue);

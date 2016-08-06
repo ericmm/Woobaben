@@ -1,7 +1,7 @@
 package woo.ba.ben.util;
 
 
-import static woo.ba.ben.core.DataReaderFactory.HEAP_READER_L;
+import static woo.ba.ben.core.DataHandlerFactory.HEAP_READER_L;
 
 public class MurmurHash3 {
 
