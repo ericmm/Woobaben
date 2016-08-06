@@ -1,6 +1,8 @@
 package woo.ba.ben.core;
 
-public class BigEndianHeapDataReader extends AbstractDataReader implements IHeapDataReader {
+class BigEndianHeapDataReader extends AbstractDataReader implements IHeapDataReader {
+    BigEndianHeapDataReader() {
+    }
 
     @Override
     public long readLong(final byte[] buffer, final int startIndex) {

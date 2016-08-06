@@ -7,7 +7,9 @@ import static java.lang.Float.intBitsToFloat;
 import static woo.ba.ben.core.UnsafeFactory.IS_NATIVE_ORDER_BIG_ENDIAN;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
-public class BigEndianOffHeapDataReader extends AbstractDataReader implements IOffHeapDataReader {
+class BigEndianOffHeapDataReader extends AbstractDataReader implements IOffHeapDataReader {
+    BigEndianOffHeapDataReader() {
+    }
 
     @Override
     public long readLong(final long startAddress) {

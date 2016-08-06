@@ -8,6 +8,7 @@ Talk is cheap, show me the code.
 <li>ArrayBackedHashSet - Array Backed Hash Set  --Done 
 <li>Faster java object attribute accessors by utlilising sun.misc.Unsafe  --Done 
 <li>Faster java heap object copy (clone) by sun.misc.Unsafe  --Done
+<li>Data Reader heap/off-heap --Done
 
 <b>Near plan</b>
 <li>Custom UTF8 String - InProgress

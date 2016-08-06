@@ -1,7 +1,10 @@
 package woo.ba.ben.core;
 
 
-public class LittleEndianHeapDataReader extends AbstractDataReader implements IHeapDataReader {
+class LittleEndianHeapDataReader extends AbstractDataReader implements IHeapDataReader {
+    LittleEndianHeapDataReader() {
+    }
+
     @Override
     public long readLong(final byte[] buffer, final int startIndex) {
         return makeLong(
