@@ -37,7 +37,7 @@ public class LittleEndianOffHeapDataHandlerTest {
     }
 
     @Test
-    public void shouldPrintOutValue() {
+    public void shouldReadCorrectValue() {
         long unsafeReadValue = UNSAFE.getLong(address);
         long littleEndianValue = readerL.readLong(address);
         long bigEndianValue = readerB.readLong(address);
@@ -61,6 +61,27 @@ public class LittleEndianOffHeapDataHandlerTest {
         } else {
             assertEquals(littleEndianValue, unsafeReadValue);
         }
+    }
+
+
+    @Test
+    public void testPerformance(){
+        int loop_count = 2_000_000_000;
+        long start, end;
+
+        start = System.nanoTime();
+        for(int i = 1; i <= loop_count; i++){
+            swap(readerL.readLong(address));
+        }
+        end = System.nanoTime();
+        System.out.println("swap from readerL took "+(end - start) +" nano sec");
+
+        start = System.nanoTime();
+        for(int i = 1; i <= loop_count; i++){
+            readLongRawB(address);
+        }
+        end = System.nanoTime();
+        System.out.println("readLongRawB took "+(end - start) +" nano sec");
     }
 
     private long readLongRawB(final long startAddress) {

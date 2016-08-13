@@ -3,375 +3,250 @@ package woo.ba.ben.core;
 
 import java.nio.charset.CoderResult;
 
+import static java.lang.Math.min;
+import static java.nio.charset.CoderResult.OVERFLOW;
+import static java.nio.charset.CoderResult.UNDERFLOW;
+import static java.util.Arrays.fill;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 public class UTF8Utils {
 
-    public static CoderResult encode(final char[] source, final int offset, final int count, final byte[] dest, final int destOffset) {
-        if (source == null || dest == null || offset < 0 || count < 0 || destOffset < 0) {
-            throw new IllegalArgumentException("Illegal arguments");
+    public static int encodingDestBlockSize(final char[] source, final int srcStartOffset, final int srcLimit) {
+        if (source == null || srcStartOffset < 0 || srcLimit < 0) {
+            throw new IllegalArgumentException();
         }
 
-        int sourceOffset = offset, destinationOffset = destOffset;
-        final int sourceLength = source.length - sourceOffset;
-        int sourceRemaining = count > sourceLength ? sourceLength : count;
-        int remainingCapacity = dest.length - destinationOffset;
-        if (remainingCapacity < sourceRemaining) {
-            return CoderResult.OVERFLOW;
-        }
+        int sourceStartOffset = srcStartOffset;
+        final int sourceLength = source.length - sourceStartOffset;
+        int sourceRemaining = min(sourceLength, srcLimit);
 
-        // handle ascii encoded strings in an optimised loop
-        final int smallerLength = Math.min(sourceRemaining, remainingCapacity);
-        while (destinationOffset < smallerLength && source[sourceOffset] < 0x80) {
-            dest[destinationOffset++] = (byte) source[sourceOffset++];
+        int size = 0;
+        while (sourceStartOffset < sourceRemaining && source[sourceStartOffset] < 0x80) {
+            sourceStartOffset++;
+            size++;
         }
 
         int charValueInInt;
-        for (int i = sourceOffset; i < sourceRemaining; i++) {
+        for (int i = sourceStartOffset; i < sourceRemaining; i++) {
             charValueInInt = source[i];
-
             if (charValueInInt < 0x80) {
-                //check remaining capacity
-                remainingCapacity--;
-                sourceRemaining--;
-                if (remainingCapacity < sourceRemaining) {
-                    return CoderResult.OVERFLOW;
-                }
-
-                // 1 bit
-                dest[destinationOffset++] = (byte) charValueInInt;
+                size++;
             } else if (charValueInInt < 0x800) {
-                //check remaining capacity
-                remainingCapacity -= 2;
-                sourceRemaining--;
-                if (remainingCapacity < sourceRemaining) {
-                    return CoderResult.OVERFLOW;
-                }
-
-                // 2 bits
-                dest[destinationOffset++] = (byte) (0xC0 | charValueInInt >> 6);
-                dest[destinationOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
+                size += 2;
             } else if (charValueInInt < 0x10000) {
-                //check remaining capacity
-                remainingCapacity -= 3;
-                sourceRemaining--;
-                if (remainingCapacity < sourceRemaining) {
-                    return CoderResult.OVERFLOW;
-                }
-
-                // 3 bits
-                dest[destinationOffset++] = (byte) (0xE0 | charValueInInt >> 12);
-                dest[destinationOffset++] = (byte) (0x80 | charValueInInt >> 6 & 0x3F);
-                dest[destinationOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
+                size += 3;
             } else if (charValueInInt < 0x200000) {
-                //check remaining capacity
-                remainingCapacity -= 4;
-                sourceRemaining--;
-                if (remainingCapacity < sourceRemaining) {
-                    return CoderResult.OVERFLOW;
-                }
-
-                // 4 bits
-                dest[destinationOffset++] = (byte) (0xF0 | charValueInInt >> 18);
-                dest[destinationOffset++] = (byte) (0x80 | charValueInInt >> 12 & 0x3F);
-                dest[destinationOffset++] = (byte) (0x80 | charValueInInt >> 6 & 0x3F);
-                dest[destinationOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
+                size += 4;
             } else {
-                // error, TODO: clean-up byte array;
-                return CoderResult.OVERFLOW;
+                return -1;
             }
         }
-        return CoderResult.UNDERFLOW;
+        return size;
     }
 
-    // no boundaries checking
-    private static CoderResult encodeInternal(final char[] source, final int offset, final int count, final byte[] dest, final int destOffset) {
-        int sourceOffset = offset, destinationOffset = destOffset;
-        final int sourceLength = source.length - sourceOffset;
-        final int sourceRemaining = count > sourceLength ? sourceLength : count;
-        final int remainingCapacity = dest.length - destinationOffset;
-        if (remainingCapacity < sourceRemaining) {
-            return CoderResult.OVERFLOW;
+    public static byte[] encode(final char[] source, final int srcStartOffset, final int srcLimit) {
+        final int size = encodingDestBlockSize(source, srcStartOffset, srcLimit);
+        if (size > 0) {
+            final byte[] destination = new byte[size];
+            encodeInternal(source, srcStartOffset, srcLimit, destination, 0, destination.length);
+            return destination;
         }
+        return null;
+    }
 
-        // handle ascii encoded strings in an optimised loop
-        final int smallerLength = Math.min(sourceRemaining, remainingCapacity);
-        while (destinationOffset < smallerLength && source[sourceOffset] < 0x80) {
-            dest[destinationOffset++] = (byte) source[sourceOffset++];
+    public static void encodeInternal(final char[] source, final int srcStartOffset, final int srcLimit,
+                                      final byte[] destination, final int destStartOffset, final int destLimit) {
+
+        int sourceStartOffset = srcStartOffset, destinationStartOffset = destStartOffset;
+        final int sourceLength = source.length - sourceStartOffset;
+        int sourceRemaining = min(sourceLength, srcLimit);
+        while (sourceStartOffset < sourceRemaining && source[sourceStartOffset] < 0x80) {
+            destination[destinationStartOffset++] = (byte) source[sourceStartOffset++];
         }
 
         int charValueInInt;
-        for (int i = sourceOffset; i < sourceRemaining; i++) {
+        for (int i = sourceStartOffset; i < sourceRemaining; i++) {
             charValueInInt = source[i];
 
             if (charValueInInt < 0x80) {
-                // 1 bit
-                dest[destinationOffset++] = (byte) charValueInInt;
+                destination[destinationStartOffset++] = (byte) charValueInInt;
             } else if (charValueInInt < 0x800) {
                 // 2 bits
-                dest[destinationOffset++] = (byte) (0xC0 | charValueInInt >> 6);
-                dest[destinationOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
+                destination[destinationStartOffset++] = (byte) (0xC0 | charValueInInt >> 6);
+                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
             } else if (charValueInInt < 0x10000) {
                 // 3 bits
-                dest[destinationOffset++] = (byte) (0xE0 | charValueInInt >> 12);
-                dest[destinationOffset++] = (byte) (0x80 | charValueInInt >> 6 & 0x3F);
-                dest[destinationOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
-            } else if (charValueInInt < 0x200000) {
-                // 4 bits
-                dest[destinationOffset++] = (byte) (0xF0 | charValueInInt >> 18);
-                dest[destinationOffset++] = (byte) (0x80 | charValueInInt >> 12 & 0x3F);
-                dest[destinationOffset++] = (byte) (0x80 | charValueInInt >> 6 & 0x3F);
-                dest[destinationOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
-            } else {
-                // error, clean-up byte array;
-                return CoderResult.OVERFLOW;
-            }
-        }
-        return CoderResult.UNDERFLOW;
-    }
-
-    public static byte[] encode(final char[] source, final int offset, final int count) {
-        if (source == null || offset < 0 || count < 0) {
-            throw new IllegalArgumentException("Illegal argument");
-        }
-
-        int targetCapacity = 0;
-        int charValueInInt;
-        for (int i = offset; i < count; i++) {
-            charValueInInt = source[i];
-            if (charValueInInt < 0x80) {
-                targetCapacity++;
-            } else if (charValueInInt < 0x800) {
-                targetCapacity += 2;
-            } else if (charValueInInt < 0x10000) {
-                targetCapacity += 3;
-            } else if (charValueInInt < 0x200000) {
-                targetCapacity += 4;
-            } else {
-                throw new IllegalArgumentException("Containing unrecognised character:" + source[i]);
-            }
-        }
-
-        final byte[] dest = new byte[targetCapacity];
-        int destOffset = 0;
-        for (int i = offset; i < count; i++) {
-            charValueInInt = source[i];
-
-            if (charValueInInt < 0x80) {
-                // 1 bit
-                dest[destOffset++] = (byte) charValueInInt;
-            } else if (charValueInInt < 0x800) {
-                // 2 bits
-                dest[destOffset++] = (byte) (0xC0 | charValueInInt >> 6);
-                dest[destOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
-            } else if (charValueInInt < 0x10000) {
-                // 3 bits
-                dest[destOffset++] = (byte) (0xE0 | charValueInInt >> 12);
-                dest[destOffset++] = (byte) (0x80 | charValueInInt >> 6 & 0x3F);
-                dest[destOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
+                destination[destinationStartOffset++] = (byte) (0xE0 | charValueInInt >> 12);
+                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt >> 6 & 0x3F);
+                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
             } else {
                 // 4 bits
-                dest[destOffset++] = (byte) (0xF0 | charValueInInt >> 18);
-                dest[destOffset++] = (byte) (0x80 | charValueInInt >> 12 & 0x3F);
-                dest[destOffset++] = (byte) (0x80 | charValueInInt >> 6 & 0x3F);
-                dest[destOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
+                destination[destinationStartOffset++] = (byte) (0xF0 | charValueInInt >> 18);
+                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt >> 12 & 0x3F);
+                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt >> 6 & 0x3F);
+                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
             }
         }
-        return dest;
     }
 
-    public static CoderResult encode(final char[] source, final int offset, final int count, final long destOffset, final long destLimit) {
-        if (source == null || offset < 0 || count < 0 || destOffset < 0 || destLimit < 0) {
-            throw new IllegalArgumentException("Illegal arguments");
+    public static CoderResult encode(final char[] source, final int srcStartOffset, final int srcLimit,
+                                     final byte[] destination, final int destStartOffset, final int destLimit) {
+        if (source == null || destination == null ||
+                srcStartOffset < 0 || srcLimit < 0 || destStartOffset < 0 || destLimit < 0) {
+            throw new IllegalArgumentException();
         }
 
-        int sourceOffset = offset;
-        long destinationOffset = destOffset;
-        final int sourceLength = source.length - sourceOffset;
-        int sourceRemaining = count > sourceLength ? sourceLength : count;
-        int remainingCapacity = (int) (destLimit - destinationOffset);
-        if (remainingCapacity < sourceRemaining) {
-            return CoderResult.OVERFLOW;
+        int sourceStartOffset = srcStartOffset, destinationStartOffset = destStartOffset;
+        final int sourceLength = source.length - sourceStartOffset;
+        int sourceCount = min(sourceLength, srcLimit);
+        final int destinationLength = destination.length - destStartOffset;
+        int destinationCount = min(destinationLength, destLimit);
+
+        if (destinationCount < sourceCount) {
+            return OVERFLOW;
         }
 
-        // handle ascii encoded strings in an optimised loop
-        final int smallerLength = Math.min(sourceRemaining, remainingCapacity);
-        while (destinationOffset < smallerLength && source[sourceOffset] < 0x80) {
-            UNSAFE.putByte(destinationOffset++, (byte) source[sourceOffset++]);
+        final int smallerCount = min(sourceCount, destinationCount);
+        while (destinationStartOffset < smallerCount && source[sourceStartOffset] < 0x80) {
+            destination[destinationStartOffset++] = (byte) source[sourceStartOffset++];
         }
 
         int charValueInInt;
-        for (int i = sourceOffset; i < sourceRemaining; i++) {
+        for (int i = sourceStartOffset; i < sourceCount; i++) {
             charValueInInt = source[i];
 
             if (charValueInInt < 0x80) {
                 //check remaining capacity
-                remainingCapacity--;
-                sourceRemaining--;
-                if (remainingCapacity < sourceRemaining) {
-                    return CoderResult.OVERFLOW;
+                if (destinationStartOffset + 1 > destinationCount) {
+                    fill(destination, destStartOffset, destinationCount, (byte) 0);
+                    return OVERFLOW;
                 }
 
                 // 1 bit
-                UNSAFE.putByte(destinationOffset++, (byte) charValueInInt);
+                destination[destinationStartOffset++] = (byte) charValueInInt;
             } else if (charValueInInt < 0x800) {
                 //check remaining capacity
-                remainingCapacity -= 2;
-                sourceRemaining--;
-                if (remainingCapacity < sourceRemaining) {
-                    return CoderResult.OVERFLOW;
+                if (destinationStartOffset + 2 > destinationCount) {
+                    fill(destination, destStartOffset, destinationCount, (byte) 0);
+                    return OVERFLOW;
                 }
 
                 // 2 bits
-                UNSAFE.putByte(destinationOffset++, (byte) (0xC0 | charValueInInt >> 6));
-                UNSAFE.putByte(destinationOffset++, (byte) (0x80 | charValueInInt & 0x3F));
+                destination[destinationStartOffset++] = (byte) (0xC0 | charValueInInt >> 6);
+                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
             } else if (charValueInInt < 0x10000) {
                 //check remaining capacity
-                remainingCapacity -= 3;
-                sourceRemaining--;
-                if (remainingCapacity < sourceRemaining) {
-                    return CoderResult.OVERFLOW;
+                if (destinationStartOffset + 3 > destinationCount) {
+                    fill(destination, destStartOffset, destinationCount, (byte) 0);
+                    return OVERFLOW;
                 }
 
                 // 3 bits
-                UNSAFE.putByte(destinationOffset++, (byte) (0xE0 | charValueInInt >> 12));
-                UNSAFE.putByte(destinationOffset++, (byte) (0x80 | charValueInInt >> 6 & 0x3F));
-                UNSAFE.putByte(destinationOffset++, (byte) (0x80 | charValueInInt & 0x3F));
+                destination[destinationStartOffset++] = (byte) (0xE0 | charValueInInt >> 12);
+                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt >> 6 & 0x3F);
+                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
             } else if (charValueInInt < 0x200000) {
                 //check remaining capacity
-                remainingCapacity -= 4;
-                sourceRemaining--;
-                if (remainingCapacity < sourceRemaining) {
-                    return CoderResult.OVERFLOW;
+                if (destinationStartOffset + 4 > destinationCount) {
+                    fill(destination, destStartOffset, destinationCount, (byte) 0);
+                    return OVERFLOW;
                 }
 
                 // 4 bits
-                UNSAFE.putByte(destinationOffset++, (byte) (0xF0 | charValueInInt >> 18));
-                UNSAFE.putByte(destinationOffset++, (byte) (0x80 | charValueInInt >> 12 & 0x3F));
-                UNSAFE.putByte(destinationOffset++, (byte) (0x80 | charValueInInt >> 6 & 0x3F));
-                UNSAFE.putByte(destinationOffset++, (byte) (0x80 | charValueInInt & 0x3F));
+                destination[destinationStartOffset++] = (byte) (0xF0 | charValueInInt >> 18);
+                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt >> 12 & 0x3F);
+                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt >> 6 & 0x3F);
+                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
             } else {
-                // error, clean-up byte array;
-                return CoderResult.OVERFLOW;
+                fill(destination, destStartOffset, destinationCount, (byte) 0);
+                return OVERFLOW;
             }
         }
-        return CoderResult.UNDERFLOW;
+        return UNDERFLOW;
     }
 
-    // no boundaries checking
-    private static CoderResult encodeInternal(final char[] source, final int offset, final int count, final long destOffset, final long destLimit) {
-        int sourceOffset = offset;
-        long destinationOffset = destOffset;
-        final int sourceLength = source.length - sourceOffset;
-        final int sourceRemaining = count > sourceLength ? sourceLength : count;
-        final int remainingCapacity = (int) (destLimit - destinationOffset);
-        if (remainingCapacity < sourceRemaining) {
-            return CoderResult.OVERFLOW;
+    public static CoderResult encode(final char[] source, final int srcStartOffset, final int srcLimit,
+                                     final long destAddress, final int destStartOffset, final int destLimit) {
+        if (source == null || destAddress < 0 ||
+                srcStartOffset < 0 || srcLimit < 0 || destStartOffset < 0 || destLimit < 0) {
+            throw new IllegalArgumentException();
         }
 
-        // handle ascii encoded strings in an optimised loop
-        final int smallerLength = Math.min(sourceRemaining, remainingCapacity);
-        while (destinationOffset < smallerLength && source[sourceOffset] < 0x80) {
-            UNSAFE.putByte(destinationOffset++, (byte) source[sourceOffset++]);
+        int sourceStartOffset = srcStartOffset, destinationStartOffset = destStartOffset;
+        final int sourceLength = source.length - sourceStartOffset;
+        int sourceCount = min(sourceLength, srcLimit);
+        int destinationCount = destLimit - destinationStartOffset;
+
+        if (destinationCount < sourceCount) {
+            return OVERFLOW;
+        }
+
+        final int smallerCount = min(sourceCount, destinationCount);
+        while (destinationStartOffset < smallerCount && source[sourceStartOffset] < 0x80) {
+            putByte(destAddress, destinationStartOffset++, (byte) source[sourceStartOffset++]);
         }
 
         int charValueInInt;
-        for (int i = sourceOffset; i < sourceRemaining; i++) {
+        for (int i = sourceStartOffset; i < sourceCount; i++) {
             charValueInInt = source[i];
 
             if (charValueInInt < 0x80) {
+                //check remaining capacity
+                if (destinationStartOffset + 1 > destinationCount) {
+                    cleanUpDestination(destAddress, destStartOffset, destinationCount);
+                    return OVERFLOW;
+                }
+
                 // 1 bit
-                UNSAFE.putByte(destinationOffset++, (byte) charValueInInt);
+                putByte(destAddress, destinationStartOffset++, (byte) charValueInInt);
             } else if (charValueInInt < 0x800) {
+                //check remaining capacity
+                if (destinationStartOffset + 2 > destinationCount) {
+                    cleanUpDestination(destAddress, destStartOffset, destinationCount);
+                    return OVERFLOW;
+                }
+
                 // 2 bits
-                UNSAFE.putByte(destinationOffset++, (byte) (0xC0 | charValueInInt >> 6));
-                UNSAFE.putByte(destinationOffset++, (byte) (0x80 | charValueInInt & 0x3F));
+                putByte(destAddress, destinationStartOffset++, (byte) (0xC0 | charValueInInt >> 6));
+                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | charValueInInt & 0x3F));
             } else if (charValueInInt < 0x10000) {
+                //check remaining capacity
+                if (destinationStartOffset + 3 > destinationCount) {
+                    cleanUpDestination(destAddress, destStartOffset, destinationCount);
+                    return OVERFLOW;
+                }
+
                 // 3 bits
-                UNSAFE.putByte(destinationOffset++, (byte) (0xE0 | charValueInInt >> 12));
-                UNSAFE.putByte(destinationOffset++, (byte) (0x80 | charValueInInt >> 6 & 0x3F));
-                UNSAFE.putByte(destinationOffset++, (byte) (0x80 | charValueInInt & 0x3F));
+                putByte(destAddress, destinationStartOffset++, (byte) (0xE0 | charValueInInt >> 12));
+                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | charValueInInt >> 6 & 0x3F));
+                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | charValueInInt & 0x3F));
             } else if (charValueInInt < 0x200000) {
+                //check remaining capacity
+                if (destinationStartOffset + 4 > destinationCount) {
+                    cleanUpDestination(destAddress, destStartOffset, destinationCount);
+                    return OVERFLOW;
+                }
+
                 // 4 bits
-                UNSAFE.putByte(destinationOffset++, (byte) (0xF0 | charValueInInt >> 18));
-                UNSAFE.putByte(destinationOffset++, (byte) (0x80 | charValueInInt >> 12 & 0x3F));
-                UNSAFE.putByte(destinationOffset++, (byte) (0x80 | charValueInInt >> 6 & 0x3F));
-                UNSAFE.putByte(destinationOffset++, (byte) (0x80 | charValueInInt & 0x3F));
+                putByte(destAddress, destinationStartOffset++, (byte) (0xF0 | charValueInInt >> 18));
+                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | charValueInInt >> 12 & 0x3F));
+                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | charValueInInt >> 6 & 0x3F));
+                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | charValueInInt & 0x3F));
             } else {
-                // error, clean-up byte array;
-                return CoderResult.OVERFLOW;
+                cleanUpDestination(destAddress, destStartOffset, destinationCount);
+                return OVERFLOW;
             }
         }
-        return CoderResult.UNDERFLOW;
+        return UNDERFLOW;
     }
 
+    private static void cleanUpDestination(final long destAddress, final int destStartOffset, final int count) {
+        for (int idx = destStartOffset; idx < count; idx++) {
+            UNSAFE.putByte(destAddress + idx, (byte) 0);
+        }
+    }
 
-//    public CoderResult encodeStringToHeap(final String src, final ByteBuffer dst) {
-//        int lastDp = 0;
-//        int arrayOffset = dst.arrayOffset();
-//        int dp = arrayOffset + dst.position();
-//        int dl = arrayOffset + dst.limit();
-//
-//        int spCurr = UnsafeString.getOffset(src);
-//        int sl = src.length();
-//
-//        try {
-//            CoderResult result = encode(UnsafeString.getChars(src), spCurr, sl,
-//                    dst.array(), dp, dl);
-//            dst.position(lastDp - arrayOffset);
-//            return result;
-//        } catch (ArrayIndexOutOfBoundsException e) {
-//            return CoderResult.OVERFLOW;
-//        }
-//    }
-//
-//    public final CoderResult encodeString(String src, ByteBuffer dst) {
-//        if (dst.hasArray())
-//            return encodeStringToHeap(src, dst);
-//        else
-//            return encodeStringToDirect(src, dst);
-//    }
-//
-//    public final CoderResult encodeStringToDirect(String src, ByteBuffer dst) {
-//        lastDp = 0;
-//        int dp = dst.position();
-//        int dl = dst.limit();
-//
-//        // in JDK7 offset is always 0, but earlier versions accomodated
-//        // substrings
-//        // pointing back to original array and having a separate offset and
-//        // length.
-//        int spCurr = UnsafeString.getOffset(src);
-//        int sl = src.length();
-//
-//        // pluck the chars array out of the String, saving us an array copy
-//        long address = UnsafeDirectByteBuffer.getAddress(dst);
-//        CoderResult result = encode(UnsafeString.getChars(src), spCurr, sl,
-//                address + dp, address + dl);
-//        // only move the position if we fit the whole thing in.
-//        if (lastDp != 0)
-//            dst.position((int) (lastDp - address));
-//        return result;
-//
-//    }
-//
-//    public CoderResult encodeStringToHeap(String src, ByteBuffer dst) {
-//        int lastDp = 0;
-//        int arrayOffset = dst.arrayOffset();
-//        int dp = arrayOffset + dst.position();
-//        int dl = arrayOffset + dst.limit();
-//
-//        int spCurr = UnsafeString.getOffset(src);
-//        int sl = src.length();
-//
-//        try {
-//            CoderResult result = encode(UnsafeString.getChars(src), spCurr, sl,
-//                    dst.array(), dp, dl);
-//            dst.position(lastDp - arrayOffset);
-//            return result;
-//        } catch (ArrayIndexOutOfBoundsException e) {
-//            return CoderResult.OVERFLOW;
-//        }
-//
-//    }
+    private static void putByte(final long address, final int position, final byte value) {
+        UNSAFE.putByte(address + position, value);
+    }
 }
