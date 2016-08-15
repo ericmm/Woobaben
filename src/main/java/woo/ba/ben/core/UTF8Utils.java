@@ -1,6 +1,7 @@
 package woo.ba.ben.core;
 
 
+import java.lang.reflect.Field;
 import java.nio.charset.CoderResult;
 
 import static java.lang.Math.min;
@@ -10,6 +11,30 @@ import static java.util.Arrays.fill;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 public class UTF8Utils {
+    public static final int INVALID_BLOCK_SIZE = -1;
+
+    private static Field VALUE_FIELD = null;
+
+    static {
+        try {
+            VALUE_FIELD = String.class.getDeclaredField("value");
+            VALUE_FIELD.setAccessible(true);
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static char[] getCharArrayDirectly(final String str) {
+        if (str == null) {
+            return null;
+        }
+
+        try {
+            return (char[]) VALUE_FIELD.get(str);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static int encodingDestBlockSize(final char[] source, final int srcStartOffset, final int srcLimit) {
         if (source == null || srcStartOffset < 0 || srcLimit < 0) {
@@ -38,7 +63,7 @@ public class UTF8Utils {
             } else if (charValueInInt < 0x200000) {
                 size += 4;
             } else {
-                return -1;
+                return INVALID_BLOCK_SIZE;
             }
         }
         return size;
