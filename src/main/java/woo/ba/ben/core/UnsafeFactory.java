@@ -7,6 +7,7 @@ import java.lang.reflect.Constructor;
 import java.nio.ByteOrder;
 
 import static java.nio.ByteOrder.BIG_ENDIAN;
+import static java.nio.ByteOrder.nativeOrder;
 
 class UnsafeFactory {
     public static final boolean IS_64_BIT;
@@ -22,7 +23,7 @@ class UnsafeFactory {
 
             OBJECT_REF_SIZE = UNSAFE.arrayIndexScale(Object[].class);
             IS_64_BIT = UNSAFE.addressSize() == Long.SIZE;
-            IS_NATIVE_ORDER_BIG_ENDIAN = BIG_ENDIAN.equals(ByteOrder.nativeOrder());
+            IS_NATIVE_ORDER_BIG_ENDIAN = BIG_ENDIAN.equals(nativeOrder());
         } catch (final Exception e) {
             throw new RuntimeException("Cannot get the Unsafe instance!", e);
         }

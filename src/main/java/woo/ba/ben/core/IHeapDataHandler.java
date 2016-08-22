@@ -5,11 +5,16 @@ import static java.lang.Double.doubleToRawLongBits;
 import static java.lang.Double.longBitsToDouble;
 import static java.lang.Float.floatToRawIntBits;
 import static java.lang.Float.intBitsToFloat;
+import static woo.ba.ben.core.IDataReader.unsignedByte;
 import static woo.ba.ben.core.IDataReader.unsignedInt;
 import static woo.ba.ben.core.IDataReader.unsignedShort;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 public interface IHeapDataHandler extends IDataReader {
+
+    default short readUnsignedByte(final byte[] buffer, final int startIndex) {
+        return unsignedByte(buffer[startIndex]);
+    }
 
     default int readUnsignedShort(final byte[] buffer, final int startIndex) {
         return unsignedShort(readShort(buffer, startIndex));

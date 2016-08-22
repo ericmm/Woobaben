@@ -6,11 +6,16 @@ import static java.lang.Double.longBitsToDouble;
 import static java.lang.Float.floatToRawIntBits;
 import static java.lang.Float.intBitsToFloat;
 import static java.lang.Long.BYTES;
+import static woo.ba.ben.core.IDataReader.unsignedByte;
 import static woo.ba.ben.core.IDataReader.unsignedInt;
 import static woo.ba.ben.core.IDataReader.unsignedShort;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 public interface IOffHeapDataHandler extends IDataReader {
+
+    default short readUnsignedByte(final long startAddress) {
+        return unsignedByte(UNSAFE.getByte(startAddress));
+    }
 
     default int readUnsignedShort(final long startAddress) {
         return unsignedShort(readShort(startAddress));

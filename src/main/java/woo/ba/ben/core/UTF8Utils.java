@@ -13,13 +13,13 @@ import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 public class UTF8Utils {
     public static final int INVALID_BLOCK_SIZE = -1;
 
-    private static Field VALUE_FIELD = null;
+    private static Field STRING_VALUE_FIELD = null;
 
     static {
         try {
-            VALUE_FIELD = String.class.getDeclaredField("value");
-            VALUE_FIELD.setAccessible(true);
-        } catch (NoSuchFieldException e) {
+            STRING_VALUE_FIELD = String.class.getDeclaredField("value");
+            STRING_VALUE_FIELD.setAccessible(true);
+        } catch (final NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
     }
@@ -30,8 +30,8 @@ public class UTF8Utils {
         }
 
         try {
-            return (char[]) VALUE_FIELD.get(str);
-        } catch (IllegalAccessException e) {
+            return (char[]) STRING_VALUE_FIELD.get(str);
+        } catch (final IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
@@ -43,7 +43,7 @@ public class UTF8Utils {
 
         int sourceStartOffset = srcStartOffset;
         final int sourceLength = source.length - sourceStartOffset;
-        int sourceRemaining = min(sourceLength, srcLimit);
+        final int sourceRemaining = min(sourceLength, srcLimit);
 
         int size = 0;
         while (sourceStartOffset < sourceRemaining && source[sourceStartOffset] < 0x80) {
@@ -84,7 +84,7 @@ public class UTF8Utils {
 
         int sourceStartOffset = srcStartOffset, destinationStartOffset = destStartOffset;
         final int sourceLength = source.length - sourceStartOffset;
-        int sourceRemaining = min(sourceLength, srcLimit);
+        final int sourceRemaining = min(sourceLength, srcLimit);
         while (sourceStartOffset < sourceRemaining && source[sourceStartOffset] < 0x80) {
             destination[destinationStartOffset++] = (byte) source[sourceStartOffset++];
         }
@@ -123,9 +123,9 @@ public class UTF8Utils {
 
         int sourceStartOffset = srcStartOffset, destinationStartOffset = destStartOffset;
         final int sourceLength = source.length - sourceStartOffset;
-        int sourceCount = min(sourceLength, srcLimit);
+        final int sourceCount = min(sourceLength, srcLimit);
         final int destinationLength = destination.length - destStartOffset;
-        int destinationCount = min(destinationLength, destLimit);
+        final int destinationCount = min(destinationLength, destLimit);
 
         if (destinationCount < sourceCount) {
             return OVERFLOW;
@@ -199,8 +199,8 @@ public class UTF8Utils {
 
         int sourceStartOffset = srcStartOffset, destinationStartOffset = destStartOffset;
         final int sourceLength = source.length - sourceStartOffset;
-        int sourceCount = min(sourceLength, srcLimit);
-        int destinationCount = destLimit - destinationStartOffset;
+        final int sourceCount = min(sourceLength, srcLimit);
+        final int destinationCount = destLimit - destinationStartOffset;
 
         if (destinationCount < sourceCount) {
             return OVERFLOW;

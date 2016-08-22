@@ -28,4 +28,8 @@ public interface IDataReader {
     static long unsignedInt(final int num) {
         return num & 0xFFFFFFFFL;
     }
+
+    static short unsignedByte(final byte num) {
+        return (short) (num & 0xFF);
+    }
 }

@@ -7,7 +7,7 @@ import java.nio.charset.CoderResult;
 import static java.nio.charset.CoderResult.OVERFLOW;
 import static woo.ba.ben.core.DataHandlerFactory.nativeOrderHeapDataHandler;
 import static woo.ba.ben.core.UTF8Utils.*;
-import static woo.ba.ben.util.MurmurHash3.murmurhash3_x86_32;
+import static woo.ba.ben.util.MurmurHash3.hash32;
 
 public class UTF8HeapString implements java.io.Serializable, Comparable<UTF8HeapString> {
     private static final long serialVersionUID = 6849454375434667710L;
@@ -64,7 +64,7 @@ public class UTF8HeapString implements java.io.Serializable, Comparable<UTF8Heap
     @Override
     public int hashCode() {
         if (!hashComputed) {
-            hash = murmurhash3_x86_32(content, 0, content.length, content.length);
+            hash = hash32(0, content, 0, content.length);
             hashComputed = true;
         }
         return hash;
