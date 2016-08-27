@@ -2,17 +2,15 @@ package woo.ba.ben.core;
 
 
 import java.lang.reflect.Field;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CoderResult;
 
 import static java.lang.Math.min;
 import static java.nio.charset.CoderResult.OVERFLOW;
 import static java.nio.charset.CoderResult.UNDERFLOW;
-import static java.util.Arrays.fill;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
-public class UTF8Utils {
-    public static final int INVALID_BLOCK_SIZE = -1;
-
+class UTF8Utils {
     private static Field STRING_VALUE_FIELD = null;
 
     static {
@@ -24,11 +22,7 @@ public class UTF8Utils {
         }
     }
 
-    public static char[] getCharArrayDirectly(final String str) {
-        if (str == null) {
-            return null;
-        }
-
+    static char[] getCharArrayDirectly(final String str) {
         try {
             return (char[]) STRING_VALUE_FIELD.get(str);
         } catch (final IllegalAccessException e) {
@@ -36,7 +30,7 @@ public class UTF8Utils {
         }
     }
 
-    public static int encodingDestBlockSize(final char[] source, final int srcStartOffset, final int srcLimit) {
+    static int encodingDestBlockSize(final char[] source, final int srcStartOffset, final int srcLimit) throws CharacterCodingException {
         if (source == null || srcStartOffset < 0 || srcLimit < 0) {
             throw new IllegalArgumentException();
         }
@@ -63,26 +57,57 @@ public class UTF8Utils {
             } else if (charValueInInt < 0x200000) {
                 size += 4;
             } else {
-                return INVALID_BLOCK_SIZE;
+                throw new CharacterCodingException();
             }
         }
         return size;
     }
 
-    public static byte[] encode(final char[] source, final int srcStartOffset, final int srcLimit) {
+//    static int decodingDestBlockSize(final byte[] source, final int srcStartOffset, final int srcLimit) throws CharacterCodingException {
+//        if (source == null || srcStartOffset < 0 || srcLimit < 0) {
+//            throw new IllegalArgumentException();
+//        }
+//
+//        int sourceStartOffset = srcStartOffset;
+//        final int sourceLength = source.length - sourceStartOffset;
+//        final int sourceRemaining = min(sourceLength, srcLimit);
+//
+//        int size = 0;
+//        while (sourceStartOffset < sourceRemaining && source[sourceStartOffset] > 0) {
+//            sourceStartOffset++;
+//            size++;
+//        }
+//
+//        for (int i = sourceStartOffset; i < sourceRemaining; i++) {
+//            if (source[i] > 0) {
+//                size++;
+//            } else {
+//                switch (0xF0 & source[i]) {
+//                    case 0xE0:
+//                        i += 3;
+//                        break;
+//                    case 0xF0:
+//                        i += 4;
+//                        break;
+//                    default:
+//                        i += 2;
+//                        break;
+//                }
+//            }
+//        }
+//        return size;
+//    }
+
+
+    static byte[] encode(final char[] source, final int srcStartOffset, final int srcLimit) throws CharacterCodingException {
         final int size = encodingDestBlockSize(source, srcStartOffset, srcLimit);
-        if (size > 0) {
-            final byte[] destination = new byte[size];
-            encodeInternal(source, srcStartOffset, srcLimit, destination, 0, destination.length);
-            return destination;
-        }
-        return null;
+        final byte[] destination = new byte[size];
+        encodeInternal(source, srcStartOffset, srcLimit, destination);
+        return destination;
     }
 
-    public static void encodeInternal(final char[] source, final int srcStartOffset, final int srcLimit,
-                                      final byte[] destination, final int destStartOffset, final int destLimit) {
-
-        int sourceStartOffset = srcStartOffset, destinationStartOffset = destStartOffset;
+    private static void encodeInternal(final char[] source, final int srcStartOffset, final int srcLimit, final byte[] destination) {
+        int sourceStartOffset = srcStartOffset, destinationStartOffset = 0;
         final int sourceLength = source.length - sourceStartOffset;
         final int sourceRemaining = min(sourceLength, srcLimit);
         while (sourceStartOffset < sourceRemaining && source[sourceStartOffset] < 0x80) {
@@ -143,7 +168,6 @@ public class UTF8Utils {
             if (charValueInInt < 0x80) {
                 //check remaining capacity
                 if (destinationStartOffset + 1 > destinationCount) {
-                    fill(destination, destStartOffset, destinationCount, (byte) 0);
                     return OVERFLOW;
                 }
 
@@ -152,7 +176,6 @@ public class UTF8Utils {
             } else if (charValueInInt < 0x800) {
                 //check remaining capacity
                 if (destinationStartOffset + 2 > destinationCount) {
-                    fill(destination, destStartOffset, destinationCount, (byte) 0);
                     return OVERFLOW;
                 }
 
@@ -162,7 +185,6 @@ public class UTF8Utils {
             } else if (charValueInInt < 0x10000) {
                 //check remaining capacity
                 if (destinationStartOffset + 3 > destinationCount) {
-                    fill(destination, destStartOffset, destinationCount, (byte) 0);
                     return OVERFLOW;
                 }
 
@@ -173,7 +195,6 @@ public class UTF8Utils {
             } else if (charValueInInt < 0x200000) {
                 //check remaining capacity
                 if (destinationStartOffset + 4 > destinationCount) {
-                    fill(destination, destStartOffset, destinationCount, (byte) 0);
                     return OVERFLOW;
                 }
 
@@ -183,7 +204,6 @@ public class UTF8Utils {
                 destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt >> 6 & 0x3F);
                 destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
             } else {
-                fill(destination, destStartOffset, destinationCount, (byte) 0);
                 return OVERFLOW;
             }
         }
@@ -218,7 +238,6 @@ public class UTF8Utils {
             if (charValueInInt < 0x80) {
                 //check remaining capacity
                 if (destinationStartOffset + 1 > destinationCount) {
-                    cleanUpDestination(destAddress, destStartOffset, destinationCount);
                     return OVERFLOW;
                 }
 
@@ -227,7 +246,6 @@ public class UTF8Utils {
             } else if (charValueInInt < 0x800) {
                 //check remaining capacity
                 if (destinationStartOffset + 2 > destinationCount) {
-                    cleanUpDestination(destAddress, destStartOffset, destinationCount);
                     return OVERFLOW;
                 }
 
@@ -237,7 +255,6 @@ public class UTF8Utils {
             } else if (charValueInInt < 0x10000) {
                 //check remaining capacity
                 if (destinationStartOffset + 3 > destinationCount) {
-                    cleanUpDestination(destAddress, destStartOffset, destinationCount);
                     return OVERFLOW;
                 }
 
@@ -248,7 +265,6 @@ public class UTF8Utils {
             } else if (charValueInInt < 0x200000) {
                 //check remaining capacity
                 if (destinationStartOffset + 4 > destinationCount) {
-                    cleanUpDestination(destAddress, destStartOffset, destinationCount);
                     return OVERFLOW;
                 }
 
@@ -258,17 +274,10 @@ public class UTF8Utils {
                 putByte(destAddress, destinationStartOffset++, (byte) (0x80 | charValueInInt >> 6 & 0x3F));
                 putByte(destAddress, destinationStartOffset++, (byte) (0x80 | charValueInInt & 0x3F));
             } else {
-                cleanUpDestination(destAddress, destStartOffset, destinationCount);
                 return OVERFLOW;
             }
         }
         return UNDERFLOW;
-    }
-
-    private static void cleanUpDestination(final long destAddress, final int destStartOffset, final int count) {
-        for (int idx = destStartOffset; idx < count; idx++) {
-            UNSAFE.putByte(destAddress + idx, (byte) 0);
-        }
     }
 
     private static void putByte(final long address, final int position, final byte value) {

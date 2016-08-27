@@ -5,9 +5,7 @@ import static java.lang.Double.doubleToRawLongBits;
 import static java.lang.Double.longBitsToDouble;
 import static java.lang.Float.floatToRawIntBits;
 import static java.lang.Float.intBitsToFloat;
-import static woo.ba.ben.core.IDataReader.unsignedByte;
-import static woo.ba.ben.core.IDataReader.unsignedInt;
-import static woo.ba.ben.core.IDataReader.unsignedShort;
+import static woo.ba.ben.core.IDataReader.*;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 public interface IHeapDataHandler extends IDataReader {
@@ -40,9 +38,13 @@ public interface IHeapDataHandler extends IDataReader {
 
     char readChar(final byte[] buffer, final int startIndex);
     
-    default boolean arrayEquals(final byte[] left, final byte[] right) {
+    static boolean arrayEquals(final byte[] left, final byte[] right) {
         if (left == right) {
             return true;
+        }
+
+        if (left == null || right == null) {
+            return false;
         }
 
         if (right.length != left.length) {
@@ -54,7 +56,7 @@ public interface IHeapDataHandler extends IDataReader {
         final int loopLength = loopTimes * Long.BYTES;
         for (int startIndex = 0; startIndex < loopLength; startIndex += Long.BYTES) {
             currentOffset = UNSAFE.ARRAY_BYTE_BASE_OFFSET + (startIndex * Long.BYTES);
-            if (0L != (UNSAFE.getLong(left, currentOffset) ^ UNSAFE.getLong(right, currentOffset))) {
+            if (UNSAFE.getLong(left, currentOffset) != UNSAFE.getLong(right, currentOffset)) {
                 return false;
             }
         }

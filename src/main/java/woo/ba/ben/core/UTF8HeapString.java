@@ -2,11 +2,10 @@ package woo.ba.ben.core;
 
 
 import java.nio.charset.CharacterCodingException;
-import java.nio.charset.CoderResult;
 
-import static java.nio.charset.CoderResult.OVERFLOW;
-import static woo.ba.ben.core.DataHandlerFactory.nativeOrderHeapDataHandler;
-import static woo.ba.ben.core.UTF8Utils.*;
+import static woo.ba.ben.core.IHeapDataHandler.arrayEquals;
+import static woo.ba.ben.core.UTF8Utils.encode;
+import static woo.ba.ben.core.UTF8Utils.getCharArrayDirectly;
 import static woo.ba.ben.util.MurmurHash3.hash32;
 
 public class UTF8HeapString implements java.io.Serializable, Comparable<UTF8HeapString> {
@@ -17,14 +16,13 @@ public class UTF8HeapString implements java.io.Serializable, Comparable<UTF8Heap
     private boolean hashComputed;
 
     public UTF8HeapString(final String str) throws CharacterCodingException {
+        checkNotNull(str);
         char[] chars = getCharArrayDirectly(str);
         initialise(chars);
     }
 
     public UTF8HeapString(final UTF8HeapString uStr) throws CharacterCodingException {
-        if (uStr == null) {
-            throw new IllegalArgumentException();
-        }
+        checkNotNull(uStr);
 
         this.content = uStr.content;
         this.hash = uStr.hash;
@@ -36,15 +34,8 @@ public class UTF8HeapString implements java.io.Serializable, Comparable<UTF8Heap
     }
 
     private void initialise(char[] chars) throws CharacterCodingException {
-        if (chars == null) {
-            throw new IllegalArgumentException();
-        }
-        final int size = encodingDestBlockSize(chars, 0, chars.length);
-        byte[] content = new byte[size];
-        final CoderResult result = encode(chars, 0, chars.length, content, 0, content.length);
-        if (result == OVERFLOW) {
-            throw new CharacterCodingException();
-        }
+        checkNotNull(chars);
+        content = encode(chars, 0, chars.length);
     }
 
     @Override
@@ -58,7 +49,7 @@ public class UTF8HeapString implements java.io.Serializable, Comparable<UTF8Heap
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UTF8HeapString that = (UTF8HeapString) o;
-        return nativeOrderHeapDataHandler().arrayEquals(content, that.content);
+        return arrayEquals(content, that.content);
     }
 
     @Override
@@ -74,5 +65,11 @@ public class UTF8HeapString implements java.io.Serializable, Comparable<UTF8Heap
     public String toString() {
         //TODO: decode byte[]
         throw new RuntimeException("implement me");
+    }
+
+    private void checkNotNull(Object obj) {
+        if (obj == null) {
+            throw new IllegalArgumentException();
+        }
     }
 }
