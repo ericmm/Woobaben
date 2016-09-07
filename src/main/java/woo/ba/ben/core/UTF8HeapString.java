@@ -35,7 +35,7 @@ public class UTF8HeapString implements java.io.Serializable, Comparable<UTF8Heap
 
     private void initialise(char[] chars) throws CharacterCodingException {
         checkNotNull(chars);
-        content = encode(chars, 0, chars.length);
+        content = encode(chars);
     }
 
     @Override

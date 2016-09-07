@@ -5,7 +5,11 @@ import static java.lang.Double.doubleToRawLongBits;
 import static java.lang.Double.longBitsToDouble;
 import static java.lang.Float.floatToRawIntBits;
 import static java.lang.Float.intBitsToFloat;
-import static woo.ba.ben.core.IDataReader.*;
+import static java.lang.Long.BYTES;
+import static sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET;
+import static woo.ba.ben.core.IDataReader.unsignedByte;
+import static woo.ba.ben.core.IDataReader.unsignedInt;
+import static woo.ba.ben.core.IDataReader.unsignedShort;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 public interface IHeapDataHandler extends IDataReader {
@@ -37,7 +41,7 @@ public interface IHeapDataHandler extends IDataReader {
     short readShort(final byte[] buffer, final int startIndex);
 
     char readChar(final byte[] buffer, final int startIndex);
-    
+
     static boolean arrayEquals(final byte[] left, final byte[] right) {
         if (left == right) {
             return true;
@@ -51,14 +55,14 @@ public interface IHeapDataHandler extends IDataReader {
             return false;
         }
 
-        long currentOffset;
-        final int loopTimes = left.length / Long.BYTES;
-        final int loopLength = loopTimes * Long.BYTES;
-        for (int startIndex = 0; startIndex < loopLength; startIndex += Long.BYTES) {
-            currentOffset = UNSAFE.ARRAY_BYTE_BASE_OFFSET + (startIndex * Long.BYTES);
+        final int loopTimes = left.length / BYTES;
+        final int loopLength = loopTimes * BYTES;
+        long currentOffset = ARRAY_BYTE_BASE_OFFSET;
+        for (int startIndex = 0; startIndex < loopLength; startIndex += BYTES) {
             if (UNSAFE.getLong(left, currentOffset) != UNSAFE.getLong(right, currentOffset)) {
                 return false;
             }
+            currentOffset += BYTES;
         }
 
         // for remaining
