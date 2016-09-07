@@ -5,8 +5,7 @@ import java.lang.reflect.Field;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CoderResult;
 
-import static java.lang.Character.highSurrogate;
-import static java.lang.Character.lowSurrogate;
+import static java.lang.Character.MIN_LOW_SURROGATE;
 import static java.lang.Math.min;
 import static java.nio.charset.CoderResult.OVERFLOW;
 import static java.nio.charset.CoderResult.UNDERFLOW;
@@ -14,12 +13,13 @@ import static woo.ba.ben.core.IDataReader.unsignedByte;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 class UTF8Utils {
-    private static Field STRING_VALUE_FIELD = null;
+    private static final int HIGH_SURROGATE_BASE = 55232;
+    private static Field valueFieldOfStringObj = null;
 
     static {
         try {
-            STRING_VALUE_FIELD = String.class.getDeclaredField("value");
-            STRING_VALUE_FIELD.setAccessible(true);
+            valueFieldOfStringObj = String.class.getDeclaredField("value");
+            valueFieldOfStringObj.setAccessible(true);
         } catch (final NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
@@ -27,7 +27,7 @@ class UTF8Utils {
 
     static char[] getCharArrayDirectly(final String str) {
         try {
-            return (char[]) STRING_VALUE_FIELD.get(str);
+            return (char[]) valueFieldOfStringObj.get(str);
         } catch (final IllegalAccessException e) {
             throw new RuntimeException(e);
         }
@@ -74,7 +74,7 @@ class UTF8Utils {
     }
 
     public static CoderResult decode(final byte[] source, final int srcStartOffset, final int srcLimit,
-                                     final char[] destination, final int destStartOffset, final int destLimit) throws CharacterCodingException {
+                                     final char[] destination, final int destStartOffset, final int destLimit) {
         if (source == null || destination == null ||
                 srcStartOffset < 0 || srcLimit < 0 || destStartOffset < 0 || destLimit < 0) {
             throw new IllegalArgumentException();
@@ -85,16 +85,15 @@ class UTF8Utils {
         final int destinationCount = min(destination.length - destinationStartOffset, destLimit);
 
         final int smallerCount = min(sourceCount, destinationCount);
-        while (destinationStartOffset < smallerCount && unsignedByte(source[sourceStartOffset]) < 0x80) {
+        while (destinationStartOffset < smallerCount && source[sourceStartOffset] >= 0) { //0 ~ 127
             destination[destinationStartOffset++] = (char) source[sourceStartOffset++];
         }
 
-        short byteValueInShort;
         int charValueInInt;
         while (sourceStartOffset < sourceCount) {
-            byteValueInShort = unsignedByte(source[sourceStartOffset]);
+            charValueInInt = unsignedByte(source[sourceStartOffset]);
 
-            if (byteValueInShort < 0x80) { //"01111111" == 0x7f
+            if (charValueInInt < 0x80) { //"01111111" == 0x7f
                 //check remaining capacity
                 if (destinationStartOffset + 1 > destinationCount) {
                     return OVERFLOW;
@@ -102,55 +101,36 @@ class UTF8Utils {
 
                 // 1 bit
                 destination[destinationStartOffset++] = (char) source[sourceStartOffset++];
-            } else if (byteValueInShort < 0xE0) { //"11000000" == 0xc0, "11011111" == 0xdf
+            } else if (charValueInInt < 0xE0) { //"11000000" == 0xc0, "11011111" == 0xdf
                 //check remaining capacity
-                if (destinationStartOffset + 1 > destinationCount) {
+                if ((destinationStartOffset + 1 > destinationCount) || (sourceStartOffset + 1 > sourceCount)) {
                     return OVERFLOW;
                 }
 
-                // two bytes
-                if ((sourceStartOffset + 1 >= sourceCount) || !checkTwoBytes(byteValueInShort, unsignedByte(source[sourceStartOffset + 1]))) {
-                    throw new CharacterCodingException();
-                }
-
-                charValueInInt = ((byteValueInShort & 0x1F) << 6) | (source[sourceStartOffset + 1] & 0x3F);
+                // two bytes into one char --> '11111 111111' is 2047
+                destination[destinationStartOffset++] = (char) (((charValueInInt & 0x1F) << 6) | (source[sourceStartOffset + 1] & 0x3F));
                 sourceStartOffset += 2;
-
-                // 1 bits --> '11111 111111' is 2047
-                destination[destinationStartOffset++] = (char) charValueInInt;
-            } else if (byteValueInShort < 0xF0) { //"11100000" == 0xe0, "11101111" == 0xef
+            } else if (charValueInInt < 0xF0) { //"11100000" == 0xe0, "11101111" == 0xef
                 //check remaining capacity
-                if (destinationStartOffset + 1 > destinationCount) {
+                if ((destinationStartOffset + 1 > destinationCount) || (sourceStartOffset + 2 > sourceCount)) {
                     return OVERFLOW;
                 }
 
-                //three bytes
-                if ((sourceStartOffset + 2 >= sourceCount) || !checkThreeBytes(byteValueInShort, unsignedByte(source[sourceStartOffset + 1]), unsignedByte(source[sourceStartOffset + 2]))) {
-                    throw new CharacterCodingException();
-                }
-
-                charValueInInt = ((byteValueInShort & 0x0F) << 12) | ((source[sourceStartOffset + 1] & 0x3F) << 6) | (source[sourceStartOffset + 2] & 0x3F);
+                // three bytes into one char --> '1111 111111 111111' is 65535
+                destination[destinationStartOffset++] = (char) (((charValueInInt & 0x0F) << 12) | ((source[sourceStartOffset + 1] & 0x3F) << 6) | (source[sourceStartOffset + 2] & 0x3F));
                 sourceStartOffset += 3;
-
-                // 1 bits --> '1111 111111 111111' is 65535
-                destination[destinationStartOffset++] = (char) charValueInInt;
-            } else if (byteValueInShort < 0xF8) { //"11110000" == 0xf0, "11110111" == 0xf7
-                //four bytes
-                if ((sourceStartOffset + 3 >= sourceCount) || !checkFourBytes(byteValueInShort, unsignedByte(source[sourceStartOffset + 1]), unsignedByte(source[sourceStartOffset + 2]), unsignedByte(source[sourceStartOffset + 3]))) {
-                    throw new CharacterCodingException();
-                }
-
-                charValueInInt = ((byteValueInShort & 0x0F) << 18) | ((source[sourceStartOffset + 1] & 0x3F) << 12) | ((source[sourceStartOffset + 2] & 0x3F) << 6) | (source[sourceStartOffset + 3] & 0x3F);
-                sourceStartOffset += 4;
-
+            } else if (charValueInInt < 0xF8) { //"11110000" == 0xf0, "11110111" == 0xf7
                 //check remaining capacity
-                if (destinationStartOffset + 2 > destinationCount) {
+                if ((destinationStartOffset + 2 > destinationCount) || (sourceStartOffset + 3 > sourceCount)) {
                     return OVERFLOW;
                 }
 
-                // 2 bits
-                destination[destinationStartOffset++] = highSurrogate(charValueInInt);
-                destination[destinationStartOffset++] = lowSurrogate(charValueInInt);
+                charValueInInt = ((charValueInInt & 0x0F) << 18) | ((source[sourceStartOffset + 1] & 0x3F) << 12) | ((source[sourceStartOffset + 2] & 0x3F) << 6) | (source[sourceStartOffset + 3] & 0x3F);
+
+                // four bytes into two chars
+                destination[destinationStartOffset++] = (char) ((charValueInInt >>> 10) + HIGH_SURROGATE_BASE);
+                destination[destinationStartOffset++] = (char) ((charValueInInt & 0x3ff) + MIN_LOW_SURROGATE);
+                sourceStartOffset += 4;
             } else {
                 return OVERFLOW;
             }
@@ -298,21 +278,5 @@ class UTF8Utils {
 
     private static void putByte(final long address, final int position, final byte value) {
         UNSAFE.putByte(address + position, value);
-    }
-
-    private static boolean checkFourBytes(short unsignedByte1, short unsignedByte2, short unsignedByte3, short unsignedByte4) {
-        return unsignedByte1 > 0xF0 && validSecondaryByte(unsignedByte2) && validSecondaryByte(unsignedByte3) && validSecondaryByte(unsignedByte4);
-    }
-
-    private static boolean checkThreeBytes(final short unsignedByte1, final short unsignedByte2, final short unsignedByte3) {
-        return unsignedByte1 > 0xE0 && validSecondaryByte(unsignedByte2) && validSecondaryByte(unsignedByte3);
-    }
-
-    private static boolean checkTwoBytes(final short unsignedByte1, final short unsignedByte2) {
-        return unsignedByte1 > 0xC0 && validSecondaryByte(unsignedByte2);
-    }
-
-    private static boolean validSecondaryByte(final short unsignedByte2) {
-        return unsignedByte2 >= 0x80 && unsignedByte2 <= 0xBF;
     }
 }

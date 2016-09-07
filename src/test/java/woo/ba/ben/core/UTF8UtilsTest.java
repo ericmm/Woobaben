@@ -27,11 +27,10 @@ public class UTF8UtilsTest {
         char[] charArr = a.toCharArray();
         final byte[] bytes = testConvertString(a);
         final byte[] bytes1 = testConvert(charArr);
+        assertTrue(arrayEquals(bytes, bytes1));
 
         final char[] chars = decodeString(bytes);
         final char[] chars1 = decodeMy(bytes);
-
-        assertTrue(arrayEquals(bytes, bytes1));
 
         assertArrayEquals(chars, chars1);
     }
