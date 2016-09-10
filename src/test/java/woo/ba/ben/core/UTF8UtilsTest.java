@@ -42,7 +42,7 @@ public class UTF8UtilsTest {
             decode(bytes, 0, bytes.length, chars, 0, chars.length);
         }
         long end = System.currentTimeMillis();
-        System.out.println("it took " + (end - start) + " to decode(UTF-8)");
+        System.out.println("it took " + (end - start) + " to run custom decode()");
 
         return chars;
     }
@@ -53,7 +53,7 @@ public class UTF8UtilsTest {
             new String(bytes, "UTF-8");
         }
         long end = System.currentTimeMillis();
-        System.out.println("it took " + (end - start) + " to new String(UTF-8)");
+        System.out.println("it took " + (end - start) + " to run new String(bytes, UTF-8)");
 
         final String str = new String(bytes, "UTF-8");
         return UTF8Utils.getCharArrayDirectly(str);
@@ -65,7 +65,7 @@ public class UTF8UtilsTest {
             str.getBytes("UTF-8");
         }
         long end = System.currentTimeMillis();
-        System.out.println("it took " + (end - start) + " to run String.getBytes()");
+        System.out.println("it took " + (end - start) + " to run String.getBytes(UTF-8)");
 
         return str.getBytes("UTF-8");
     }
@@ -78,7 +78,7 @@ public class UTF8UtilsTest {
             encode(charArr, 0, charArr.length, output, 0, output.length);
         }
         long end = System.currentTimeMillis();
-        System.out.println("it took " + (end - start) + " to run charArr");
+        System.out.println("it took " + (end - start) + " to run custom encode()");
 
         return output;
     }

@@ -1,7 +1,6 @@
 package woo.ba.ben.core;
 
 
-import java.lang.reflect.Field;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CoderResult;
 
@@ -14,23 +13,14 @@ import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 class UTF8Utils {
     private static final int HIGH_SURROGATE_BASE = 55232;
-    private static Field valueFieldOfStringObj = null;
+    private static final FieldStruct stringValueField = ClassStructFactory.get(String.class).getField("value");
 
-    static {
-        try {
-            valueFieldOfStringObj = String.class.getDeclaredField("value");
-            valueFieldOfStringObj.setAccessible(true);
-        } catch (final NoSuchFieldException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     static char[] getCharArrayDirectly(final String str) {
-        try {
-            return (char[]) valueFieldOfStringObj.get(str);
-        } catch (final IllegalAccessException e) {
-            throw new RuntimeException(e);
+        if (str == null) {
+            return null;
         }
+        return (char[]) FieldAccessor.getObject(str, stringValueField);
     }
 
     static int encodingDestBlockSize(final char[] source, final int srcStartOffset, final int srcLimit) throws CharacterCodingException {
@@ -91,7 +81,7 @@ class UTF8Utils {
 
         int charValueInInt;
         while (sourceStartOffset < sourceCount) {
-            charValueInInt = unsignedByte(source[sourceStartOffset]);
+            charValueInInt = unsignedByte(source[sourceStartOffset++]);
 
             if (charValueInInt < 0x80) { //"01111111" == 0x7f
                 //check remaining capacity
@@ -100,7 +90,7 @@ class UTF8Utils {
                 }
 
                 // 1 bit
-                destination[destinationStartOffset++] = (char) source[sourceStartOffset++];
+                destination[destinationStartOffset++] = (char) charValueInInt;
             } else if (charValueInInt < 0xE0) { //"11000000" == 0xc0, "11011111" == 0xdf
                 //check remaining capacity
                 if ((destinationStartOffset + 1 > destinationCount) || (sourceStartOffset + 1 > sourceCount)) {
@@ -108,8 +98,7 @@ class UTF8Utils {
                 }
 
                 // two bytes into one char --> '11111 111111' is 2047
-                destination[destinationStartOffset++] = (char) (((charValueInInt & 0x1F) << 6) | (source[sourceStartOffset + 1] & 0x3F));
-                sourceStartOffset += 2;
+                destination[destinationStartOffset++] = (char) (((charValueInInt & 0x1F) << 6) | (source[sourceStartOffset++] & 0x3F));
             } else if (charValueInInt < 0xF0) { //"11100000" == 0xe0, "11101111" == 0xef
                 //check remaining capacity
                 if ((destinationStartOffset + 1 > destinationCount) || (sourceStartOffset + 2 > sourceCount)) {
@@ -117,20 +106,18 @@ class UTF8Utils {
                 }
 
                 // three bytes into one char --> '1111 111111 111111' is 65535
-                destination[destinationStartOffset++] = (char) (((charValueInInt & 0x0F) << 12) | ((source[sourceStartOffset + 1] & 0x3F) << 6) | (source[sourceStartOffset + 2] & 0x3F));
-                sourceStartOffset += 3;
+                destination[destinationStartOffset++] = (char) (((charValueInInt & 0x0F) << 12) | ((source[sourceStartOffset++] & 0x3F) << 6) | (source[sourceStartOffset++] & 0x3F));
             } else if (charValueInInt < 0xF8) { //"11110000" == 0xf0, "11110111" == 0xf7
                 //check remaining capacity
                 if ((destinationStartOffset + 2 > destinationCount) || (sourceStartOffset + 3 > sourceCount)) {
                     return OVERFLOW;
                 }
 
-                charValueInInt = ((charValueInInt & 0x0F) << 18) | ((source[sourceStartOffset + 1] & 0x3F) << 12) | ((source[sourceStartOffset + 2] & 0x3F) << 6) | (source[sourceStartOffset + 3] & 0x3F);
+                charValueInInt = ((charValueInInt & 0x0F) << 18) | ((source[sourceStartOffset++] & 0x3F) << 12) | ((source[sourceStartOffset++] & 0x3F) << 6) | (source[sourceStartOffset++] & 0x3F);
 
                 // four bytes into two chars
                 destination[destinationStartOffset++] = (char) ((charValueInInt >>> 10) + HIGH_SURROGATE_BASE);
                 destination[destinationStartOffset++] = (char) ((charValueInInt & 0x3ff) + MIN_LOW_SURROGATE);
-                sourceStartOffset += 4;
             } else {
                 return OVERFLOW;
             }
