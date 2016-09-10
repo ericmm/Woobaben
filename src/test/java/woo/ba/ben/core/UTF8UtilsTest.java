@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.CharacterCodingException;
+import java.text.NumberFormat;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
@@ -14,6 +15,8 @@ import static woo.ba.ben.core.UTF8Utils.encode;
 
 public class UTF8UtilsTest {
     public static final int LOOP_CNT = 50_000_000;
+
+    private long time1, time2, time3, time4;
 
     @Test
     public void shouldEncodeAndDecodeCorrectly() throws UnsupportedEncodingException, CharacterCodingException {
@@ -28,11 +31,18 @@ public class UTF8UtilsTest {
         final byte[] bytes = testConvertString(a);
         final byte[] bytes1 = testConvert(charArr);
         assertTrue(arrayEquals(bytes, bytes1));
+        System.out.println("\nCustom encoding is " + calcPercentage(time1, time2) + " faster than JDK. \n");
 
         final char[] chars = decodeString(bytes);
         final char[] chars1 = decodeMy(bytes);
-
         assertArrayEquals(chars, chars1);
+        System.out.println("\nCustom decoding is " + calcPercentage(time3, time4) + " faster than JDK. \n");
+    }
+
+    private String calcPercentage(long d1, long d2) {
+        NumberFormat percentFormat = NumberFormat.getPercentInstance();
+        percentFormat.setMaximumFractionDigits(0);
+        return percentFormat.format(1.0 * (d1 - d2) / d1);
     }
 
     private char[] decodeMy(byte[] bytes) throws CharacterCodingException {
@@ -42,7 +52,8 @@ public class UTF8UtilsTest {
             decode(bytes, 0, bytes.length, chars, 0, chars.length);
         }
         long end = System.currentTimeMillis();
-        System.out.println("it took " + (end - start) + " to run custom decode()");
+        time4 = end - start;
+        System.out.println("it took " + time4 + " to run custom decode()");
 
         return chars;
     }
@@ -53,7 +64,8 @@ public class UTF8UtilsTest {
             new String(bytes, "UTF-8");
         }
         long end = System.currentTimeMillis();
-        System.out.println("it took " + (end - start) + " to run new String(bytes, UTF-8)");
+        time3 = end - start;
+        System.out.println("it took " + time3 + " to run new String(bytes, UTF-8)");
 
         final String str = new String(bytes, "UTF-8");
         return UTF8Utils.getCharArrayDirectly(str);
@@ -65,7 +77,8 @@ public class UTF8UtilsTest {
             str.getBytes("UTF-8");
         }
         long end = System.currentTimeMillis();
-        System.out.println("it took " + (end - start) + " to run String.getBytes(UTF-8)");
+        time1 = end - start;
+        System.out.println("it took " + time1 + " to run String.getBytes(UTF-8)");
 
         return str.getBytes("UTF-8");
     }
@@ -78,7 +91,8 @@ public class UTF8UtilsTest {
             encode(charArr, 0, charArr.length, output, 0, output.length);
         }
         long end = System.currentTimeMillis();
-        System.out.println("it took " + (end - start) + " to run custom encode()");
+        time2 = end - start;
+        System.out.println("it took " + time2 + " to run custom encode()");
 
         return output;
     }

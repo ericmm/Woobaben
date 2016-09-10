@@ -15,12 +15,8 @@ class UTF8Utils {
     private static final int HIGH_SURROGATE_BASE = 55232;
     private static final FieldStruct stringValueField = ClassStructFactory.get(String.class).getField("value");
 
-
     static char[] getCharArrayDirectly(final String str) {
-        if (str == null) {
-            return null;
-        }
-        return (char[]) FieldAccessor.getObject(str, stringValueField);
+        return str == null ? null : (char[]) FieldAccessor.getObject(str, stringValueField);
     }
 
     static int encodingDestBlockSize(final char[] source, final int srcStartOffset, final int srcLimit) throws CharacterCodingException {
@@ -28,18 +24,11 @@ class UTF8Utils {
             throw new IllegalArgumentException();
         }
 
-        int sourceStartOffset = srcStartOffset;
-        final int sourceLength = source.length - sourceStartOffset;
-        final int sourceRemaining = min(sourceLength, srcLimit);
+        final int sourceRemaining = min(source.length - srcStartOffset, srcLimit);
 
         int size = 0;
-        while (sourceStartOffset < sourceRemaining && source[sourceStartOffset] < 0x80) {
-            sourceStartOffset++;
-            size++;
-        }
-
         int charValueInInt;
-        for (int i = sourceStartOffset; i < sourceRemaining; i++) {
+        for (int i = srcStartOffset; i < sourceRemaining; i++) {
             charValueInInt = source[i];
             if (charValueInInt < 0x80) {
                 size++;
@@ -56,10 +45,40 @@ class UTF8Utils {
         return size;
     }
 
-    static byte[] encode(final char[] source) throws CharacterCodingException {
+    static int decodingDestBlockSize(final byte[] source, final int srcStartOffset, final int srcLimit) throws CharacterCodingException {
+        if (source == null || srcStartOffset < 0 || srcLimit < 0) {
+            throw new IllegalArgumentException();
+        }
+
+        final int sourceRemaining = min(source.length - srcStartOffset, srcLimit);
+
+        int size = 0;
+        int charValueInInt;
+        for (int i = srcStartOffset; i < sourceRemaining; i++) {
+            charValueInInt = unsignedByte(source[i]);
+            if (charValueInInt < 0xF0) {
+                size++;
+            } else if (charValueInInt < 0xF8) {
+                size += 2;
+            } else {
+                throw new CharacterCodingException();
+            }
+        }
+        return size;
+    }
+
+    static byte[] encodeExactly(final char[] source) throws CharacterCodingException {
         final int size = encodingDestBlockSize(source, 0, source.length);
         final byte[] destination = new byte[size];
         encode(source, 0, source.length, destination, 0, destination.length);
+        return destination;
+    }
+
+    static byte[] encodeQuickly(final char[] source) throws CharacterCodingException {
+        final byte[] destination = new byte[source.length * 4];
+        if (encode(source, 0, source.length, destination, 0, destination.length) == OVERFLOW) {
+            throw new CharacterCodingException();
+        }
         return destination;
     }
 

@@ -4,7 +4,7 @@ package woo.ba.ben.core;
 import java.nio.charset.CharacterCodingException;
 
 import static woo.ba.ben.core.IHeapDataHandler.arrayEquals;
-import static woo.ba.ben.core.UTF8Utils.encode;
+import static woo.ba.ben.core.UTF8Utils.encodeExactly;
 import static woo.ba.ben.core.UTF8Utils.getCharArrayDirectly;
 import static woo.ba.ben.util.MurmurHash3.hash32;
 
@@ -35,7 +35,7 @@ public class UTF8HeapString implements java.io.Serializable, Comparable<UTF8Heap
 
     private void initialise(char[] chars) throws CharacterCodingException {
         checkNotNull(chars);
-        content = encode(chars);
+        content = encodeExactly(chars);
     }
 
     @Override
