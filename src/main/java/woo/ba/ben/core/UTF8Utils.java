@@ -179,12 +179,11 @@ class UTF8Utils {
             } else if (charValueInInt > -17) { //"11110000" ==> 4 bytes
                 //check remaining capacity
                 if ((destinationStartOffset + 2 > destinationCount) || (sourceStartOffset + 3 > sourceCount)
-                        ){
-//                        || !checkFourBytes2(charValueInInt, byte2 = source[sourceStartOffset++], byte3 = source[sourceStartOffset++], byte4 = source[sourceStartOffset++])) {
+                        || !checkFourBytes2(charValueInInt, byte2 = source[sourceStartOffset++], byte3 = source[sourceStartOffset++], byte4 = source[sourceStartOffset++])) {
                     return OVERFLOW;
                 }
 
-                charValueInInt = ((charValueInInt & 0x0F) << 18) | ((source[sourceStartOffset++] & 0x3F) << 12) | ((source[sourceStartOffset++] & 0x3F) << 6) | (source[sourceStartOffset++] & 0x3F);
+                charValueInInt = ((charValueInInt & 0x0F) << 18) | ((byte2 & 0x3F) << 12) | ((byte3 & 0x3F) << 6) | (byte4 & 0x3F);
                 // four bytes into two chars
                 destination[destinationStartOffset++] = (char) ((charValueInInt >>> 10) + HIGH_SURROGATE_BASE);
                 destination[destinationStartOffset++] = (char) ((charValueInInt & 0x3ff) + MIN_LOW_SURROGATE);
@@ -192,22 +191,20 @@ class UTF8Utils {
             } else if (charValueInInt > -33) { //"1110xxxx" ==> 3 bytes
                 //check remaining capacity
                 if ((destinationStartOffset + 1 > destinationCount) || (sourceStartOffset + 2 > sourceCount)
-                        ){
-//                        || !checkThreeBytes2(charValueInInt, byte2 = source[sourceStartOffset++], byte3 = source[sourceStartOffset++])) {
+                        || !checkThreeBytes2(charValueInInt, byte2 = source[sourceStartOffset++], byte3 = source[sourceStartOffset++])) {
                     return OVERFLOW;
                 }
 
                 // three bytes into one char --> '1111 111111 111111' is 65535
-                destination[destinationStartOffset++] = (char) (((charValueInInt & 0x0F) << 12) | ((source[sourceStartOffset++] & 0x3F) << 6) | (source[sourceStartOffset++] & 0x3F));
+                destination[destinationStartOffset++] = (char) (((charValueInInt & 0x0F) << 12) | ((byte2 & 0x3F) << 6) | (byte3 & 0x3F));
             } else if (charValueInInt > -65) { //"110xxxxx" ==> 2 bytes
                 //check remaining capacity
                 if ((destinationStartOffset + 1 > destinationCount) || (sourceStartOffset + 1 > sourceCount)
-                        ){
-//                        || !checkTwoBytes2(charValueInInt, byte2 = source[sourceStartOffset++])) {
+                        || !checkTwoBytes2(charValueInInt, byte2 = source[sourceStartOffset++])) {
                     return OVERFLOW;
                 }
                 // two bytes into one char --> '11111 111111' is 2047
-                destination[destinationStartOffset++] = (char) (((charValueInInt & 0x1F) << 6) | (source[sourceStartOffset++] & 0x3F));
+                destination[destinationStartOffset++] = (char) (((charValueInInt & 0x1F) << 6) | (byte2 & 0x3F));
             }
         }
         return UNDERFLOW;
@@ -385,6 +382,6 @@ class UTF8Utils {
 
     private static boolean validSecondaryByte2(final short byte2) {
         //[10000000 -- 10111111]
-        return byte2 >= -65 && byte2 <= -128;
+        return byte2 < -64;
     }
 }

@@ -30,16 +30,16 @@ public class UTF8UtilsTest {
         final byte[] bytes = testConvertString(a);
         final byte[] bytes1 = testConvert(charArr);
         assertTrue(arrayEquals(bytes, bytes1));
-        System.out.println("\nCustom encoding is " + calcPercentage(time1, time2) + " faster than JDK. \n");
-
+        System.out.println("========> Custom encoding is " + calcPercentage(time1, time2) + " faster than JDK. \n");
 
         final char[] chars = decodeString(bytes);
         final char[] chars1 = decodeMy(bytes);
         final char[] chars2 = decodeMy2(bytes);
         assertArrayEquals(chars, chars1);
         assertArrayEquals(chars1, chars2);
-        System.out.println("\nCustom decoding is " + calcPercentage(time3, time4) + " faster than JDK. \n");
-        System.out.println("\nCustom decoding 2 is " + calcPercentage(time4, time5) + " faster than 1. \n");
+        System.out.println("========> Custom decoding is " + calcPercentage(time3, time4) + " faster than JDK. ");
+        System.out.println("========> Custom decoding 2 is " + calcPercentage(time3, time5) + " faster than JDK. ");
+        System.out.println("========> Custom decoding 2 is " + calcPercentage(time4, time5) + " faster than decoding 1. ");
     }
 
     private String calcPercentage(long d1, long d2) {
