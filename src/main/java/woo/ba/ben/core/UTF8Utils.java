@@ -99,6 +99,7 @@ class UTF8Utils {
         }
 
         int charValueInInt;
+        byte byte2, byte3, byte4;
         while (sourceStartOffset < sourceCount) {
             charValueInInt = unsignedByte(source[sourceStartOffset++]);
 
@@ -107,38 +108,106 @@ class UTF8Utils {
                 if (destinationStartOffset + 1 > destinationCount) {
                     return OVERFLOW;
                 }
-
                 // 1 bit
                 destination[destinationStartOffset++] = (char) charValueInInt;
             } else if (charValueInInt < 0xE0) { //"11000000" == 0xc0, "11011111" == 0xdf
                 //check remaining capacity
-                if ((destinationStartOffset + 1 > destinationCount) || (sourceStartOffset + 1 > sourceCount)) {
+                if ((destinationStartOffset + 1 > destinationCount) || (sourceStartOffset + 1 > sourceCount)
+                        || !checkTwoBytes(charValueInInt, unsignedByte(byte2 = source[sourceStartOffset++]))) {
                     return OVERFLOW;
                 }
-
                 // two bytes into one char --> '11111 111111' is 2047
-                destination[destinationStartOffset++] = (char) (((charValueInInt & 0x1F) << 6) | (source[sourceStartOffset++] & 0x3F));
+                destination[destinationStartOffset++] = (char) (((charValueInInt & 0x1F) << 6) | (byte2 & 0x3F));
             } else if (charValueInInt < 0xF0) { //"11100000" == 0xe0, "11101111" == 0xef
                 //check remaining capacity
-                if ((destinationStartOffset + 1 > destinationCount) || (sourceStartOffset + 2 > sourceCount)) {
+                if ((destinationStartOffset + 1 > destinationCount) || (sourceStartOffset + 2 > sourceCount)
+                        || !checkThreeBytes(charValueInInt, unsignedByte(byte2 = source[sourceStartOffset++]), unsignedByte(byte3 = source[sourceStartOffset++]))) {
                     return OVERFLOW;
                 }
-
                 // three bytes into one char --> '1111 111111 111111' is 65535
-                destination[destinationStartOffset++] = (char) (((charValueInInt & 0x0F) << 12) | ((source[sourceStartOffset++] & 0x3F) << 6) | (source[sourceStartOffset++] & 0x3F));
+                destination[destinationStartOffset++] = (char) (((charValueInInt & 0x0F) << 12) | ((byte2 & 0x3F) << 6) | (byte3 & 0x3F));
             } else if (charValueInInt < 0xF8) { //"11110000" == 0xf0, "11110111" == 0xf7
                 //check remaining capacity
-                if ((destinationStartOffset + 2 > destinationCount) || (sourceStartOffset + 3 > sourceCount)) {
+                if ((destinationStartOffset + 2 > destinationCount) || (sourceStartOffset + 3 > sourceCount)
+                        || !checkFourBytes(charValueInInt, unsignedByte(byte2 = source[sourceStartOffset++]), unsignedByte(byte3 = source[sourceStartOffset++]), unsignedByte(byte4 = source[sourceStartOffset++]))) {
                     return OVERFLOW;
                 }
 
-                charValueInInt = ((charValueInInt & 0x0F) << 18) | ((source[sourceStartOffset++] & 0x3F) << 12) | ((source[sourceStartOffset++] & 0x3F) << 6) | (source[sourceStartOffset++] & 0x3F);
+                charValueInInt = ((charValueInInt & 0x0F) << 18) | ((byte2 & 0x3F) << 12) | ((byte3 & 0x3F) << 6) | (byte4 & 0x3F);
 
                 // four bytes into two chars
                 destination[destinationStartOffset++] = (char) ((charValueInInt >>> 10) + HIGH_SURROGATE_BASE);
                 destination[destinationStartOffset++] = (char) ((charValueInInt & 0x3ff) + MIN_LOW_SURROGATE);
             } else {
                 return OVERFLOW;
+            }
+        }
+        return UNDERFLOW;
+    }
+
+    public static CoderResult decode2(final byte[] source, final int srcStartOffset, final int srcLimit,
+                                      final char[] destination, final int destStartOffset, final int destLimit) {
+        if (source == null || destination == null ||
+                srcStartOffset < 0 || srcLimit < 0 || destStartOffset < 0 || destLimit < 0) {
+            throw new IllegalArgumentException();
+        }
+
+        int sourceStartOffset = srcStartOffset, destinationStartOffset = destStartOffset;
+        final int sourceCount = min(source.length - sourceStartOffset, srcLimit);
+        final int destinationCount = min(destination.length - destinationStartOffset, destLimit);
+
+        final int smallerCount = min(sourceCount, destinationCount);
+        while (destinationStartOffset < smallerCount && source[sourceStartOffset] >= 0) { //0 ~ 127
+            destination[destinationStartOffset++] = (char) source[sourceStartOffset++];
+        }
+
+        int charValueInInt;
+        byte byte2, byte3, byte4;
+        while (sourceStartOffset < sourceCount) {
+            charValueInInt = source[sourceStartOffset++];
+
+            if (charValueInInt >= 0) { //"01111111" == 0x7f
+                //check remaining capacity
+                if (destinationStartOffset + 1 > destinationCount) {
+                    return OVERFLOW;
+                }
+
+                // 1 bit
+                destination[destinationStartOffset++] = (char) charValueInInt;
+            } else if (charValueInInt > -9) { //invalid, "11xxxxxx"
+                return OVERFLOW;
+            } else if (charValueInInt > -17) { //"11110000" ==> 4 bytes
+                //check remaining capacity
+                if ((destinationStartOffset + 2 > destinationCount) || (sourceStartOffset + 3 > sourceCount)
+                        ){
+//                        || !checkFourBytes2(charValueInInt, byte2 = source[sourceStartOffset++], byte3 = source[sourceStartOffset++], byte4 = source[sourceStartOffset++])) {
+                    return OVERFLOW;
+                }
+
+                charValueInInt = ((charValueInInt & 0x0F) << 18) | ((source[sourceStartOffset++] & 0x3F) << 12) | ((source[sourceStartOffset++] & 0x3F) << 6) | (source[sourceStartOffset++] & 0x3F);
+                // four bytes into two chars
+                destination[destinationStartOffset++] = (char) ((charValueInInt >>> 10) + HIGH_SURROGATE_BASE);
+                destination[destinationStartOffset++] = (char) ((charValueInInt & 0x3ff) + MIN_LOW_SURROGATE);
+
+            } else if (charValueInInt > -33) { //"1110xxxx" ==> 3 bytes
+                //check remaining capacity
+                if ((destinationStartOffset + 1 > destinationCount) || (sourceStartOffset + 2 > sourceCount)
+                        ){
+//                        || !checkThreeBytes2(charValueInInt, byte2 = source[sourceStartOffset++], byte3 = source[sourceStartOffset++])) {
+                    return OVERFLOW;
+                }
+
+                // three bytes into one char --> '1111 111111 111111' is 65535
+                destination[destinationStartOffset++] = (char) (((charValueInInt & 0x0F) << 12) | ((source[sourceStartOffset++] & 0x3F) << 6) | (source[sourceStartOffset++] & 0x3F));
+            } else if (charValueInInt > -65) { //"110xxxxx" ==> 2 bytes
+                //check remaining capacity
+                if ((destinationStartOffset + 1 > destinationCount) || (sourceStartOffset + 1 > sourceCount)
+                        ){
+//                        || !checkTwoBytes2(charValueInInt, byte2 = source[sourceStartOffset++])) {
+                    return OVERFLOW;
+                }
+                // two bytes into one char --> '11111 111111' is 2047
+                destination[destinationStartOffset++] = (char) (((charValueInInt & 0x1F) << 6) | (source[sourceStartOffset++] & 0x3F));
             }
         }
         return UNDERFLOW;
@@ -284,5 +353,38 @@ class UTF8Utils {
 
     private static void putByte(final long address, final int position, final byte value) {
         UNSAFE.putByte(address + position, value);
+    }
+
+    private static boolean checkFourBytes(final int unsignedByte1, short unsignedByte2, short unsignedByte3, short unsignedByte4) {
+        return unsignedByte1 > 0xF0 && validSecondaryByte(unsignedByte2) && validSecondaryByte(unsignedByte3) && validSecondaryByte(unsignedByte4);
+    }
+
+    private static boolean checkThreeBytes(final int unsignedByte1, final short unsignedByte2, final short unsignedByte3) {
+        return unsignedByte1 > 0xE0 && validSecondaryByte(unsignedByte2) && validSecondaryByte(unsignedByte3);
+    }
+
+    private static boolean checkTwoBytes(final int unsignedByte1, final short unsignedByte2) {
+        return unsignedByte1 > 0xC0 && validSecondaryByte(unsignedByte2);
+    }
+
+    private static boolean validSecondaryByte(final short unsignedByte2) {
+        return unsignedByte2 >= 0x80 && unsignedByte2 <= 0xBF;
+    }
+
+    private static boolean checkFourBytes2(final int byte1, short byte2, short byte3, short byte4) {
+        return byte1 < -8 && validSecondaryByte2(byte2) && validSecondaryByte2(byte3) && validSecondaryByte2(byte4);
+    }
+
+    private static boolean checkThreeBytes2(final int byte1, final short byte2, final short byte3) {
+        return byte1 < -16 && validSecondaryByte2(byte2) && validSecondaryByte2(byte3);
+    }
+
+    private static boolean checkTwoBytes2(final int byte1, final short byte2) {
+        return byte1 < -32 && validSecondaryByte2(byte2);
+    }
+
+    private static boolean validSecondaryByte2(final short byte2) {
+        //[10000000 -- 10111111]
+        return byte2 >= -65 && byte2 <= -128;
     }
 }

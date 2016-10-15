@@ -9,14 +9,13 @@ import java.text.NumberFormat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 import static woo.ba.ben.core.IHeapDataHandler.arrayEquals;
-import static woo.ba.ben.core.UTF8Utils.decode;
-import static woo.ba.ben.core.UTF8Utils.encode;
+import static woo.ba.ben.core.UTF8Utils.*;
 
 
 public class UTF8UtilsTest {
     public static final int LOOP_CNT = 50_000_000;
 
-    private long time1, time2, time3, time4;
+    private long time1, time2, time3, time4, time5;
 
     @Test
     public void shouldEncodeAndDecodeCorrectly() throws UnsupportedEncodingException, CharacterCodingException {
@@ -33,10 +32,14 @@ public class UTF8UtilsTest {
         assertTrue(arrayEquals(bytes, bytes1));
         System.out.println("\nCustom encoding is " + calcPercentage(time1, time2) + " faster than JDK. \n");
 
+
         final char[] chars = decodeString(bytes);
         final char[] chars1 = decodeMy(bytes);
+        final char[] chars2 = decodeMy2(bytes);
         assertArrayEquals(chars, chars1);
+        assertArrayEquals(chars1, chars2);
         System.out.println("\nCustom decoding is " + calcPercentage(time3, time4) + " faster than JDK. \n");
+        System.out.println("\nCustom decoding 2 is " + calcPercentage(time4, time5) + " faster than 1. \n");
     }
 
     private String calcPercentage(long d1, long d2) {
@@ -54,6 +57,19 @@ public class UTF8UtilsTest {
         long end = System.currentTimeMillis();
         time4 = end - start;
         System.out.println("it took " + time4 + " to run custom decode()");
+
+        return chars;
+    }
+
+    private char[] decodeMy2(byte[] bytes) throws CharacterCodingException {
+        char[] chars = new char[66];
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < LOOP_CNT; i++) {
+            decode2(bytes, 0, bytes.length, chars, 0, chars.length);
+        }
+        long end = System.currentTimeMillis();
+        time5 = end - start;
+        System.out.println("it took " + time5 + " to run custom decode2()");
 
         return chars;
     }
