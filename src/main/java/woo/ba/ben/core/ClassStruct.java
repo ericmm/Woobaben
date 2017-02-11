@@ -13,18 +13,18 @@ import static sun.misc.Unsafe.INVALID_FIELD_OFFSET;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 import static woo.ba.ben.core.UnsafeFactory.getTypeSize;
 
-public class ClassStruct {
-    public static final String FIELD_SEPARATOR = ".";
+class ClassStruct {
+    static final String FIELD_SEPARATOR = ".";
 
     private static final Comparator<FieldStruct> FIELD_STRUCT_OFFSET_COMPARATOR = (f1, f2) -> (int) (f1.offset - f2.offset);
 
-    public final Class realClass;
+    final Class realClass;
 
     private List<FieldStruct> instanceFields;
     private List<FieldStruct> transientFields;
     private Map<String, FieldStruct> fieldMap;
 
-    public ClassStruct(final Class realClass) {
+    ClassStruct(final Class realClass) {
         if (realClass == null) {
             throw new IllegalArgumentException("Input parameter should not be null");
         }
@@ -42,35 +42,35 @@ public class ClassStruct {
         }
     }
 
-    public static Class getObjectClass(final Object obj) {
+    static Class getObjectClass(final Object obj) {
         return obj instanceof Class ? (Class) obj : obj.getClass();
     }
 
-    public FieldStruct getField(final String fieldName) {
+    FieldStruct getField(final String fieldName) {
         return fieldMap == null ? null : fieldMap.get(fieldName);
     }
 
-    public int getFieldCount() {
+    int getFieldCount() {
         return fieldMap == null ? 0 : fieldMap.size();
     }
 
-    public List<FieldStruct> getInstanceFields() {
+    List<FieldStruct> getInstanceFields() {
         return instanceFields;
     }
 
-    public boolean hasInstanceFields() {
+    boolean hasInstanceFields() {
         return instanceFields != null && !instanceFields.isEmpty();
     }
 
-    public List<FieldStruct> getTransientFields() {
+    List<FieldStruct> getTransientFields() {
         return transientFields;
     }
 
-    public boolean hasTransientFields() {
+    boolean hasTransientFields() {
         return transientFields != null && !transientFields.isEmpty();
     }
 
-    public long getStartOffset() {
+    long getStartOffset() {
         if (realClass.isArray()) {
             return UNSAFE.arrayBaseOffset(realClass);
         }
@@ -82,7 +82,7 @@ public class ClassStruct {
         return instanceFields.get(0).offset;
     }
 
-    public long getInstanceBlockSize() {
+    long getInstanceBlockSize() {
         if (!hasInstanceFields()) {
             return INVALID_FIELD_OFFSET;
         }
@@ -92,7 +92,7 @@ public class ClassStruct {
         return size + getTypeSize(lastFieldStruct.type);
     }
 
-    public long getArrayBlockSize(final int length) {
+    long getArrayBlockSize(final int length) {
         if (!realClass.isArray() || length <= 0) {
             return INVALID_FIELD_OFFSET;
         }
@@ -102,7 +102,7 @@ public class ClassStruct {
 
     /*
     //!!Unsafe - not verified!!
-    public static long unsafeSizeOf(final Object object) {
+     static long unsafeSizeOf(final Object object) {
         if (object == null) {
             return INVALID_FIELD_OFFSET;
         }

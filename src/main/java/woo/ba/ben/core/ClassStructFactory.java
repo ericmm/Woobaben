@@ -4,7 +4,7 @@ package woo.ba.ben.core;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ClassStructFactory {
+class ClassStructFactory {
     //TODO: allow the eldest Classes to be garbage collected
     private static final int DEFAULT_CACHE_SIZE = 1024;
     private static final Map<Class, ClassStruct> CACHE = new HashMap<>(DEFAULT_CACHE_SIZE);
@@ -12,7 +12,7 @@ public class ClassStructFactory {
     private ClassStructFactory() {
     }
 
-    public static ClassStruct get(final Class realClass) {
+    static ClassStruct get(final Class realClass) {
         if (realClass == null) {
             return null;
         }

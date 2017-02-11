@@ -2,39 +2,42 @@ package woo.ba.ben.core;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Objects;
 
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
-public class FieldStruct {
-    public final String name;
-    public final Class type;
-    public final long offset;
+class FieldStruct {
+    final String name;
+    final Class type;
+    final long offset;
     private final int modifiers;
 
-    public FieldStruct(final Field field) {
+    FieldStruct(final Field field) {
+        Objects.requireNonNull(field, "The field parameter cannot be null");
+
         this.name = field.getName();
         this.type = field.getType();
         this.modifiers = field.getModifiers();
         this.offset = isStatic() ? UNSAFE.staticFieldOffset(field) : UNSAFE.objectFieldOffset(field);
     }
 
-    public boolean isArray() {
+    boolean isArray() {
         return type.isArray();
     }
 
-    public Class getArrayType() {
+    Class getArrayType() {
         return isArray() ? type.getComponentType() : null;
     }
 
-    public boolean isPrimitive() {
+    boolean isPrimitive() {
         return type.isPrimitive();
     }
 
-    public boolean isStatic() {
+    boolean isStatic() {
         return Modifier.isStatic(modifiers);
     }
 
-    public boolean isTransient() {
+    boolean isTransient() {
         return Modifier.isTransient(modifiers);
     }
 
@@ -59,12 +62,10 @@ public class FieldStruct {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("FieldStruct{");
-        sb.append("name='").append(name).append('\'');
-        sb.append(", type=").append(type);
-        sb.append(", offset=").append(offset);
-        sb.append(", modifiers=").append(modifiers);
-        sb.append('}');
-        return sb.toString();
+        return "FieldStruct{" + "name='" + name + '\'' +
+                ", type=" + type +
+                ", offset=" + offset +
+                ", modifiers=" + modifiers +
+                '}';
     }
 }
