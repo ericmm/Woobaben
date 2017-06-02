@@ -6,6 +6,7 @@ import java.util.Map;
 import static java.lang.System.arraycopy;
 import static java.lang.reflect.Array.getLength;
 import static java.lang.reflect.Array.newInstance;
+import static woo.ba.ben.core.ClassStruct.classStruct;
 import static woo.ba.ben.core.ClassStruct.getObjectClass;
 import static woo.ba.ben.core.ImmutableClasses.isImmutable;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
@@ -16,7 +17,7 @@ public class HeapObjectCopier {
 
     public static <T> T deepCopy(final T originalObj) {
         if (originalObj == null) {
-            return originalObj;
+            return null;
         }
 
         final Map<Object, Object> objectMap = new IdentityHashMap<>();
@@ -33,7 +34,7 @@ public class HeapObjectCopier {
         }
 
         final T targetObject = createNonArrayInstanceIfNeeded(originalObj, objectClass, objectMap);
-        final ClassStruct classStruct = ClassStructFactory.get(objectClass);
+        final ClassStruct classStruct = classStruct(objectClass);
         if (!classStruct.hasInstanceFields()) {
             return targetObject;
         }
@@ -81,7 +82,7 @@ public class HeapObjectCopier {
 
     private static <T> T copyArray(final T arrayObj, final Class<T> arrayClass, final Map<Object, Object> objectMap) {
         if (arrayObj == null) {
-            return arrayObj;
+            return null;
         }
 
         final int length = getLength(arrayObj);
@@ -117,7 +118,7 @@ public class HeapObjectCopier {
     private static <T> T createArrayInstanceIfNeeded(final T originalObj, final int length, final Class<T> objClass, final Map<Object, Object> objectMap) {
         T targetArray = (T) objectMap.get(originalObj);
         if (targetArray == null) {
-            targetArray = createArray(objClass.getComponentType(), length);
+            targetArray = (T) newInstance(objClass.getComponentType(), length);
             objectMap.put(originalObj, targetArray);
         }
         return targetArray;
@@ -134,10 +135,6 @@ public class HeapObjectCopier {
         } catch (final InstantiationException e) {
             throw new RuntimeException("Cannot instantiate class:" + objectClass.getName(), e);
         }
-    }
-
-    private static <T> T createArray(final Class componentType, final int length) {
-        return (T) newInstance(componentType, length);
     }
 
     private static <T> T createObject(final Class<T> objectClass) throws InstantiationException {

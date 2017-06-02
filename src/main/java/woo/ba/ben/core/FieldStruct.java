@@ -1,24 +1,25 @@
 package woo.ba.ben.core;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.Objects;
 
+import static java.lang.reflect.Modifier.isStatic;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
-class FieldStruct {
+/*
+ * Represent the field object, two FieldStruct can only be compared if they are in the same class
+ * offset is unique within class
+ */
+final class FieldStruct implements Comparable<FieldStruct> {
     final String name;
     final Class type;
     final long offset;
-    private final int modifiers;
+    final int modifiers;
 
     FieldStruct(final Field field) {
-        Objects.requireNonNull(field, "The field parameter cannot be null");
-
         this.name = field.getName();
         this.type = field.getType();
         this.modifiers = field.getModifiers();
-        this.offset = isStatic() ? UNSAFE.staticFieldOffset(field) : UNSAFE.objectFieldOffset(field);
+        this.offset = isStatic(modifiers) ? UNSAFE.staticFieldOffset(field) : UNSAFE.objectFieldOffset(field);
     }
 
     boolean isArray() {
@@ -33,31 +34,22 @@ class FieldStruct {
         return type.isPrimitive();
     }
 
-    boolean isStatic() {
-        return Modifier.isStatic(modifiers);
-    }
-
-    boolean isTransient() {
-        return Modifier.isTransient(modifiers);
-    }
-
     @Override
-    public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
-        final FieldStruct that = (FieldStruct) o;
-
-        if (offset != that.offset) return false;
-        return name.equals(that.name);
-
+        FieldStruct that = (FieldStruct) o;
+        return offset == that.offset;
     }
 
     @Override
     public int hashCode() {
-        int result = name.hashCode();
-        result = 31 * result + (int) (offset ^ (offset >>> 32));
-        return result;
+        return (int) (offset ^ (offset >>> 32));
     }
 
     @Override
@@ -67,5 +59,10 @@ class FieldStruct {
                 ", offset=" + offset +
                 ", modifiers=" + modifiers +
                 '}';
+    }
+
+    @Override
+    public int compareTo(final FieldStruct f) {
+        return (int) (this.offset - f.offset);
     }
 }

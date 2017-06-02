@@ -2,56 +2,84 @@ package woo.ba.ben.core;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.reflect.Modifier.isStatic;
+import static java.lang.reflect.Modifier.isTransient;
+import static java.util.Collections.EMPTY_LIST;
+import static java.util.Collections.EMPTY_MAP;
 import static java.util.Collections.sort;
 import static java.util.Collections.unmodifiableList;
 import static sun.misc.Unsafe.INVALID_FIELD_OFFSET;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 import static woo.ba.ben.core.UnsafeFactory.getTypeSize;
 
-class ClassStruct {
-    static final String FIELD_SEPARATOR = ".";
+final class ClassStruct {
+    static final String FIELD_SEPARATOR = "@";
 
-    private static final Comparator<FieldStruct> FIELD_STRUCT_OFFSET_COMPARATOR = (f1, f2) -> (int) (f1.offset - f2.offset);
+    //TODO: think about GC strategy, allow unused Classes to be cleaned
+    private static final Map<Class, ClassStruct> CACHE = new HashMap<>(1024);
+    private static List<FieldStruct> staticFields;
 
     final Class realClass;
-
     private List<FieldStruct> instanceFields;
     private List<FieldStruct> transientFields;
     private Map<String, FieldStruct> fieldMap;
 
-    ClassStruct(final Class realClass) {
-        if (realClass == null) {
-            throw new IllegalArgumentException("Input parameter should not be null");
+    private ClassStruct(final Class realClass) {
+        if (realClass == null || realClass.isArray() || isAnnotationOrEnumOrInterface(realClass)) {
+            throw new IllegalArgumentException("Class cannot be null, Array, Annotation, Enum or Interface.");
         }
 
         this.realClass = realClass;
+        parseFields(realClass);
+        sortAndProtectFields();
+        CACHE.put(realClass, this);
+    }
 
-        if (!realClass.isArray()) {
-            final int fieldCount = getFieldCount(realClass);
-            if (fieldCount > 0) {
-                parseFields(realClass, fieldCount);
-                sort(instanceFields, FIELD_STRUCT_OFFSET_COMPARATOR);
-                instanceFields = unmodifiableList(instanceFields);
-                transientFields = unmodifiableList(transientFields);
-            }
+    // not thread-safe, but it's acceptable
+    static ClassStruct classStruct(final Class realClass) {
+        if (CACHE.containsKey(realClass)) {
+            return CACHE.get(realClass);
         }
+        final ClassStruct struct = new ClassStruct(realClass);
+        CACHE.put(realClass, struct);
+        return struct;
     }
 
     static Class getObjectClass(final Object obj) {
         return obj instanceof Class ? (Class) obj : obj.getClass();
     }
 
-    FieldStruct getField(final String fieldName) {
-        return fieldMap == null ? null : fieldMap.get(fieldName);
+    static boolean isAnnotationOrEnumOrInterface(final Class clazz) {
+        return clazz.isAnnotation() || clazz.isEnum() || clazz.isInterface();
     }
 
-    int getFieldCount() {
-        return fieldMap == null ? 0 : fieldMap.size();
+    private static int getFieldCount(final Class realClass) {
+        int result = 0;
+        Class currentClass = realClass;
+        while (currentClass.getSuperclass() != null) { //except Object.class
+            result += currentClass.getDeclaredFields().length;
+            currentClass = currentClass.getSuperclass();
+        }
+        return result;
+    }
+
+    static long getArrayBlockSize(final Class arrayClass, final int length) {
+        if (length < 0) {
+            return INVALID_FIELD_OFFSET;
+        }
+        return UNSAFE.arrayIndexScale(arrayClass) * length;
+    }
+
+    static long getArrayStartOffset(final Class arrayClass) {
+        return UNSAFE.arrayBaseOffset(arrayClass);
+    }
+
+    FieldStruct getField(final String fieldName) {
+        return fieldMap.get(fieldName);
     }
 
     List<FieldStruct> getInstanceFields() {
@@ -59,23 +87,11 @@ class ClassStruct {
     }
 
     boolean hasInstanceFields() {
-        return instanceFields != null && !instanceFields.isEmpty();
-    }
-
-    List<FieldStruct> getTransientFields() {
-        return transientFields;
-    }
-
-    boolean hasTransientFields() {
-        return transientFields != null && !transientFields.isEmpty();
+        return !instanceFields.isEmpty();
     }
 
     long getStartOffset() {
-        if (realClass.isArray()) {
-            return UNSAFE.arrayBaseOffset(realClass);
-        }
-
-        if (!hasInstanceFields()) {
+        if (instanceFields.isEmpty()) {
             return INVALID_FIELD_OFFSET;
         }
 
@@ -83,7 +99,7 @@ class ClassStruct {
     }
 
     long getInstanceBlockSize() {
-        if (!hasInstanceFields()) {
+        if (instanceFields.isEmpty()) {
             return INVALID_FIELD_OFFSET;
         }
 
@@ -92,12 +108,88 @@ class ClassStruct {
         return size + getTypeSize(lastFieldStruct.type);
     }
 
-    long getArrayBlockSize(final int length) {
-        if (!realClass.isArray() || length <= 0) {
-            return INVALID_FIELD_OFFSET;
+    @Override
+    public String toString() {
+        return "ClassStruct{" + "realClass=" + realClass + '}';
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
         }
 
-        return UNSAFE.arrayIndexScale(realClass) * length;
+        final ClassStruct that = (ClassStruct) o;
+        return realClass.equals(that.realClass);
+    }
+
+    @Override
+    public int hashCode() {
+        return realClass.hashCode();
+    }
+
+    private void parseFields(final Class realClass) {
+        final int fieldCount = getFieldCount(realClass);
+        if (fieldCount == 0) {
+            createEmptyCollections();
+            return;
+        }
+
+        createCollections(fieldCount);
+
+        FieldStruct fieldStruct;
+        Field[] declaredFields;
+        Class currentClass = realClass;
+        while (currentClass.getSuperclass() != null) { //except Object.class
+            declaredFields = currentClass.getDeclaredFields();
+
+            for (int i = declaredFields.length; --i >= 0; ) {
+                fieldStruct = new FieldStruct(declaredFields[i]);
+                if (fieldMap.containsKey(fieldStruct.name)) {
+                    fieldMap.put(fieldStruct.name + FIELD_SEPARATOR + currentClass.getName(), fieldStruct);
+                } else {
+                    fieldMap.put(fieldStruct.name, fieldStruct);
+                }
+
+                if (isStatic(fieldStruct.modifiers)) {
+                    staticFields.add(fieldStruct);
+                } else {
+                    instanceFields.add(fieldStruct);
+                }
+
+                if (isTransient(fieldStruct.modifiers)) {
+                    transientFields.add(fieldStruct);
+                }
+            }
+            currentClass = currentClass.getSuperclass();
+        }
+    }
+
+    private void createCollections(final int fieldCount) {
+        fieldMap = new HashMap<>(fieldCount);
+        staticFields = new ArrayList<>();
+        instanceFields = new ArrayList<>(fieldCount);
+        transientFields = new ArrayList<>();
+    }
+
+    private void createEmptyCollections() {
+        fieldMap = EMPTY_MAP;
+        staticFields = EMPTY_LIST;
+        instanceFields = EMPTY_LIST;
+        transientFields = EMPTY_LIST;
+    }
+
+    private void sortAndProtectFields() {
+        sort(staticFields);
+        sort(instanceFields);
+        sort(transientFields);
+
+        staticFields = unmodifiableList(staticFields);
+        instanceFields = unmodifiableList(instanceFields);
+        transientFields = unmodifiableList(transientFields);
     }
 
     /*
@@ -109,65 +201,4 @@ class ClassStruct {
         return UNSAFE.getAddress(unsignedInt(UNSAFE.getInt(object, 4L)) + 12L);
     }
     */
-
-    @Override
-    public String toString() {
-        return "ClassStruct{" + "realClass=" + realClass + '}';
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        final ClassStruct that = (ClassStruct) o;
-        return realClass.equals(that.realClass);
-    }
-
-    @Override
-    public int hashCode() {
-        return realClass.hashCode();
-    }
-
-    private void parseFields(final Class realClass, final int fieldCount) {
-        fieldMap = new HashMap<>(fieldCount);
-        instanceFields = new ArrayList<>(fieldCount);
-        transientFields = new ArrayList<>(fieldCount);
-
-        FieldStruct fieldStruct;
-        Field[] declaredFields;
-        Class currentClass = realClass;
-        while (currentClass.getSuperclass() != null) { //except Object.class
-            declaredFields = currentClass.getDeclaredFields();
-
-            for (int i = declaredFields.length; --i >= 0; ) {
-                fieldStruct = new FieldStruct(declaredFields[i]);
-                if (fieldMap.containsKey(fieldStruct.name)) {
-                    fieldMap.put(currentClass.getSimpleName() + FIELD_SEPARATOR + fieldStruct.name, fieldStruct);
-                } else {
-                    fieldMap.put(fieldStruct.name, fieldStruct);
-                }
-
-                if (!fieldStruct.isStatic()) {
-                    instanceFields.add(fieldStruct);
-                }
-
-                if (fieldStruct.isTransient()) {
-                    transientFields.add(fieldStruct);
-                }
-            }
-            currentClass = currentClass.getSuperclass();
-        }
-    }
-
-    private int getFieldCount(final Class realClass) {
-        int result = 0;
-        Class currentClass = realClass;
-        while (currentClass.getSuperclass() != null) { //except Object.class
-            result += currentClass.getDeclaredFields().length;
-            currentClass = currentClass.getSuperclass();
-        }
-        return result;
-    }
-
 }

@@ -6,6 +6,8 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import static woo.ba.ben.core.ClassStruct.classStruct;
+
 public class HeapObjectSerializer {
 
     public void write(final OutputStream out, final Object object) throws IOException {
@@ -26,8 +28,8 @@ public class HeapObjectSerializer {
         if (originalObj == null) {
             return;
         }
-        final ClassStruct classStruct = ClassStructFactory.get(originalObj.getClass());
-        if (classStruct.getFieldCount() == 0) {
+        final ClassStruct classStruct = classStruct(originalObj.getClass());
+        if (!classStruct.hasInstanceFields()) {
             return;
         }
 

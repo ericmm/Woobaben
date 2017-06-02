@@ -4,8 +4,10 @@ package woo.ba.ben.core;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ImmutableClasses {
-    private static final Set<Class> IMMUTABLE_CLASS_SET = new HashSet<>(128);
+import static woo.ba.ben.core.ClassStruct.isAnnotationOrEnumOrInterface;
+
+class ImmutableClasses {
+    private static final Set<Class> IMMUTABLE_CLASS_SET = new HashSet<>(80);
 
     static {
         IMMUTABLE_CLASS_SET.add(java.awt.Font.class);
@@ -89,21 +91,13 @@ public class ImmutableClasses {
 
         IMMUTABLE_CLASS_SET.add(HeapObjectCopier.class);
         IMMUTABLE_CLASS_SET.add(UnsafeFactory.class);
-        IMMUTABLE_CLASS_SET.add(ClassStructFactory.class);
+        IMMUTABLE_CLASS_SET.add(UTF8Utils.class);
     }
 
     private ImmutableClasses() {
     }
 
-    public static boolean addImmutableClass(final Class clazz) {
-        return IMMUTABLE_CLASS_SET.add(clazz);
-    }
-
-    public static boolean isImmutable(final Class clazz) {
+    static boolean isImmutable(final Class clazz) {
         return IMMUTABLE_CLASS_SET.contains(clazz) || isAnnotationOrEnumOrInterface(clazz);
-    }
-
-    private static boolean isAnnotationOrEnumOrInterface(final Class clazz) {
-        return clazz.isAnnotation() || clazz.isEnum() || clazz.isInterface();
     }
 }

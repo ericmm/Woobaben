@@ -5,8 +5,10 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static woo.ba.ben.core.ClassStruct.classStruct;
 
 
 public class ClassStructFactoryTest {
@@ -14,10 +16,10 @@ public class ClassStructFactoryTest {
 
     @Test
     public void shouldCreateClassStruct() {
-        final ClassStruct testFieldObjStruct = ClassStructFactory.get(TestFieldObj.class);
+        final ClassStruct testFieldObjStruct = classStruct(TestFieldObj.class);
         assertThat(testFieldObjStruct, notNullValue());
 
-        final ClassStruct testClassObjStruct = ClassStructFactory.get(TestClassObj.class);
+        final ClassStruct testClassObjStruct = classStruct(TestClassObj.class);
         assertThat(testClassObjStruct, notNullValue());
 
         assertThat(testClassObjStruct.getField("testPrimitiveByte").isPrimitive(), is(true));
@@ -25,10 +27,10 @@ public class ClassStructFactoryTest {
 
     @Test
     public void shouldGetClassStruct() {
-        final ClassStruct testFieldObjStruct = new ClassStruct(TestFieldObj.class);
+        final ClassStruct testFieldObjStruct = classStruct(TestFieldObj.class);
         assertThat(testFieldObjStruct, notNullValue());
 
-        final ClassStruct testClassObjStruct = ClassStructFactory.get(TestClassObj.class);
+        final ClassStruct testClassObjStruct = classStruct(TestClassObj.class);
         assertThat(testClassObjStruct, notNullValue());
 
         assertThat(testClassObjStruct.getField("testPrimitiveByte").isPrimitive(), is(true));
@@ -36,21 +38,16 @@ public class ClassStructFactoryTest {
 
     @Test
     public void shouldGetClassStructForAnyNotNullClass() {
-        assertThat(ClassStructFactory.get(Object.class), notNullValue());
-    }
-
-    @Test
-    public void shouldGetNullWhenInputIsNull() {
-        assertThat(ClassStructFactory.get(null), nullValue());
+        assertThat(classStruct(Object.class), notNullValue());
     }
 
     @Test
     public void shouldTestPerformance() throws NoSuchFieldException, IllegalAccessException {
         final Unsafe unsafe = UnsafeFactory.UNSAFE;
 
-        final ClassStruct classObjStruct = ClassStructFactory.get(TestClassObj.class);
-        final ClassStruct emptyObjStruct = ClassStructFactory.get(TestEmptyObj.class);
-        final ClassStruct fieldObjStruct = ClassStructFactory.get(TestFieldObj.class);
+        final ClassStruct classObjStruct = classStruct(TestClassObj.class);
+        final ClassStruct emptyObjStruct = classStruct(TestEmptyObj.class);
+        final ClassStruct fieldObjStruct = classStruct(TestFieldObj.class);
 
         final TestFieldObj testFieldObj = new TestFieldObj();
         testFieldObj.setTestPrimitiveByte((byte) 1);

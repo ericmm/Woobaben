@@ -8,12 +8,13 @@ import static java.lang.Character.MIN_LOW_SURROGATE;
 import static java.lang.Math.min;
 import static java.nio.charset.CoderResult.OVERFLOW;
 import static java.nio.charset.CoderResult.UNDERFLOW;
+import static woo.ba.ben.core.ClassStruct.classStruct;
 import static woo.ba.ben.core.IDataReader.unsignedByte;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 class UTF8Utils {
     private static final int HIGH_SURROGATE_BASE = 55232;
-    private static final FieldStruct stringValueField = ClassStructFactory.get(String.class).getField("value");
+    private static final FieldStruct stringValueField = classStruct(String.class).getField("value");
 
     static char[] getCharArrayDirectly(final String str) {
         return str == null ? null : (char[]) FieldAccessor.getObject(str, stringValueField);

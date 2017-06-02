@@ -1,6 +1,7 @@
 package woo.ba.ben.core;
 
 
+import static java.lang.reflect.Modifier.isStatic;
 import static woo.ba.ben.core.ClassStruct.getObjectClass;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
@@ -10,7 +11,7 @@ class FieldAccessor {
 
     //Boolean
     static boolean getBoolean(final Object obj, final FieldStruct fieldStruct) {
-        return UNSAFE.getBoolean(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
+        return UNSAFE.getBoolean(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
     static boolean getInstanceBoolean(final Object obj, final FieldStruct fieldStruct) {
@@ -22,7 +23,7 @@ class FieldAccessor {
     }
 
     static void setBoolean(final Object obj, final FieldStruct fieldStruct, final boolean value) {
-        UNSAFE.putBoolean(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
+        UNSAFE.putBoolean(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset, value);
     }
 
     static void setInstanceBoolean(final Object obj, final FieldStruct fieldStruct, final boolean value) {
@@ -60,7 +61,7 @@ class FieldAccessor {
 
     //Byte
     static byte getByte(final Object obj, final FieldStruct fieldStruct) {
-        return UNSAFE.getByte(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
+        return UNSAFE.getByte(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
     static byte getInstanceByte(final Object obj, final FieldStruct fieldStruct) {
@@ -72,7 +73,7 @@ class FieldAccessor {
     }
 
     static void setByte(final Object obj, final FieldStruct fieldStruct, final byte value) {
-        UNSAFE.putByte(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
+        UNSAFE.putByte(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset, value);
     }
 
     static void setInstanceByte(final Object obj, final FieldStruct fieldStruct, final byte value) {
@@ -109,7 +110,7 @@ class FieldAccessor {
 
     //Char
     static char getChar(final Object obj, final FieldStruct fieldStruct) {
-        return UNSAFE.getChar(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
+        return UNSAFE.getChar(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
     static char getInstanceChar(final Object obj, final FieldStruct fieldStruct) {
@@ -121,7 +122,7 @@ class FieldAccessor {
     }
 
     static void setChar(final Object obj, final FieldStruct fieldStruct, final char value) {
-        UNSAFE.putChar(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
+        UNSAFE.putChar(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset, value);
     }
 
     static void setInstanceChar(final Object obj, final FieldStruct fieldStruct, final char value) {
@@ -158,7 +159,7 @@ class FieldAccessor {
 
     //Double
     static double getDouble(final Object obj, final FieldStruct fieldStruct) {
-        return UNSAFE.getDouble(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
+        return UNSAFE.getDouble(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
     static double getInstanceDouble(final Object obj, final FieldStruct fieldStruct) {
@@ -170,7 +171,7 @@ class FieldAccessor {
     }
 
     static void setDouble(final Object obj, final FieldStruct fieldStruct, final double value) {
-        UNSAFE.putDouble(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
+        UNSAFE.putDouble(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset, value);
     }
 
     static void setInstanceDouble(final Object obj, final FieldStruct fieldStruct, final double value) {
@@ -207,7 +208,7 @@ class FieldAccessor {
 
     //Float
     static float getFloat(final Object obj, final FieldStruct fieldStruct) {
-        return UNSAFE.getFloat(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
+        return UNSAFE.getFloat(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
     static float getInstanceFloat(final Object obj, final FieldStruct fieldStruct) {
@@ -219,7 +220,7 @@ class FieldAccessor {
     }
 
     static void setFloat(final Object obj, final FieldStruct fieldStruct, final float value) {
-        UNSAFE.putFloat(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
+        UNSAFE.putFloat(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset, value);
     }
 
     static void setInstanceFloat(final Object obj, final FieldStruct fieldStruct, final float value) {
@@ -256,7 +257,7 @@ class FieldAccessor {
 
     //Int
     static int getInt(final Object obj, final FieldStruct fieldStruct) {
-        return UNSAFE.getInt(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
+        return UNSAFE.getInt(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
     static int getInstanceInt(final Object obj, final FieldStruct fieldStruct) {
@@ -268,7 +269,7 @@ class FieldAccessor {
     }
 
     static void setInt(final Object obj, final FieldStruct fieldStruct, final int value) {
-        UNSAFE.putInt(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
+        UNSAFE.putInt(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset, value);
     }
 
     static void setInstanceInt(final Object obj, final FieldStruct fieldStruct, final int value) {
@@ -305,7 +306,7 @@ class FieldAccessor {
 
     //Long
     static long getLong(final Object obj, final FieldStruct fieldStruct) {
-        return UNSAFE.getLong(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
+        return UNSAFE.getLong(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
     static long getInstanceLong(final Object obj, final FieldStruct fieldStruct) {
@@ -317,7 +318,7 @@ class FieldAccessor {
     }
 
     static void setLong(final Object obj, final FieldStruct fieldStruct, final long value) {
-        UNSAFE.putLong(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
+        UNSAFE.putLong(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset, value);
     }
 
     static void setInstanceLong(final Object obj, final FieldStruct fieldStruct, final long value) {
@@ -354,7 +355,7 @@ class FieldAccessor {
 
     //Short
     static short getShort(final Object obj, final FieldStruct fieldStruct) {
-        return UNSAFE.getShort(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
+        return UNSAFE.getShort(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
     static short getInstanceShort(final Object obj, final FieldStruct fieldStruct) {
@@ -366,7 +367,7 @@ class FieldAccessor {
     }
 
     static void setShort(final Object obj, final FieldStruct fieldStruct, final short value) {
-        UNSAFE.putShort(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
+        UNSAFE.putShort(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset, value);
     }
 
     static void setInstanceShort(final Object obj, final FieldStruct fieldStruct, final short value) {
@@ -403,7 +404,7 @@ class FieldAccessor {
 
     //Object
     static Object getObject(final Object obj, final FieldStruct fieldStruct) {
-        return UNSAFE.getObject(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset);
+        return UNSAFE.getObject(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset);
     }
 
     static Object getInstanceObject(final Object obj, final FieldStruct fieldStruct) {
@@ -415,7 +416,7 @@ class FieldAccessor {
     }
 
     static void setObject(final Object obj, final FieldStruct fieldStruct, final Object value) {
-        UNSAFE.putObject(fieldStruct.isStatic() ? getObjectClass(obj) : obj, fieldStruct.offset, value);
+        UNSAFE.putObject(isStatic(fieldStruct.modifiers) ? getObjectClass(obj) : obj, fieldStruct.offset, value);
     }
 
     static void setInstanceObject(final Object obj, final FieldStruct fieldStruct, final Object value) {
