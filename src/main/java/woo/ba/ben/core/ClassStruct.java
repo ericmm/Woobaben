@@ -1,25 +1,28 @@
 package woo.ba.ben.core;
 
+import com.google.common.cache.Cache;
+
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.google.common.cache.CacheBuilder.newBuilder;
 import static java.lang.reflect.Modifier.isAbstract;
 import static java.util.Collections.EMPTY_MAP;
+import static java.util.Collections.unmodifiableMap;
 import static sun.misc.Unsafe.INVALID_FIELD_OFFSET;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
-import static woo.ba.ben.core.UnsafeFactory.getTypeSize;
 
 final class ClassStruct {
     static final String FIELD_SEPARATOR = "@";
 
-    //TODO: think about GC strategy, allow unused Classes to be cleaned
-    private static final Map<Class, ClassStruct> CACHE = new HashMap<>(1024);
+    //TODO: read max size from properties
+    private static final Cache<Class, ClassStruct> CACHE = newBuilder()
+            .maximumSize(1024)
+            .build();
 
     final Class realClass;
     Map<String, FieldStruct> fieldMap;
-    long startOffset = INVALID_FIELD_OFFSET;
-    int instanceBlockSize = INVALID_FIELD_OFFSET;
 
     private ClassStruct(final Class realClazz) {
         if (realClazz == null || isUnsupportedClass(realClazz)) {
@@ -31,12 +34,12 @@ final class ClassStruct {
         CACHE.put(realClazz, this);
     }
 
-    // not thread-safe, but it's acceptable
     static ClassStruct classStruct(final Class realClass) {
-        if (CACHE.containsKey(realClass)) {
-            return CACHE.get(realClass);
+        ClassStruct struct = CACHE.getIfPresent(realClass);
+        if (struct != null) {
+            return struct;
         }
-        final ClassStruct struct = new ClassStruct(realClass);
+        struct = new ClassStruct(realClass);
         CACHE.put(realClass, struct);
         return struct;
     }
@@ -105,8 +108,7 @@ final class ClassStruct {
         }
 
         Field[] declaredFields;
-        long lastOffset = INVALID_FIELD_OFFSET;
-        FieldStruct fieldStruct, lastInstanceFieldStruct = null;
+        FieldStruct fieldStruct;
         Class currentClass = realClass;
         fieldMap = new HashMap<>(fieldCount);
         while (currentClass.getSuperclass() != null) { //except Object.class
@@ -115,24 +117,10 @@ final class ClassStruct {
             for (int i = declaredFields.length; --i >= 0; ) {
                 fieldStruct = new FieldStruct(declaredFields[i]);
                 buildFieldMap(fieldStruct, currentClass);
-
-                if (!fieldStruct.isStatic()) {
-                    if (startOffset == INVALID_FIELD_OFFSET || fieldStruct.offset < startOffset) {
-                        startOffset = fieldStruct.offset;
-                    }
-
-                    if (fieldStruct.offset > lastOffset) {
-                        lastOffset = fieldStruct.offset;
-                        lastInstanceFieldStruct = fieldStruct;
-                    }
-                }
             }
             currentClass = currentClass.getSuperclass();
         }
-
-        if (lastInstanceFieldStruct != null) {
-            instanceBlockSize = (int) (lastOffset - startOffset) + getTypeSize(lastInstanceFieldStruct.type);
-        }
+        fieldMap = unmodifiableMap(fieldMap);
     }
 
     private void buildFieldMap(final FieldStruct fieldStruct, final Class currentClass) {
