@@ -1,12 +1,6 @@
 package woo.ba.ben;
 
 
-import parsii.eval.Expression;
-import parsii.eval.Parser;
-import parsii.eval.Scope;
-import parsii.eval.Variable;
-import parsii.tokenizer.ParseException;
-
 public class App {
 
     public static void main(String[] args) throws Exception {
@@ -31,15 +25,14 @@ public class App {
 
         EntityInstance instance = new EntityInstance(2, instanceValues);
 
-        Rule rule = new Rule(5, new Attr[]{life, magic}, "var_" + life.id + "  + sqrt( var_" + magic.id + ") ");
-
-        rule.variables[0].setValue((Double) lifeValue.value);
-        rule.variables[1].setValue((Double) magicValue.value);
-
-        System.out.println("result=" + rule.expression.evaluate());
+//        Rule rule = new Rule(5, new Attr[]{life, magic}, "var_" + life.id + "  + sqrt( var_" + magic.id + ") ");
+//
+//        rule.variables[0].setValue((Double) lifeValue.value);
+//        rule.variables[1].setValue((Double) magicValue.value);
+//
+//        System.out.println("result=" + rule.expression.evaluate());
 
 //        Rule expRule = new Rule(7, new Attr[]{exp, }, "var_" + exp.id + "  + sqrt( var_" + magic.id + ") ");
-
 
 
 //        double result = 0;
@@ -122,19 +115,19 @@ class EntityInstance {
 class Rule {
     int id;
     String calculationExpr;
-    Scope scope;
-    Variable[] variables;
-    Expression expression;
-
-    Rule(int id, Attr[] relatedAttrs, String calculationExpr) throws ParseException {
-        this.id = id;
-        this.calculationExpr = calculationExpr;
-
-        scope = new Scope();
-        variables = new Variable[relatedAttrs.length];
-        for (int i = 0; i < relatedAttrs.length; i++) {
-            variables[i] = scope.create("var_" + relatedAttrs[i].id);
-        }
-        expression = Parser.parse(String.format(calculationExpr, variables), scope);
-    }
+//    Scope scope;
+//    Variable[] variables;
+//    Expression expression;
+//
+//    Rule(int id, Attr[] relatedAttrs, String calculationExpr) throws ParseException {
+//        this.id = id;
+//        this.calculationExpr = calculationExpr;
+//
+//        scope = new Scope();
+//        variables = new Variable[relatedAttrs.length];
+//        for (int i = 0; i < relatedAttrs.length; i++) {
+//            variables[i] = scope.create("var_" + relatedAttrs[i].id);
+//        }
+//        expression = Parser.parse(String.format(calculationExpr, variables), scope);
+//    }
 }

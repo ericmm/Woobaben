@@ -1,6 +1,7 @@
 package woo.ba.ben.core;
 
 
+import java.lang.reflect.Field;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CoderResult;
 
@@ -8,16 +9,29 @@ import static java.lang.Character.MIN_LOW_SURROGATE;
 import static java.lang.Math.min;
 import static java.nio.charset.CoderResult.OVERFLOW;
 import static java.nio.charset.CoderResult.UNDERFLOW;
-import static woo.ba.ben.core.ClassStruct.classStruct;
 import static woo.ba.ben.core.IDataReader.unsignedByte;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 class UTF8Utils {
     private static final int HIGH_SURROGATE_BASE = 55232;
-    private static final FieldStruct stringValueField = classStruct(String.class).getField("value");
+
+    private static Field STRING_VALUE_FIELD = null;
+
+    static {
+        try {
+            STRING_VALUE_FIELD = String.class.getDeclaredField("value");
+            STRING_VALUE_FIELD.setAccessible(true);
+        } catch (final NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     static char[] getCharArrayDirectly(final String str) {
-        return str == null ? null : (char[]) FieldAccessor.getObject(str, stringValueField);
+        try {
+            return (char[]) STRING_VALUE_FIELD.get(str);
+        } catch (final IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     static int encodingDestBlockSize(final char[] source, final int srcStartOffset, final int srcLimit) throws CharacterCodingException {

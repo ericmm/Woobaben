@@ -2,16 +2,11 @@ package woo.ba.ben.core;
 
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET;
-import static woo.ba.ben.core.ClassStruct.classStruct;
-import static woo.ba.ben.core.ClassStruct.getArrayBlockSize;
-import static woo.ba.ben.core.ClassStruct.getArrayStartOffset;
+import static woo.ba.ben.core.ClassStruct.*;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 public class ClassStructTest {
@@ -49,8 +44,8 @@ public class ClassStructTest {
         obj1.setIntFieldInClassObj(123456);
 
         final ClassStruct struct = classStruct(TestClassObj.class);
-        final long startOffset = struct.getStartOffset();
-        final long blockSize = struct.getInstanceBlockSize();
+        final long startOffset = struct.startOffset;
+        final long blockSize = struct.instanceBlockSize;
         final byte[] buffer = new byte[(int) blockSize];
 
         final FieldStruct fieldStruct = struct.getField("intFieldInClassObj");

@@ -11,11 +11,7 @@ class ImmutableClasses {
 
     static {
         IMMUTABLE_CLASS_SET.add(java.awt.Font.class);
-        IMMUTABLE_CLASS_SET.add(java.awt.BasicStroke.class);
         IMMUTABLE_CLASS_SET.add(java.awt.Color.class);
-        IMMUTABLE_CLASS_SET.add(java.awt.GradientPaint.class);
-        IMMUTABLE_CLASS_SET.add(java.awt.LinearGradientPaint.class);
-        IMMUTABLE_CLASS_SET.add(java.awt.RadialGradientPaint.class);
         IMMUTABLE_CLASS_SET.add(java.awt.Cursor.class);
 
         IMMUTABLE_CLASS_SET.add(java.lang.Boolean.class);

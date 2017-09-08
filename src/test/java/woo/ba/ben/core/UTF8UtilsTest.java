@@ -99,7 +99,6 @@ public class UTF8UtilsTest {
         return str.getBytes("UTF-8");
     }
 
-
     private byte[] testConvert(char[] charArr) throws UnsupportedEncodingException {
         byte[] output = new byte[114];
         long start = System.currentTimeMillis();

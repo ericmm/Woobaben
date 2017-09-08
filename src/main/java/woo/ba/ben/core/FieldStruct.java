@@ -1,15 +1,15 @@
 package woo.ba.ben.core;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
-import static java.lang.reflect.Modifier.isStatic;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 /*
- * Represent the field object, two FieldStruct can only be compared if they are in the same class
- * offset is unique within class
+ * Represent the field object
+ *
  */
-final class FieldStruct implements Comparable<FieldStruct> {
+final class FieldStruct {
     final String name;
     final Class type;
     final long offset;
@@ -19,7 +19,7 @@ final class FieldStruct implements Comparable<FieldStruct> {
         this.name = field.getName();
         this.type = field.getType();
         this.modifiers = field.getModifiers();
-        this.offset = isStatic(modifiers) ? UNSAFE.staticFieldOffset(field) : UNSAFE.objectFieldOffset(field);
+        this.offset = isStatic() ? UNSAFE.staticFieldOffset(field) : UNSAFE.objectFieldOffset(field);
     }
 
     boolean isArray() {
@@ -34,17 +34,13 @@ final class FieldStruct implements Comparable<FieldStruct> {
         return type.isPrimitive();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+    boolean isStatic() {
+        return Modifier.isStatic(modifiers);
+    }
 
-        FieldStruct that = (FieldStruct) o;
-        return offset == that.offset;
+    @Override
+    public boolean equals(final Object o) {
+        return this == o || o != null && FieldStruct.class == o.getClass() && offset == ((FieldStruct) o).offset;
     }
 
     @Override
@@ -59,10 +55,5 @@ final class FieldStruct implements Comparable<FieldStruct> {
                 ", offset=" + offset +
                 ", modifiers=" + modifiers +
                 '}';
-    }
-
-    @Override
-    public int compareTo(final FieldStruct f) {
-        return (int) (this.offset - f.offset);
     }
 }

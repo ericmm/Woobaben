@@ -29,9 +29,9 @@ public class HeapObjectSerializer {
             return;
         }
         final ClassStruct classStruct = classStruct(originalObj.getClass());
-        if (!classStruct.hasInstanceFields()) {
-            return;
-        }
+//        if (!classStruct.hasInstanceField()) {
+//            return;
+//        }
 
 //        Object attributeInOriginalObj, attributeInTargetObj;
 //        for (final FieldStruct fieldStruct : classStruct.getSortedInstanceFields()) {

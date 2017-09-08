@@ -34,13 +34,13 @@ public class HeapObjectCopier {
         }
 
         final T targetObject = createNonArrayInstanceIfNeeded(originalObj, objectClass, objectMap);
-        final ClassStruct classStruct = classStruct(objectClass);
-        if (!classStruct.hasInstanceFields()) {
-            return targetObject;
-        }
 
         Object attributeInOriginalObj, attributeInTargetObj;
-        for (final FieldStruct fieldStruct : classStruct.getInstanceFields()) {
+        for (final FieldStruct fieldStruct : classStruct(objectClass).fieldMap.values()) {
+            if (fieldStruct.isStatic()) {
+                continue;
+            }
+
             if (fieldStruct.isPrimitive()) {
                 copyPrimitive(originalObj, targetObject, fieldStruct);
             } else {

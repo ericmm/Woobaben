@@ -4,7 +4,6 @@ package woo.ba.ben.core;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Constructor;
-import java.nio.ByteOrder;
 
 import static java.nio.ByteOrder.BIG_ENDIAN;
 import static java.nio.ByteOrder.nativeOrder;
@@ -32,7 +31,29 @@ class UnsafeFactory {
     private UnsafeFactory() {
     }
 
+//    public static int getTypeSize(final Class classType) {
+//        return UNSAFE.arrayIndexScale(classType);
+//    }
+
     public static int getTypeSize(final Class classType) {
-        return UNSAFE.arrayIndexScale(classType);
+        if (!classType.isPrimitive()) {
+            return UNSAFE.ARRAY_OBJECT_INDEX_SCALE;
+        } else if (classType == int.class) {
+            return UNSAFE.ARRAY_INT_INDEX_SCALE;
+        } else if (classType == long.class) {
+            return UNSAFE.ARRAY_LONG_INDEX_SCALE;
+        } else if (classType == boolean.class) {
+            return UNSAFE.ARRAY_BOOLEAN_INDEX_SCALE;
+        } else if (classType == double.class) {
+            return UNSAFE.ARRAY_DOUBLE_INDEX_SCALE;
+        } else if (classType == float.class) {
+            return UNSAFE.ARRAY_FLOAT_INDEX_SCALE;
+        } else if (classType == byte.class) {
+            return UNSAFE.ARRAY_BYTE_INDEX_SCALE;
+        } else if (classType == char.class) {
+            return UNSAFE.ARRAY_CHAR_INDEX_SCALE;
+        } else {
+            return UNSAFE.ARRAY_SHORT_INDEX_SCALE;
+        }
     }
 }
