@@ -1,6 +1,8 @@
 package woo.ba.ben.core;
 
 import com.google.common.cache.Cache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -16,7 +18,7 @@ import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 final class ClassStruct {
     static final String FIELD_SEPARATOR = "@";
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClassStruct.class);
     private static final Cache<Class, ClassStruct> CACHE = newBuilder()
             .maximumSize(getPropertyAsLong("class.cache.size"))
             .build();
@@ -125,7 +127,9 @@ final class ClassStruct {
 
     private void buildFieldMap(final FieldStruct fieldStruct, final Class currentClass) {
         if (fieldMap.containsKey(fieldStruct.name)) {
-            fieldMap.put(getMaskedFieldName(fieldStruct.name, currentClass), fieldStruct);
+            final String maskedFieldName = getMaskedFieldName(fieldStruct.name, currentClass);
+            LOGGER.info(fieldStruct.name + " already exists on " + realClass.getName() + ", will use [" + maskedFieldName + "] as field name");
+            fieldMap.put(maskedFieldName, fieldStruct);
         } else {
             fieldMap.put(fieldStruct.name, fieldStruct);
         }
