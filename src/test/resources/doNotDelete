@@ -1,0 +1,154 @@
+core object:
+==============
+primitive type, common objects, UTF8String,
+classStruct, fieldStruct (off-heap version)
+fastest file operation/network aio/nio2/ completefuture
+
+faster basic object
+==============
+better string --> array[], stringUtil methods
+faster hash  --> faster hash implements (Murmur3, FNV-1a)
+
+
+String / Rope / StringBuffer /
+==============
+1. string search interface
+2. string search implementations
+3. string search strategy manager
+4. string replacement (javolution.text.Text / mikera.persistent.Text)
+5. search/replace in parallel
+
+===============
+field  --> unsafe
+method --> method handle / coroutine
+Class --> classStruct
+
+==========
+lightweight java compiler, expr language (DSL) --> LLVM?
+
+
+Java field fast accessor:
+==============
+ASM/ByteBuddy/Unsafe --> access field
+OGNL bean accessor
+*each class produce one Json/Binary template for exporting to file system or off-heap (read Class format);
+*bean changes publisher/subscriber, changes made to class as source events, and become event driven.
+JSON/XML parser / serializer (Kryo/Jackson/fastjson/vtd-xml parser/FST)
+off-heap(struct-fst/prieon)/directbuf/Chronicle/
+java DSL(Kan-Java)-->expression evaluation & bean.query.lang-->template engine (Macro)
+Object as an event stream (swam.js), RxJava, streaming, parallel algorithm
+big data/esper/fork-join framework/map-reduce/spark
+Math library --> SIMD, JNI etc.
+JNA/JNI/JNI-javacritical_
+java pass off-heap array (like struct) to JNI, and JNI to call SIMP/SSE/GPU and return the value in array buf.
+continuation & coroutine? (call/cc)
+
+==============
+backbone message queue, refer to disruptor, caffeine, JCTool, to produce MPMC queue/SPSC queue
+Kilim / message queue /distributed cache (off heap, only one copy)
+SIMD/DPDK/ADR support(JNI)
+big data --> big computation --> support distributed vectors --> high performance computation
+
+OpenMP/Java
+MPJ Express?
+task parallel or data parallel?
+cpu-->SIMD(mmx/sse5/avx/fma[intel]/Neon[arm])
+GPU-->opencl(JavaCL / OpenCL4Java /jocl)/cuda(to write CUDA kernel you have to code in C, and then compile to executable form with nvidia's CUDA compiler. )
+CUDA4J[ibm sdk]
+Aparapi --> write your code in Java and will attempt to convert bytecode to OpenCL at runtime.
+
+CPU --> Message Passing interface distributed memory parallelization used a lot in big clusters
+(https://computing.llnl.gov/tutorials/mpi/),
+
+For shared memory --> OpenMP but it's compiler dependent (http://openmp.org/wp/)
+
+
+
+DI/IoC container
+============
+guice
+NIO2 -->AIO-->network hardware --> Hard disk
+
+
+Expression evaluation
+==============
+template (freemarker, mvel) with macro
+
+
+LOG file as data source (Chronicle - concurrent version)
+off-heap memory allocator
+java off-heap management vs direct memory access (direct bytebuffer, etc)
+=============
+bypass GC  (OpenHFT projects, peter lawrey)
+
+
+Log (log as json & structured, log by user action ref-id from request to response)
+==============
+fast log, message queue, transaction management, (OpenHFT- chroile)
+
+
+continuation & coroutine? (call/cc)
+==============
+Kilim / message queue /distributed cache (off heap, only one copy)
+
+
+HashMap/bitmap/tire ?
+==============
+key-value
+
+
+Compiler -> java/eclipse compiler -> DSL language engine (kan-java)
+==============
+
+
+concurrency
+==============
+futureCompletion, etc.
+
+
+HTTP/HTTPS/WebAssembly/HTML5 (netty/undertow/servlet/websocket/file upload), webpack,
+==============
+webRtc (ICE/STUN/TURN)
+
+
+web component/vue & webpack/eventbus/webassembly [/angular/react]
+==============
+netty/vert.x/Ntruts/jemalloc/zmalloc/
+
+
+JNI-critical
+==============
+JNA/JNI/JNI-javacritical_
+java pass off-heap array (like struct) to JNI, and JNI to call SIMP/SSE/GPU and return the value in array buf.
+
+
+SIMD/DPDK/ADR support(JNI)
+================
+
+
+
+docker (package in a node)
+==============
+paxos/zookeeper/raft/viewstamp enhanced/
+eventual consistency --> CRDT,
+virtual synchronization, Totem Ring, Evs4j,
+gearman --> task assignment
+Object as an event stream (swam.js), RxJava, streaming, parallel algorithm
+rxjava, swamjs, event, op changelog, stream,
+functional programming/F Reactive P
+SQL theory & implementation, apply to distributed computing... (esper)
+
+
+
+search engine, OLAP, distributed computing engine
+================
+spark, naiad, etc.
+
+
+================
+pass corelation id to each call, use asm generate dynamic proxy to pass the value.
+simd , gpu support with jni critical, R language, jni and simd share same mem address (off heap)
+
+
+================
+b+ tree, inverted index. tire? cukoo filter
