@@ -11,14 +11,14 @@ import static java.lang.reflect.Modifier.isAbstract;
 import static java.util.Collections.EMPTY_MAP;
 import static java.util.Collections.unmodifiableMap;
 import static sun.misc.Unsafe.INVALID_FIELD_OFFSET;
+import static woo.ba.ben.core.ConfigReader.getPropertyAsLong;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 final class ClassStruct {
     static final String FIELD_SEPARATOR = "@";
 
-    //TODO: read max size from properties
     private static final Cache<Class, ClassStruct> CACHE = newBuilder()
-            .maximumSize(1024)
+            .maximumSize(getPropertyAsLong("class.cache.size"))
             .build();
 
     final Class realClass;
