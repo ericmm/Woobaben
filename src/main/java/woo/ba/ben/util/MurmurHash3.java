@@ -8,11 +8,11 @@ public class MurmurHash3 {
     private MurmurHash3() {
     }
 
-    /**
-     * Returns the MurmurHash3_x86_32 hash.
-     */
-    public static int hash32(final int seed, final byte[] data, final int offset, final int len) {
+    public static int hash32(final int seed, final byte[] data) {
+        return hash32(seed, data, 0, data.length);
+    }
 
+    public static int hash32(final int seed, final byte[] data, final int offset, final int len) {
         final int c1 = 0xcc9e2d51;
         final int c2 = 0x1b873593;
 
@@ -54,7 +54,7 @@ public class MurmurHash3 {
         return fmix32(h1);
     }
 
-    public static final int fmix32(int h) {
+    private static int fmix32(int h) {
         h ^= h >>> 16;
         h *= 0x85ebca6b;
         h ^= h >>> 13;

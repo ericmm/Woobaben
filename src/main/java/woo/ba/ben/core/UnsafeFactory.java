@@ -44,12 +44,12 @@ class UnsafeFactory {
             return UNSAFE.ARRAY_LONG_INDEX_SCALE;
         } else if (classType == boolean.class) {
             return UNSAFE.ARRAY_BOOLEAN_INDEX_SCALE;
+        } else if (classType == byte.class) {
+            return UNSAFE.ARRAY_BYTE_INDEX_SCALE;
         } else if (classType == double.class) {
             return UNSAFE.ARRAY_DOUBLE_INDEX_SCALE;
         } else if (classType == float.class) {
             return UNSAFE.ARRAY_FLOAT_INDEX_SCALE;
-        } else if (classType == byte.class) {
-            return UNSAFE.ARRAY_BYTE_INDEX_SCALE;
         } else if (classType == char.class) {
             return UNSAFE.ARRAY_CHAR_INDEX_SCALE;
         } else {
