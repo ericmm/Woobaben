@@ -13,8 +13,8 @@ import static woo.ba.ben.core.UnsafeFactory.IS_NATIVE_ORDER_BIG_ENDIAN;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 public class LittleEndianOffHeapDataHandlerTest {
-    private IOffHeapDataHandler readerL, readerB;
     private static long address;
+    private IOffHeapDataHandler readerL, readerB;
 
     @BeforeClass
     public static void init() {
@@ -28,6 +28,26 @@ public class LittleEndianOffHeapDataHandlerTest {
         unsafePut(address + 5, (byte) 5);
         unsafePut(address + 6, (byte) 6);
         unsafePut(address + 7, (byte) 7);
+    }
+
+    private static long makeLong(final byte b7, final byte b6, final byte b5, final byte b4,
+                                 final byte b3, final byte b2, final byte b1, final byte b0) {
+        return (((long) b7) << 56) |
+                ((b6 & BYTE_MASK_LONG) << 48) |
+                ((b5 & BYTE_MASK_LONG) << 40) |
+                ((b4 & BYTE_MASK_LONG) << 32) |
+                ((b3 & BYTE_MASK_LONG) << 24) |
+                ((b2 & BYTE_MASK_LONG) << 16) |
+                ((b1 & BYTE_MASK_LONG) << 8) |
+                (b0 & BYTE_MASK_LONG);
+    }
+
+    private static byte unsafeGet(final long address) {
+        return UNSAFE.getByte(address);
+    }
+
+    private static void unsafePut(final long address, final byte value) {
+        UNSAFE.putByte(address, value);
     }
 
     @Before
@@ -63,25 +83,24 @@ public class LittleEndianOffHeapDataHandlerTest {
         }
     }
 
-
     @Test
-    public void testPerformance(){
+    public void testPerformance() {
         int loop_count = 2_000_000_000;
         long start, end;
 
         start = System.nanoTime();
-        for(int i = 1; i <= loop_count; i++){
+        for (int i = 1; i <= loop_count; i++) {
             swap(readerL.readLong(address));
         }
         end = System.nanoTime();
-        System.out.println("swap from readerL took "+(end - start) +" nano sec");
+        System.out.println("swap from readerL took " + (end - start) + " nano sec");
 
         start = System.nanoTime();
-        for(int i = 1; i <= loop_count; i++){
+        for (int i = 1; i <= loop_count; i++) {
             readLongRawB(address);
         }
         end = System.nanoTime();
-        System.out.println("readLongRawB took "+(end - start) +" nano sec");
+        System.out.println("readLongRawB took " + (end - start) + " nano sec");
     }
 
     private long readLongRawB(final long startAddress) {
@@ -108,25 +127,5 @@ public class LittleEndianOffHeapDataHandlerTest {
                 unsafeGet(startAddress + 1),
                 unsafeGet(startAddress)
         );
-    }
-
-    private static long makeLong(final byte b7, final byte b6, final byte b5, final byte b4,
-                                 final byte b3, final byte b2, final byte b1, final byte b0) {
-        return (((long) b7) << 56) |
-                ((b6 & BYTE_MASK_LONG) << 48) |
-                ((b5 & BYTE_MASK_LONG) << 40) |
-                ((b4 & BYTE_MASK_LONG) << 32) |
-                ((b3 & BYTE_MASK_LONG) << 24) |
-                ((b2 & BYTE_MASK_LONG) << 16) |
-                ((b1 & BYTE_MASK_LONG) << 8) |
-                (b0 & BYTE_MASK_LONG);
-    }
-
-    private static byte unsafeGet(final long address) {
-        return UNSAFE.getByte(address);
-    }
-
-    private static void unsafePut(final long address, final byte value) {
-        UNSAFE.putByte(address, value);
     }
 }

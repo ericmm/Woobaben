@@ -45,6 +45,34 @@ public abstract class AbstractHashBase {
         return (x | x >> 32) + 1;
     }
 
+    /*
+    static int nextPowerOfTwo(int v) {
+        if (v < 1) {
+            return 0;
+        }
+        v--;
+        v |= v >> 1;
+        v |= v >> 2;
+        v |= v >> 4;
+        v |= v >> 8;
+        v |= v >> 16;
+        return ++v;
+    }
+
+    static int previousPowerOfTwo(int v) {
+        if (v < 1) {
+            return 0;
+        }
+        v--;
+        v |= v >> 1;
+        v |= v >> 2;
+        v |= v >> 4;
+        v |= v >> 8;
+        v |= v >> 16;
+        return (++v >> 1);
+    }
+    */
+
     protected void checkFillFactorAndSize(final int size, final float fillFactor) {
         if (fillFactor <= 0 || fillFactor >= 1) {
             throw new IllegalArgumentException("FillFactor must be in (0, 1)");
