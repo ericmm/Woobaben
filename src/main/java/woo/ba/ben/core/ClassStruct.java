@@ -104,34 +104,38 @@ final class ClassStruct {
 
     private void parseFields(final Class realClass) {
         final int fieldCount = getFieldCount(realClass);
-        if (fieldCount == 0) {
-            fieldMap = EMPTY_MAP;
-            return;
-        }
+        fieldMap = initialiseFieldMap(fieldCount);
 
-        Field[] declaredFields;
-        FieldStruct fieldStruct;
-        Class currentClass = realClass;
-        fieldMap = new HashMap<>(fieldCount);
-        while (currentClass.getSuperclass() != null) { //except Object.class
-            declaredFields = currentClass.getDeclaredFields();
+        if (fieldCount > 0) {
+            Field[] declaredFields;
+            FieldStruct fieldStruct;
 
-            for (int i = declaredFields.length; --i >= 0; ) {
-                fieldStruct = new FieldStruct(declaredFields[i]);
-                buildFieldMap(fieldStruct, currentClass);
+            Class currentClass = realClass;
+            while (currentClass.getSuperclass() != null) { //except Object.class
+                declaredFields = currentClass.getDeclaredFields();
+
+                for (int i = declaredFields.length; --i >= 0; ) {
+                    fieldStruct = new FieldStruct(declaredFields[i]);
+                    buildFieldMap(fieldStruct, currentClass);
+                }
+                currentClass = currentClass.getSuperclass();
             }
-            currentClass = currentClass.getSuperclass();
         }
         fieldMap = unmodifiableMap(fieldMap);
     }
 
+    private Map<String, FieldStruct> initialiseFieldMap(final int size) {
+        return size == 0 ? EMPTY_MAP : new HashMap<>(size);
+    }
+
     private void buildFieldMap(final FieldStruct fieldStruct, final Class currentClass) {
-        if (fieldMap.containsKey(fieldStruct.name)) {
-            final String maskedFieldName = getMaskedFieldName(fieldStruct.name, currentClass);
-            LOGGER.info(fieldStruct.name + " already exists on " + realClass.getName() + ", will use [" + maskedFieldName + "] as field name");
+        final String fieldName = fieldStruct.name;
+        if (fieldMap.containsKey(fieldName)) {
+            final String maskedFieldName = getMaskedFieldName(fieldName, currentClass);
+            LOGGER.info(fieldName + " already exists on " + realClass.getName() + ", will use [" + maskedFieldName + "] as field name");
             fieldMap.put(maskedFieldName, fieldStruct);
         } else {
-            fieldMap.put(fieldStruct.name, fieldStruct);
+            fieldMap.put(fieldName, fieldStruct);
         }
     }
 

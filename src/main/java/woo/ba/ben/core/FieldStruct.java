@@ -1,8 +1,13 @@
 package woo.ba.ben.core;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
+import static woo.ba.ben.core.MethodHandleUtils.*;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 /*
@@ -10,17 +15,24 @@ import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
  *
  */
 final class FieldStruct {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FieldStruct.class);
+
     final String name;
     final Class type;
     final long offset;
     final int modifiers;
+    final MethodHandle getMH;
+    final MethodHandle setMH;
 
     FieldStruct(final Field field) {
         this.name = field.getName();
         this.type = field.getType();
         this.modifiers = field.getModifiers();
         this.offset = isStatic() ? UNSAFE.staticFieldOffset(field) : UNSAFE.objectFieldOffset(field);
+        this.getMH = findFieldGetter(field.getDeclaringClass());
+        this.setMH = findFieldSetter(field.getDeclaringClass());
     }
+
 
     boolean isArray() {
         return type.isArray();
@@ -50,10 +62,34 @@ final class FieldStruct {
 
     @Override
     public String toString() {
-        return "FieldStruct{" + "name='" + name + '\'' +
-                ", type=" + type +
+        return "FieldStruct{name='" + name +
+                "', type=" + type +
                 ", offset=" + offset +
                 ", modifiers=" + modifiers +
+                ", getMH=" + getMH +
+                ", setMH=" + setMH +
                 '}';
+    }
+
+    private MethodHandle findFieldSetter(final Class<?> fieldOwner) {
+        try {
+            return isStatic()
+                    ? setter(fieldOwner, name, type)
+                    : staticSetter(fieldOwner, name, type);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            LOGGER.warn("Cannot find setter for field [{}] of type [{}] on class [{}]", name, type, fieldOwner);
+            return null;
+        }
+    }
+
+    private MethodHandle findFieldGetter(final Class<?> fieldOwner) {
+        try {
+            return isStatic()
+                    ? getter(fieldOwner, name, type)
+                    : staticGetter(fieldOwner, name, type);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            LOGGER.warn("Cannot find getter for field [{}] of type [{}] on class [{}]", name, type, fieldOwner);
+            return null;
+        }
     }
 }
