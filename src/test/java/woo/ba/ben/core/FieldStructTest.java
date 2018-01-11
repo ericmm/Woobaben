@@ -52,11 +52,4 @@ public class FieldStructTest {
         final FieldStruct fieldStruct1 = new FieldStruct(testInt);
         assertThat(fieldStruct1.hashCode(), notNullValue());
     }
-
-    @Test
-    public void shouldGenerateToString() throws NoSuchFieldException {
-        final Field testInt = TestFieldObj.class.getDeclaredField("testInt");
-        final FieldStruct fieldStruct1 = new FieldStruct(testInt);
-        assertThat(fieldStruct1.toString(), is("FieldStruct{name='testInt', type=int, offset=120, modifiers=10}"));
-    }
 }
