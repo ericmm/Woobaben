@@ -399,4 +399,37 @@ class UTF8Utils {
         //[10000000 -- 10111111]
         return byte2 < -64;
     }
+
+//    public void countUtf8Character(final byte[] s) {
+//
+//        while (s[i] > 0) {
+//            ascii:
+//            {
+//                i++;
+//            }
+//        }
+//
+//        count += i - iBefore;
+//
+//        while (s[i]) {
+//            if (s[i] > 0) {
+//                iBefore = i;
+//                break ascii;
+//            } else {
+//                switch (0xF0 & s[i]) {
+//                    case 0xE0:
+//                        i += 3;
+//                        break;
+//                    case 0xF0:
+//                        i += 4;
+//                        break;
+//                    default:
+//                        i += 2;
+//                        break;
+//                }
+//            }
+//
+//            count++;
+//        }
+//    }
 }
