@@ -35,7 +35,10 @@ public abstract class AbstractHashBase {
     }
 
     public static long nextPowerOfTwo(long x) {
-        if (x == 0) return 1;
+        if (x == 0) {
+            return 1;
+        }
+
         x--;
         x |= x >> 1;
         x |= x >> 2;
@@ -45,33 +48,6 @@ public abstract class AbstractHashBase {
         return (x | x >> 32) + 1;
     }
 
-    /*
-    static int nextPowerOfTwo(int v) {
-        if (v < 1) {
-            return 0;
-        }
-        v--;
-        v |= v >> 1;
-        v |= v >> 2;
-        v |= v >> 4;
-        v |= v >> 8;
-        v |= v >> 16;
-        return ++v;
-    }
-
-    static int previousPowerOfTwo(int v) {
-        if (v < 1) {
-            return 0;
-        }
-        v--;
-        v |= v >> 1;
-        v |= v >> 2;
-        v |= v >> 4;
-        v |= v >> 8;
-        v |= v >> 16;
-        return (++v >> 1);
-    }
-    */
 
     protected void checkFillFactorAndSize(final int size, final float fillFactor) {
         if (fillFactor <= 0 || fillFactor >= 1) {
@@ -90,15 +66,17 @@ public abstract class AbstractHashBase {
         return (index + 1) & (arraySize - 1);
     }
 
-    protected int findIndex(final Object[] elements, final Object element) {
-        int index = getStartIndex(element, elements.length);
-        for (int i = 0; i < elements.length; i++) {
-            if (elements[index] == FREE_KEY) {
+    protected int findIndex(final Object[] keysArray, final Object key) {
+        int index = getStartIndex(key, keysArray.length);
+        Object foundKey;
+        for (int i = 0; i < keysArray.length; i++) {
+            foundKey = keysArray[index];
+            if (foundKey == FREE_KEY || foundKey == REMOVED_KEY) {
                 return NOT_FOUND_INDEX;
-            } else if (elements[index].equals(element)) {
+            } else if (foundKey.equals(key)) {
                 return index;
             }
-            index = getNextIndex(index, elements.length);
+            index = getNextIndex(index, keysArray.length);
         }
         return NOT_FOUND_INDEX;
     }
