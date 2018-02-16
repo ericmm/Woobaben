@@ -14,7 +14,7 @@ public class ArrayIntIntMap implements IntIntMap {
     private static final int RANDOM_INT = 0x9E3779B9;
     private static final float DEFAULT_FILL_FACTOR = 0.75f;
     private static final int DEFAULT_INITIAL_CAPACITY = 12;
-    private static final int ONE_MEGA = 1024 * 1024;
+    private static final int ONE_MILLION = 1024 * 1024;
 
     /**
      * Fill factor, must be between (0 and 1)
@@ -52,8 +52,8 @@ public class ArrayIntIntMap implements IntIntMap {
 
     private static int arraySize(final int currentSize, final int expectedSize, final float fillFactor) {
         final long actualSize;
-        if (currentSize >= ONE_MEGA) {
-            actualSize = currentSize + ONE_MEGA;
+        if (currentSize >= ONE_MILLION) {
+            actualSize = currentSize + ONE_MILLION;
         } else {
             actualSize = Math.max(16, nextPowerOfTwo((long) Math.ceil(expectedSize / fillFactor)));
         }
