@@ -78,7 +78,6 @@ public class ArrayIntIntMap implements IntIntMap {
         }
     }
 
-
     @Override
     public int remove(final int key) {
         if (key == FREE_KEY) {
@@ -248,9 +247,9 @@ public class ArrayIntIntMap implements IntIntMap {
     }
 
     private static int arraySize(final int expectedSize, final float fillFactor) {
-        final long acutalSize = Math.max(2, nextPowerOfTwo((long) Math.ceil(expectedSize / fillFactor)));
-        assert acutalSize <= MAXIMUM_CAPACITY : "Too large (expected elements " + expectedSize + " with load factor " + fillFactor + ")";
-        return (int) acutalSize;
+        final long actualSize = Math.max(2, nextPowerOfTwo((long) Math.ceil(expectedSize / fillFactor)));
+        assert actualSize <= MAXIMUM_CAPACITY : "Too large (expected elements " + expectedSize + " with load factor " + fillFactor + ")";
+        return (int) actualSize;
     }
 
     private static long nextPowerOfTwo(long v) {
