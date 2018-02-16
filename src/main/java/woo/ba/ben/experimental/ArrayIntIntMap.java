@@ -14,6 +14,7 @@ public class ArrayIntIntMap implements IntIntMap {
     private static final int RANDOM_INT = 0x9E3779B9;
     private static final float DEFAULT_FILL_FACTOR = 0.75f;
     private static final int DEFAULT_INITIAL_CAPACITY = 12;
+    private static final int ONE_MEGA = 1024 * 1024;
 
     /**
      * Fill factor, must be between (0 and 1)
@@ -32,11 +33,47 @@ public class ArrayIntIntMap implements IntIntMap {
     public ArrayIntIntMap(final int size, final float fillFactor) {
         checkSizeAndFillFactor(size, fillFactor);
         this.fillFactor = fillFactor;
-        initializeArray(size);
+        initializeArray(0, size);
     }
 
     public ArrayIntIntMap() {
         this(DEFAULT_INITIAL_CAPACITY, DEFAULT_FILL_FACTOR);
+    }
+
+    private static void checkSizeAndFillFactor(final int size, final float fillFactor) {
+        assert fillFactor > 0 && fillFactor < 1 : "FillFactor must be in (0, 1)";
+        assert size > 0 : "Size must be positive";
+    }
+
+    private static int randomise(final int x) {
+        final int i = x * RANDOM_INT;
+        return i ^ (i >> 16);
+    }
+
+    private static int arraySize(final int currentSize, final int expectedSize, final float fillFactor) {
+        final long actualSize;
+        if (currentSize >= ONE_MEGA) {
+            actualSize = currentSize + ONE_MEGA;
+        } else {
+            actualSize = Math.max(16, nextPowerOfTwo((long) Math.ceil(expectedSize / fillFactor)));
+        }
+
+        assert actualSize <= MAXIMUM_CAPACITY : "Too large (expected elements " + expectedSize + " with load factor " + fillFactor + ")";
+        return (int) actualSize;
+    }
+
+    private static long nextPowerOfTwo(long x) {
+        if (x == 0) {
+            return 1;
+        }
+
+        x--;
+        x |= x >> 1;
+        x |= x >> 2;
+        x |= x >> 4;
+        x |= x >> 8;
+        x |= x >> 16;
+        return (x | x >> 32) + 1;
     }
 
     @Override
@@ -142,14 +179,13 @@ public class ArrayIntIntMap implements IntIntMap {
         return result;
     }
 
-
     //////////////////////////////////
     private int putValue(final int key, final int value, final int index) {
         data[index] = key;
         data[index + 1] = value;
 
         if (size >= threshold) {
-            resize(size * 2);
+            resize();
         } else {
             size++;
         }
@@ -185,11 +221,11 @@ public class ArrayIntIntMap implements IntIntMap {
         }
     }
 
-    private void resize(final int newSize) {
+    private void resize() {
         final int[] oldData = data;
-        initializeArray(newSize);
-        size = hasFreeKey ? 1 : 0;
+        initializeArray(size, size * 2);
 
+        size = hasFreeKey ? 1 : 0;
         for (int i = 0; i < oldData.length; i += 2) {
             if (oldData[i] != FREE_KEY) {
                 put(oldData[i], oldData[i + 1]);
@@ -229,42 +265,13 @@ public class ArrayIntIntMap implements IntIntMap {
         return (index + 2) & nextMask;
     }
 
-    private void initializeArray(final int size) {
-        final int capacity = arraySize(size, fillFactor);
+    private void initializeArray(final int currentSize, final int expectedSize) {
+        final int capacity = arraySize(currentSize, expectedSize, fillFactor);
         mask = capacity - 1;
         nextMask = capacity * 2 - 1;
 
         data = new int[capacity * 2];
         threshold = (int) (capacity * fillFactor);
-    }
-
-    private static void checkSizeAndFillFactor(final int size, final float fillFactor) {
-        assert fillFactor > 0 && fillFactor < 1 : "FillFactor must be in (0, 1)";
-        assert size > 0 : "Size must be positive";
-    }
-
-    private static int randomise(final int x) {
-        final int i = x * RANDOM_INT;
-        return i ^ (i >> 16);
-    }
-
-    private static int arraySize(final int expectedSize, final float fillFactor) {
-        final long actualSize = Math.max(2, nextPowerOfTwo((long) Math.ceil(expectedSize / fillFactor)));
-        assert actualSize <= MAXIMUM_CAPACITY : "Too large (expected elements " + expectedSize + " with load factor " + fillFactor + ")";
-        return (int) actualSize;
-    }
-
-    private static long nextPowerOfTwo(long v) {
-        if (v < 1) {
-            return 0;
-        }
-        v--;
-        v |= v >> 1;
-        v |= v >> 2;
-        v |= v >> 4;
-        v |= v >> 8;
-        v |= v >> 16;
-        return ++v;
     }
 }
 
