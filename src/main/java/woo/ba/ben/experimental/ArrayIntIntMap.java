@@ -84,7 +84,8 @@ public class ArrayIntIntMap implements IntIntMap {
             return removeFreeKey();
         }
 
-        int index = findIndex(key);
+        final int initialIndex = findIndex(key);
+        int index = initialIndex;
         int foundKey;
         while (true) {
             foundKey = data[index];
@@ -92,7 +93,7 @@ public class ArrayIntIntMap implements IntIntMap {
                 final int previousValue = data[index + 1];
                 data[index + 1] = NO_VALUE;
                 size--;
-                shiftEntries(index);
+                shiftEntries(index, initialIndex);
                 return previousValue;
             } else if (foundKey == FREE_KEY) {
                 return NO_VALUE;
@@ -161,7 +162,7 @@ public class ArrayIntIntMap implements IntIntMap {
         return previousValue;
     }
 
-    private void shiftEntries(int index) {
+    private void shiftEntries(final int index, final int initialIndex) {
         int nextKey;
         int nextIndex;
         int currentIndex = index;
@@ -169,16 +170,17 @@ public class ArrayIntIntMap implements IntIntMap {
         while (true) {
             nextIndex = findNextIndex(currentIndex);
             nextKey = data[nextIndex];
-            if (nextKey == FREE_KEY || findIndex(nextKey) != index) {
+            if (nextKey == FREE_KEY || findIndex(nextKey) != initialIndex) {
                 break;
-            } else {
-                // shift key & value
-                data[currentIndex] = data[nextIndex];
-                data[currentIndex + 1] = data[nextIndex + 1];
-
-                data[nextIndex] = FREE_KEY;
-                data[nextIndex + 1] = NO_VALUE;
             }
+
+            // shift key & value
+            data[currentIndex] = data[nextIndex];
+            data[currentIndex + 1] = data[nextIndex + 1];
+
+            data[nextIndex] = FREE_KEY;
+            data[nextIndex + 1] = NO_VALUE;
+
             currentIndex = nextIndex;
         }
     }
