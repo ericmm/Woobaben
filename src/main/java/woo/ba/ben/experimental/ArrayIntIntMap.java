@@ -14,7 +14,7 @@ public class ArrayIntIntMap implements IntIntMap {
     private static final int RANDOM_INT = 0x9E3779B9;
     private static final float DEFAULT_FILL_FACTOR = 0.75f;
     private static final int DEFAULT_INITIAL_CAPACITY = 12;
-    private static final int ONE_MILLION = 1024 * 1024;
+    private static final int ARRAY_THRESHOLD = 256 * 1024 * 1024;
 
     /**
      * Fill factor, must be between (0 and 1)
@@ -33,7 +33,7 @@ public class ArrayIntIntMap implements IntIntMap {
     public ArrayIntIntMap(final int size, final float fillFactor) {
         checkSizeAndFillFactor(size, fillFactor);
         this.fillFactor = fillFactor;
-        initializeArray(0, size);
+        initializeArray(size);
     }
 
     public ArrayIntIntMap() {
@@ -50,14 +50,8 @@ public class ArrayIntIntMap implements IntIntMap {
         return i ^ (i >> 16);
     }
 
-    private static int arraySize(final int currentSize, final int expectedSize, final float fillFactor) {
-        final long actualSize;
-        if (currentSize >= ONE_MILLION) {
-            actualSize = currentSize + ONE_MILLION;
-        } else {
-            actualSize = Math.max(16, nextPowerOfTwo((long) Math.ceil(expectedSize / fillFactor)));
-        }
-
+    private static int arraySize(final int expectedSize, final float fillFactor) {
+        final long actualSize = Math.max(16, nextPowerOfTwo((long) Math.ceil(expectedSize / fillFactor)));
         assert actualSize <= MAXIMUM_CAPACITY : "Too large (expected elements " + expectedSize + " with load factor " + fillFactor + ")";
         return (int) actualSize;
     }
@@ -82,7 +76,8 @@ public class ArrayIntIntMap implements IntIntMap {
             return hasFreeKey ? valueForFreeKey : NO_VALUE;
         }
 
-        int index = findIndex(key);
+        final int initialIndex = findIndex(key);
+        int index = initialIndex;
         int foundKey;
         while (true) {
             foundKey = data[index];
@@ -93,7 +88,12 @@ public class ArrayIntIntMap implements IntIntMap {
             }
 
             index = findNextIndex(index);
+            if (index == initialIndex) { // already loop a circle, should never happen
+                break;
+            }
         }
+
+        return NO_VALUE;
     }
 
     @Override
@@ -102,7 +102,8 @@ public class ArrayIntIntMap implements IntIntMap {
             return insertValueForFreeKey(value);
         }
 
-        int index = findIndex(key);
+        final int initialIndex = findIndex(key);
+        int index = initialIndex;
         int foundKey;
         while (true) {
             foundKey = data[index];
@@ -112,7 +113,12 @@ public class ArrayIntIntMap implements IntIntMap {
                 return replaceValue(index, value);
             }
             index = findNextIndex(index);
+            if (index == initialIndex) { // already loop a circle, should never happen
+                break;
+            }
         }
+
+        throw new IllegalStateException("Cannot find a place to put [" + key + ", " + value + "]");
     }
 
     @Override
@@ -136,7 +142,12 @@ public class ArrayIntIntMap implements IntIntMap {
                 return NO_VALUE;
             }
             index = findNextIndex(index);
+            if (index == initialIndex) { // already loop a circle, should never happen
+                break;
+            }
         }
+
+        return NO_VALUE;
     }
 
     @Override
@@ -223,7 +234,9 @@ public class ArrayIntIntMap implements IntIntMap {
 
     private void resize() {
         final int[] oldData = data;
-        initializeArray(size, size * 2);
+
+        final int expectedSize = size < ARRAY_THRESHOLD ? size * 2 : size + ARRAY_THRESHOLD;
+        initializeArray(expectedSize);
 
         size = hasFreeKey ? 1 : 0;
         for (int i = 0; i < oldData.length; i += 2) {
@@ -265,8 +278,8 @@ public class ArrayIntIntMap implements IntIntMap {
         return (index + 2) & nextMask;
     }
 
-    private void initializeArray(final int currentSize, final int expectedSize) {
-        final int capacity = arraySize(currentSize, expectedSize, fillFactor);
+    private void initializeArray(final int expectedSize) {
+        final int capacity = arraySize(expectedSize, fillFactor);
         mask = capacity - 1;
         nextMask = capacity * 2 - 1;
 
