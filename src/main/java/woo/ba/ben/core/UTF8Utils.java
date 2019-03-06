@@ -251,14 +251,14 @@ class UTF8Utils {
         char highSurrogate, lowSurrogate;
         for (int i = sourceStartOffset; i < sourceCount; i++) {
             if (Character.isSurrogate(source[i])) {
-                if (i + 1 > sourceCount) {
-                    return OVERFLOW;
+                if (i + 1 >= sourceCount) {
+                    return CoderResult.unmappableForLength(i + 1);
                 }
 
                 highSurrogate = source[i++];
                 lowSurrogate = source[i];
                 if (!Character.isSurrogatePair(highSurrogate, lowSurrogate)) {
-                    return CoderResult.malformedForLength(i - 1);
+                    return CoderResult.malformedForLength(i);
                 }
                 codePoint = (highSurrogate << 10) + lowSurrogate + ENCODING_CODE_POINT_BASE;
             } else {
@@ -334,14 +334,14 @@ class UTF8Utils {
         char highSurrogate, lowSurrogate;
         for (int i = sourceStartOffset; i < sourceCount; i++) {
             if (Character.isSurrogate(source[i])) {
-                if (i + 1 > sourceCount) {
-                    return OVERFLOW;
+                if (i + 1 >= sourceCount) {
+                    return CoderResult.unmappableForLength(i + 1);
                 }
 
                 highSurrogate = source[i++];
                 lowSurrogate = source[i];
                 if (!Character.isSurrogatePair(highSurrogate, lowSurrogate)) {
-                    return CoderResult.malformedForLength(i - 1);
+                    return CoderResult.malformedForLength(i);
                 }
                 codePoint = (highSurrogate << 10) + lowSurrogate + ENCODING_CODE_POINT_BASE;
             } else {

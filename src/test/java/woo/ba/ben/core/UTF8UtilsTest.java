@@ -4,18 +4,38 @@ import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CoderResult;
 import java.text.NumberFormat;
 
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static woo.ba.ben.core.IHeapDataHandler.arrayEquals;
-import static woo.ba.ben.core.UTF8Utils.*;
+import static woo.ba.ben.core.UTF8Utils.decode;
+import static woo.ba.ben.core.UTF8Utils.decode2;
+import static woo.ba.ben.core.UTF8Utils.encode;
 
 
 public class UTF8UtilsTest {
     public static final int LOOP_CNT = 50_000_000;
 
     private long time1, time2, time3, time4, time5;
+
+    private static int log2int(int bits) {
+        if (bits == 0) {
+            return 0; // or throw exception
+        }
+        return 31 - Integer.numberOfLeadingZeros(bits);
+    }
+
+    private static int log2long(long bits) {
+        if (bits == 0) {
+            return 0; // or throw exception
+        }
+        return 63 - Long.numberOfLeadingZeros(bits);
+    }
 
     @Test
     public void shouldEncodeAndDecodeCorrectly() throws UnsupportedEncodingException, CharacterCodingException {
@@ -40,6 +60,25 @@ public class UTF8UtilsTest {
         System.out.println("========> Custom decoding is " + calcPercentage(time3, time4) + " faster than JDK. ");
         System.out.println("========> Custom decoding 2 is " + calcPercentage(time3, time5) + " faster than JDK. ");
         System.out.println("========> Custom decoding 2 is " + calcPercentage(time4, time5) + " faster than decoding 1. ");
+    }
+
+    @Test
+    public void shouldEncodeCorrectly() {
+        Charset utf8 = Charset.forName("UTF-8");
+        for (int i = Character.MIN_CODE_POINT; i < Character.MAX_CODE_POINT; i++) {
+            char[] chars = Character.toChars(i);
+            byte[] array1 = new String(chars).getBytes(utf8);
+            System.out.println("code point=" + i + ", array1.length=" + array1.length + ", chars.length=" + chars.length);
+            byte[] array2 = new byte[array1.length];
+
+            CoderResult coderResult = UTF8Utils.encode(chars, 0, chars.length, array2, 0, array2.length);
+            if (i >= Character.MIN_SURROGATE && i < Character.MAX_SURROGATE + 1) {
+                assertThat(coderResult.isUnmappable(), is(true));
+            } else {
+                assertThat(coderResult, is(CoderResult.UNDERFLOW));
+                assertArrayEquals(array1, array2);
+            }
+        }
     }
 
     private String calcPercentage(long d1, long d2) {
@@ -110,5 +149,22 @@ public class UTF8UtilsTest {
         System.out.println("it took " + time2 + " to run custom encode()");
 
         return output;
+    }
+
+    @Test
+    public void shouldEqualLog2() {
+
+        int sum = 0, x = 0;
+        long time = System.nanoTime();
+        do sum += log2int(x); while (++x != 0);
+        time = System.nanoTime() - time;
+        System.out.println("time1=" + time / 1000000L / 1000.0 + "s -> " + sum);
+
+        sum = 0;
+        x = 0;
+        time = System.nanoTime();
+        do sum += log2long(x); while (++x != 0);
+        time = System.nanoTime() - time;
+        System.out.println("time2=" + time / 1000000L / 1000.0 + "s -> " + sum);
     }
 }
