@@ -5,7 +5,9 @@ import java.lang.reflect.Field;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CoderResult;
 
+import static java.lang.Character.MIN_HIGH_SURROGATE;
 import static java.lang.Character.MIN_LOW_SURROGATE;
+import static java.lang.Character.MIN_SUPPLEMENTARY_CODE_POINT;
 import static java.lang.Math.min;
 import static java.nio.charset.CoderResult.OVERFLOW;
 import static java.nio.charset.CoderResult.UNDERFLOW;
@@ -14,7 +16,7 @@ import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 class UTF8Utils {
     private static final int HIGH_SURROGATE_BASE = 55232;
-
+    private static final int ENCODING_CODE_POINT_BASE = MIN_SUPPLEMENTARY_CODE_POINT - (MIN_HIGH_SURROGATE << 10) - MIN_LOW_SURROGATE;
     private static Field STRING_VALUE_FIELD = null;
 
     static {
@@ -237,7 +239,7 @@ class UTF8Utils {
         final int destinationCount = min(destination.length - destinationStartOffset, destLimit);
 
         if (destinationCount < sourceCount) {
-            return OVERFLOW;
+            throw new IllegalArgumentException("Byte array not large enough");
         }
 
         final int smallerCount = min(sourceCount, destinationCount);
@@ -245,50 +247,64 @@ class UTF8Utils {
             destination[destinationStartOffset++] = (byte) source[sourceStartOffset++];
         }
 
-        int charValueInInt;
+        int codePoint;
+        char highSurrogate, lowSurrogate;
         for (int i = sourceStartOffset; i < sourceCount; i++) {
-            charValueInInt = source[i];
+            if (Character.isSurrogate(source[i])) {
+                if (i + 1 > sourceCount) {
+                    return OVERFLOW;
+                }
 
-            if (charValueInInt < 0x80) {
+                highSurrogate = source[i++];
+                lowSurrogate = source[i];
+                if (!Character.isSurrogatePair(highSurrogate, lowSurrogate)) {
+                    return CoderResult.malformedForLength(i - 1);
+                }
+                codePoint = (highSurrogate << 10) + lowSurrogate + ENCODING_CODE_POINT_BASE;
+            } else {
+                codePoint = source[i];
+            }
+
+            if (codePoint < 0x80) {
                 //check remaining capacity
                 if (destinationStartOffset + 1 > destinationCount) {
                     return OVERFLOW;
                 }
 
                 // 1 bit
-                destination[destinationStartOffset++] = (byte) charValueInInt;
-            } else if (charValueInInt < 0x800) {
+                destination[destinationStartOffset++] = (byte) codePoint;
+            } else if (codePoint < 0x800) {
                 //check remaining capacity
                 if (destinationStartOffset + 2 > destinationCount) {
                     return OVERFLOW;
                 }
 
                 // 2 bits
-                destination[destinationStartOffset++] = (byte) (0xC0 | charValueInInt >> 6);
-                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
-            } else if (charValueInInt < 0x10000) {
+                destination[destinationStartOffset++] = (byte) (0xC0 | codePoint >> 6);
+                destination[destinationStartOffset++] = (byte) (0x80 | codePoint & 0x3F);
+            } else if (codePoint < 0x10000) {
                 //check remaining capacity
                 if (destinationStartOffset + 3 > destinationCount) {
                     return OVERFLOW;
                 }
 
                 // 3 bits
-                destination[destinationStartOffset++] = (byte) (0xE0 | charValueInInt >> 12);
-                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt >> 6 & 0x3F);
-                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
-            } else if (charValueInInt < 0x200000) {
+                destination[destinationStartOffset++] = (byte) (0xE0 | codePoint >> 12);
+                destination[destinationStartOffset++] = (byte) (0x80 | codePoint >> 6 & 0x3F);
+                destination[destinationStartOffset++] = (byte) (0x80 | codePoint & 0x3F);
+            } else if (codePoint < 0x110000) {
                 //check remaining capacity
                 if (destinationStartOffset + 4 > destinationCount) {
                     return OVERFLOW;
                 }
 
                 // 4 bits
-                destination[destinationStartOffset++] = (byte) (0xF0 | charValueInInt >> 18);
-                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt >> 12 & 0x3F);
-                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt >> 6 & 0x3F);
-                destination[destinationStartOffset++] = (byte) (0x80 | charValueInInt & 0x3F);
+                destination[destinationStartOffset++] = (byte) (0xF0 | codePoint >> 18);
+                destination[destinationStartOffset++] = (byte) (0x80 | codePoint >> 12 & 0x3F);
+                destination[destinationStartOffset++] = (byte) (0x80 | codePoint >> 6 & 0x3F);
+                destination[destinationStartOffset++] = (byte) (0x80 | codePoint & 0x3F);
             } else {
-                return OVERFLOW;
+                return CoderResult.unmappableForLength(i);
             }
         }
         return UNDERFLOW;
@@ -306,7 +322,7 @@ class UTF8Utils {
         final int destinationCount = destLimit - destinationStartOffset;
 
         if (destinationCount < sourceCount) {
-            return OVERFLOW;
+            throw new IllegalArgumentException("Byte array not large enough");
         }
 
         final int smallerCount = min(sourceCount, destinationCount);
@@ -314,50 +330,64 @@ class UTF8Utils {
             putByte(destAddress, destinationStartOffset++, (byte) source[sourceStartOffset++]);
         }
 
-        int charValueInInt;
+        int codePoint;
+        char highSurrogate, lowSurrogate;
         for (int i = sourceStartOffset; i < sourceCount; i++) {
-            charValueInInt = source[i];
+            if (Character.isSurrogate(source[i])) {
+                if (i + 1 > sourceCount) {
+                    return OVERFLOW;
+                }
 
-            if (charValueInInt < 0x80) {
+                highSurrogate = source[i++];
+                lowSurrogate = source[i];
+                if (!Character.isSurrogatePair(highSurrogate, lowSurrogate)) {
+                    return CoderResult.malformedForLength(i - 1);
+                }
+                codePoint = (highSurrogate << 10) + lowSurrogate + ENCODING_CODE_POINT_BASE;
+            } else {
+                codePoint = source[i];
+            }
+
+            if (codePoint < 0x80) {
                 //check remaining capacity
                 if (destinationStartOffset + 1 > destinationCount) {
                     return OVERFLOW;
                 }
 
                 // 1 bit
-                putByte(destAddress, destinationStartOffset++, (byte) charValueInInt);
-            } else if (charValueInInt < 0x800) {
+                putByte(destAddress, destinationStartOffset++, (byte) codePoint);
+            } else if (codePoint < 0x800) {
                 //check remaining capacity
                 if (destinationStartOffset + 2 > destinationCount) {
                     return OVERFLOW;
                 }
 
                 // 2 bits
-                putByte(destAddress, destinationStartOffset++, (byte) (0xC0 | charValueInInt >> 6));
-                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | charValueInInt & 0x3F));
-            } else if (charValueInInt < 0x10000) {
+                putByte(destAddress, destinationStartOffset++, (byte) (0xC0 | codePoint >> 6));
+                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | codePoint & 0x3F));
+            } else if (codePoint < 0x10000) {
                 //check remaining capacity
                 if (destinationStartOffset + 3 > destinationCount) {
                     return OVERFLOW;
                 }
 
                 // 3 bits
-                putByte(destAddress, destinationStartOffset++, (byte) (0xE0 | charValueInInt >> 12));
-                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | charValueInInt >> 6 & 0x3F));
-                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | charValueInInt & 0x3F));
-            } else if (charValueInInt < 0x200000) {
+                putByte(destAddress, destinationStartOffset++, (byte) (0xE0 | codePoint >> 12));
+                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | codePoint >> 6 & 0x3F));
+                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | codePoint & 0x3F));
+            } else if (codePoint < 0x110000) {
                 //check remaining capacity
                 if (destinationStartOffset + 4 > destinationCount) {
                     return OVERFLOW;
                 }
 
                 // 4 bits
-                putByte(destAddress, destinationStartOffset++, (byte) (0xF0 | charValueInInt >> 18));
-                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | charValueInInt >> 12 & 0x3F));
-                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | charValueInInt >> 6 & 0x3F));
-                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | charValueInInt & 0x3F));
+                putByte(destAddress, destinationStartOffset++, (byte) (0xF0 | codePoint >> 18));
+                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | codePoint >> 12 & 0x3F));
+                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | codePoint >> 6 & 0x3F));
+                putByte(destAddress, destinationStartOffset++, (byte) (0x80 | codePoint & 0x3F));
             } else {
-                return OVERFLOW;
+                return CoderResult.unmappableForLength(i);
             }
         }
         return UNDERFLOW;
@@ -399,6 +429,9 @@ class UTF8Utils {
         //[10000000 -- 10111111]
         return byte2 < -64;
     }
+
+//  http://www.daemonology.net/blog/2008-06-05-faster-utf8-strlen.html
+//  http://www.daemonology.net/blog/strlentest.c
 
 //    public void countUtf8Character(final byte[] s) {
 //
