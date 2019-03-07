@@ -127,15 +127,16 @@ public class UTF8UtilsTest {
     }
 
     private byte[] testConvertString(String str) throws UnsupportedEncodingException {
+        Charset utf8 = Charset.forName("UTF-8");
         long start = System.currentTimeMillis();
         for (int i = 0; i < LOOP_CNT; i++) {
-            str.getBytes("UTF-8");
+            str.getBytes(utf8);
         }
         long end = System.currentTimeMillis();
         time1 = end - start;
         System.out.println("it took " + time1 + " to run String.getBytes(UTF-8)");
 
-        return str.getBytes("UTF-8");
+        return str.getBytes(utf8);
     }
 
     private byte[] testConvert(char[] charArr) throws UnsupportedEncodingException {

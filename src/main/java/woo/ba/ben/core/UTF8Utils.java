@@ -5,18 +5,24 @@ import java.lang.reflect.Field;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CoderResult;
 
+import static java.lang.Character.MAX_SURROGATE;
 import static java.lang.Character.MIN_HIGH_SURROGATE;
 import static java.lang.Character.MIN_LOW_SURROGATE;
 import static java.lang.Character.MIN_SUPPLEMENTARY_CODE_POINT;
+import static java.lang.Character.MIN_SURROGATE;
+import static java.lang.Character.isSurrogatePair;
 import static java.lang.Math.min;
 import static java.nio.charset.CoderResult.OVERFLOW;
 import static java.nio.charset.CoderResult.UNDERFLOW;
+import static java.nio.charset.CoderResult.malformedForLength;
+import static java.nio.charset.CoderResult.unmappableForLength;
 import static woo.ba.ben.core.IDataReader.unsignedByte;
 import static woo.ba.ben.core.UnsafeFactory.UNSAFE;
 
 class UTF8Utils {
     private static final int HIGH_SURROGATE_BASE = 55232;
     private static final int ENCODING_CODE_POINT_BASE = MIN_SUPPLEMENTARY_CODE_POINT - (MIN_HIGH_SURROGATE << 10) - MIN_LOW_SURROGATE;
+
     private static Field STRING_VALUE_FIELD = null;
 
     static {
@@ -92,7 +98,7 @@ class UTF8Utils {
     }
 
     static byte[] encodeQuickly(final char[] source) throws CharacterCodingException {
-        final byte[] destination = new byte[source.length * 4];
+        final byte[] destination = new byte[source.length * 3];
         if (encode(source, 0, source.length, destination, 0, destination.length) == OVERFLOW) {
             throw new CharacterCodingException();
         }
@@ -250,21 +256,7 @@ class UTF8Utils {
         int codePoint;
         char highSurrogate, lowSurrogate;
         for (int i = sourceStartOffset; i < sourceCount; i++) {
-            if (Character.isSurrogate(source[i])) {
-                if (i + 1 >= sourceCount) {
-                    return CoderResult.unmappableForLength(i + 1);
-                }
-
-                highSurrogate = source[i++];
-                lowSurrogate = source[i];
-                if (!Character.isSurrogatePair(highSurrogate, lowSurrogate)) {
-                    return CoderResult.malformedForLength(i);
-                }
-                codePoint = (highSurrogate << 10) + lowSurrogate + ENCODING_CODE_POINT_BASE;
-            } else {
-                codePoint = source[i];
-            }
-
+            codePoint = source[i];
             if (codePoint < 0x80) {
                 //check remaining capacity
                 if (destinationStartOffset + 1 > destinationCount) {
@@ -282,7 +274,7 @@ class UTF8Utils {
                 // 2 bits
                 destination[destinationStartOffset++] = (byte) (0xC0 | codePoint >> 6);
                 destination[destinationStartOffset++] = (byte) (0x80 | codePoint & 0x3F);
-            } else if (codePoint < 0x10000) {
+            } else if (codePoint < MIN_SURROGATE || (codePoint > MAX_SURROGATE && codePoint < 0x10000)) {
                 //check remaining capacity
                 if (destinationStartOffset + 3 > destinationCount) {
                     return OVERFLOW;
@@ -292,6 +284,40 @@ class UTF8Utils {
                 destination[destinationStartOffset++] = (byte) (0xE0 | codePoint >> 12);
                 destination[destinationStartOffset++] = (byte) (0x80 | codePoint >> 6 & 0x3F);
                 destination[destinationStartOffset++] = (byte) (0x80 | codePoint & 0x3F);
+            } else if (codePoint >= MIN_SURROGATE && codePoint <= MAX_SURROGATE) {
+                if (i + 1 >= sourceCount) {
+                    return unmappableForLength(i + 1);
+                }
+
+                // two chars for one code point
+                highSurrogate = source[i++];
+                lowSurrogate = source[i];
+                if (!isSurrogatePair(highSurrogate, lowSurrogate)) {
+                    return malformedForLength(i);
+                }
+                codePoint = (highSurrogate << 10) + lowSurrogate + ENCODING_CODE_POINT_BASE;
+                if (codePoint < 0x10000) {
+                    //check remaining capacity
+                    if (destinationStartOffset + 3 > destinationCount) {
+                        return OVERFLOW;
+                    }
+
+                    // 3 bits
+                    destination[destinationStartOffset++] = (byte) (0xE0 | codePoint >> 12);
+                    destination[destinationStartOffset++] = (byte) (0x80 | codePoint >> 6 & 0x3F);
+                    destination[destinationStartOffset++] = (byte) (0x80 | codePoint & 0x3F);
+                } else {
+                    //check remaining capacity
+                    if (destinationStartOffset + 4 > destinationCount) {
+                        return OVERFLOW;
+                    }
+
+                    // 4 bits
+                    destination[destinationStartOffset++] = (byte) (0xF0 | codePoint >> 18);
+                    destination[destinationStartOffset++] = (byte) (0x80 | codePoint >> 12 & 0x3F);
+                    destination[destinationStartOffset++] = (byte) (0x80 | codePoint >> 6 & 0x3F);
+                    destination[destinationStartOffset++] = (byte) (0x80 | codePoint & 0x3F);
+                }
             } else if (codePoint < 0x110000) {
                 //check remaining capacity
                 if (destinationStartOffset + 4 > destinationCount) {
@@ -304,7 +330,7 @@ class UTF8Utils {
                 destination[destinationStartOffset++] = (byte) (0x80 | codePoint >> 6 & 0x3F);
                 destination[destinationStartOffset++] = (byte) (0x80 | codePoint & 0x3F);
             } else {
-                return CoderResult.unmappableForLength(i);
+                return unmappableForLength(i);
             }
         }
         return UNDERFLOW;
@@ -333,21 +359,7 @@ class UTF8Utils {
         int codePoint;
         char highSurrogate, lowSurrogate;
         for (int i = sourceStartOffset; i < sourceCount; i++) {
-            if (Character.isSurrogate(source[i])) {
-                if (i + 1 >= sourceCount) {
-                    return CoderResult.unmappableForLength(i + 1);
-                }
-
-                highSurrogate = source[i++];
-                lowSurrogate = source[i];
-                if (!Character.isSurrogatePair(highSurrogate, lowSurrogate)) {
-                    return CoderResult.malformedForLength(i);
-                }
-                codePoint = (highSurrogate << 10) + lowSurrogate + ENCODING_CODE_POINT_BASE;
-            } else {
-                codePoint = source[i];
-            }
-
+            codePoint = source[i];
             if (codePoint < 0x80) {
                 //check remaining capacity
                 if (destinationStartOffset + 1 > destinationCount) {
@@ -365,7 +377,7 @@ class UTF8Utils {
                 // 2 bits
                 putByte(destAddress, destinationStartOffset++, (byte) (0xC0 | codePoint >> 6));
                 putByte(destAddress, destinationStartOffset++, (byte) (0x80 | codePoint & 0x3F));
-            } else if (codePoint < 0x10000) {
+            } else if (codePoint < MIN_SURROGATE || (codePoint > MAX_SURROGATE && codePoint < 0x10000)) {
                 //check remaining capacity
                 if (destinationStartOffset + 3 > destinationCount) {
                     return OVERFLOW;
@@ -375,6 +387,40 @@ class UTF8Utils {
                 putByte(destAddress, destinationStartOffset++, (byte) (0xE0 | codePoint >> 12));
                 putByte(destAddress, destinationStartOffset++, (byte) (0x80 | codePoint >> 6 & 0x3F));
                 putByte(destAddress, destinationStartOffset++, (byte) (0x80 | codePoint & 0x3F));
+            } else if (codePoint >= MIN_SURROGATE && codePoint <= MAX_SURROGATE) {
+                if (i + 1 >= sourceCount) {
+                    return unmappableForLength(i + 1);
+                }
+
+                // two chars for one code point
+                highSurrogate = source[i++];
+                lowSurrogate = source[i];
+                if (!isSurrogatePair(highSurrogate, lowSurrogate)) {
+                    return malformedForLength(i);
+                }
+                codePoint = (highSurrogate << 10) + lowSurrogate + ENCODING_CODE_POINT_BASE;
+                if (codePoint < 0x10000) {
+                    //check remaining capacity
+                    if (destinationStartOffset + 3 > destinationCount) {
+                        return OVERFLOW;
+                    }
+
+                    // 3 bits
+                    putByte(destAddress, destinationStartOffset++, (byte) (0xE0 | codePoint >> 12));
+                    putByte(destAddress, destinationStartOffset++, (byte) (0x80 | codePoint >> 6 & 0x3F));
+                    putByte(destAddress, destinationStartOffset++, (byte) (0x80 | codePoint & 0x3F));
+                } else {
+                    //check remaining capacity
+                    if (destinationStartOffset + 4 > destinationCount) {
+                        return OVERFLOW;
+                    }
+
+                    // 4 bits
+                    putByte(destAddress, destinationStartOffset++, (byte) (0xF0 | codePoint >> 18));
+                    putByte(destAddress, destinationStartOffset++, (byte) (0x80 | codePoint >> 12 & 0x3F));
+                    putByte(destAddress, destinationStartOffset++, (byte) (0x80 | codePoint >> 6 & 0x3F));
+                    putByte(destAddress, destinationStartOffset++, (byte) (0x80 | codePoint & 0x3F));
+                }
             } else if (codePoint < 0x110000) {
                 //check remaining capacity
                 if (destinationStartOffset + 4 > destinationCount) {
@@ -387,7 +433,7 @@ class UTF8Utils {
                 putByte(destAddress, destinationStartOffset++, (byte) (0x80 | codePoint >> 6 & 0x3F));
                 putByte(destAddress, destinationStartOffset++, (byte) (0x80 | codePoint & 0x3F));
             } else {
-                return CoderResult.unmappableForLength(i);
+                return unmappableForLength(i);
             }
         }
         return UNDERFLOW;
